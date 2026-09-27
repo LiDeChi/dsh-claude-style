@@ -91,7 +91,10 @@ const HDSL_LAYERS = ['process', 'user-env']
  * controller archives and unarchives, and the agent protocol's session delete is
  * the host delegating to an ACP agent that owns the storage. The archived row's
  * delete button therefore comes here, where the stored session directory under
- * the harness home can be removed. The path is also spelled in
+ * the harness home is removed and the id is dropped from the workspace
+ * registry's archive set — the stored-directory miss included, so an archive
+ * entry whose storage is already gone leaves the set instead of pinning its
+ * row to the list. The path is also spelled in
  * src/constants.js (SESSION_DELETE_ROUTE) for the browser half; keep the two in
  * step.
  */
@@ -452,12 +455,36 @@ function readRequestBody(req, limit) {
 }
 
 /**
+ * Drop one id from the workspace registry's archive set, durably.
+ *
+ * The registry is read at request time: it mounts with the workspace domain and
+ * can complete after this plugin. A host without one has no archive set to
+ * update — and no archived list to delete from — while a failing unarchive
+ * propagates: the route answers 500, the row stays, and the next delete
+ * retries through the miss branch.
+ */
+async function unarchiveSession(ctx, sessionId) {
+  const registry = ctx.get?.('workspaceRegistry')
+  if (typeof registry?.unarchiveSession !== 'function') return
+  await registry.unarchiveSession(sessionId)
+}
+
+/**
  * Delete one stored session: the directory named by the id under one of the
- * sessions root's working-directory directories.
+ * sessions root's working-directory directories, and the id's entry in the
+ * workspace registry's archive set.
  *
  * The id never reaches a path unchecked — it must match the harness's own
  * shape, the lookup is by exact name, and the resolved directory must stay
  * inside the sessions root.
+ *
+ * The archive set can name a session whose stored directory is already gone —
+ * an earlier removal took the directory while the registry entry stayed, and
+ * the stale session summary keeps its row on the archived list. The miss
+ * answers success too: the registry's unarchive runs no existence check and
+ * resolves without writing for an id that is not archived, so the entry leaves
+ * the set either way and the row is gone for good instead of coming back on
+ * the next reload.
  */
 async function deleteSession(ctx, req, res) {
   const refused = refusalOf(ctx, req)
@@ -483,34 +510,41 @@ async function deleteSession(ctx, req, res) {
   }
   const root = resolve(sessionsRoot(ctx))
   let dir = null
-  try {
-    for (const entry of readdirSync(root)) {
-      const candidate = join(root, entry, sessionId)
-      let stat
-      try {
-        stat = statSync(candidate)
-      } catch {
-        continue
-      }
-      if (stat.isDirectory()) {
-        dir = candidate
-        break
-      }
+  // The root listing is the storage's own answer, so a failure there is a
+  // fault and propagates to the route's 500 answer; a candidate that stats as
+  // absent is the OS's "not under this entry" — the expected state the scan
+  // moves past.
+  for (const entry of readdirSync(root)) {
+    const candidate = join(root, entry, sessionId)
+    let stat
+    try {
+      stat = statSync(candidate)
+    } catch {
+      continue
     }
-  } catch {
-    dir = null
+    if (stat.isDirectory()) {
+      dir = candidate
+      break
+    }
   }
-  if (dir === null || !resolve(dir).startsWith(root + sep)) {
-    sendJson(res, 404, { ok: false, error: 'session not found' })
+  if (dir === null) {
+    await unarchiveSession(ctx, sessionId)
+    sendJson(res, 200, { ok: true, ghost: true })
+    return
+  }
+  if (!resolve(dir).startsWith(root + sep)) {
+    sendJson(res, 403, { ok: false, error: 'session directory outside the sessions root' })
     return
   }
   try {
     rmSync(dir, { recursive: true, force: true })
   } catch (error) {
+    // A storage fault answers 500 with the OS error — nothing is swallowed.
     sendJson(res, 500, { ok: false, error: String(error?.message ?? error) })
     return
   }
-  sendJson(res, 200, { ok: true })
+  await unarchiveSession(ctx, sessionId)
+  sendJson(res, 200, { ok: true, ghost: false })
 }
 
 /**

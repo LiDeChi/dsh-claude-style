@@ -24,10 +24,11 @@ const { ROOT, HOST, SKIN_FIXTURE, same, check } = require('./shared.cjs')
  *   fake `sessions` service reports as open, and `events` maps a session id to
  *   the durable events the fake `sessionQuery` reader answers for it (each read
  *   is pushed onto `reads`, when given); `stored` is the snapshot list the fake
- *   `sessionPersistence` answers.
+ *   `sessionPersistence` answers; `registry` is the fake `workspaceRegistry`
+ *   service object itself, whose `unarchived` list records every call.
  */
 function fakeHost(mod, options = {}) {
-  const { fenced, home, live = [], events, launch, stored, reads } = options
+  const { fenced, home, live = [], events, launch, stored, reads, registry } = options
   const routes = {}
   const settings = { configure: () => () => {} }
   // The harness's launch environment, as its own snapshot behaves: the canonical
@@ -66,6 +67,7 @@ function fakeHost(mod, options = {}) {
       if (name === 'sessionQuery' && events !== undefined) {
         return { readSession: async (id) => { if (reads !== undefined) reads.push(id); return { events: events[id] ?? [] } } }
       }
+      if (name === 'workspaceRegistry' && registry !== undefined) return registry
       return undefined
     },
     effect: (fn) => fn(),
@@ -201,7 +203,8 @@ async function hostHalf() {
     const traversal = await request(host, DELETE, 'POST', JSON.stringify({ sessionId: '../escape' }), browser)
     check('a path-shaped id is refused', traversal.status === 400, `HTTP ${traversal.status}`)
     const absent = await request(host, DELETE, 'POST', JSON.stringify({ sessionId: 'session-smoke-absent' }), browser)
-    check('an unknown session is not found', absent.status === 404, `HTTP ${absent.status}`)
+    check('a stored-directory miss answers as a deleted ghost',
+      absent.status === 200 && JSON.parse(absent.body).ok === true && JSON.parse(absent.body).ghost === true, `HTTP ${absent.status}`)
     const liveHost = fakeHost(mod, { fenced, home: scratchHome, live: [scratchId] })
     const live = await request(liveHost, DELETE, 'POST', JSON.stringify({ sessionId: scratchId }), browser)
     check('a live session is refused', live.status === 409, `HTTP ${live.status}`)
@@ -209,6 +212,37 @@ async function hostHalf() {
     const done = await request(host, DELETE, 'POST', JSON.stringify({ sessionId: scratchId }), browser)
     check('a stored session is deleted', done.status === 200 && JSON.parse(done.body).ok === true, `HTTP ${done.status}`)
     check('the session directory is gone', fs.existsSync(path.join(scratchCwd, scratchId)) === false)
+    // With a workspace registry the delete also forgets the id: a ghost — an
+    // archive entry whose stored directory is already gone — leaves the set
+    // through the miss branch, and the stored session's entry goes once the
+    // directory itself is gone.
+    const trackRegistry = () => ({
+      archived: [],
+      unarchived: [],
+      unarchiveSession(id) {
+        this.unarchived.push({ id, dirGone: fs.existsSync(path.join(scratchCwd, id)) === false })
+        this.archived = this.archived.filter((known) => known !== id)
+        return Promise.resolve()
+      },
+    })
+    const ghostRegistry = trackRegistry()
+    ghostRegistry.archived = ['session-smoke-ghost-0001']
+    const ghostHost = fakeHost(mod, { fenced, home: scratchHome, registry: ghostRegistry })
+    const ghost = await request(ghostHost, DELETE, 'POST', JSON.stringify({ sessionId: 'session-smoke-ghost-0001' }), browser)
+    check('a ghost archive entry is deleted and leaves the archive set',
+      ghost.status === 200 && JSON.parse(ghost.body).ghost === true && ghostRegistry.archived.length === 0 &&
+        same(ghostRegistry.unarchived, [{ id: 'session-smoke-ghost-0001', dirGone: true }]),
+      JSON.stringify({ status: ghost.status, body: ghost.body, registry: ghostRegistry }))
+    fs.mkdirSync(path.join(scratchCwd, scratchId), { recursive: true })
+    fs.writeFileSync(path.join(scratchCwd, scratchId, 'session.v4.jsonl.zstd'), 'x')
+    const realRegistry = trackRegistry()
+    realRegistry.archived = [scratchId]
+    const registryHost = fakeHost(mod, { fenced, home: scratchHome, registry: realRegistry })
+    const settled = await request(registryHost, DELETE, 'POST', JSON.stringify({ sessionId: scratchId }), browser)
+    check('a stored delete unarchives the id after the directory is gone',
+      settled.status === 200 && JSON.parse(settled.body).ghost === false && realRegistry.archived.length === 0 &&
+        same(realRegistry.unarchived, [{ id: scratchId, dirGone: true }]),
+      JSON.stringify({ status: settled.status, body: settled.body, registry: realRegistry }))
   }
 
   // The usage roll-up from a cost-meter ledger: its per-day `byProviderModel`

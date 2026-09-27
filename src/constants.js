@@ -267,8 +267,8 @@
      * The host half's session-deletion route (host/index.js, SESSION_DELETE_PATH).
      * The harness gives the browser half no deletion API of its own, so the
      * archived row's delete button posts the session id here and the host half
-     * removes the stored session directory. Keep the path in step with the host
-     * half.
+     * removes the stored session directory and the id's entry in the workspace
+     * registry's archive set. Keep the path in step with the host half.
      */
     const SESSION_DELETE_ROUTE = '/dsh-claude-style/session-delete'
     /**

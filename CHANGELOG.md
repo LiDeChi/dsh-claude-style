@@ -2,6 +2,18 @@
 
 All notable changes to `dsh-claude-style` are documented here, newest first.
 
+## [Unreleased]
+
+[中文](#cn-Unreleased) | [English](#en-Unreleased)
+
+<h3 id="cn-Unreleased">问题修复</h3>
+
+- 修复 **已归档列表里的会话删不掉**：点「删除」后宿主半边只删存储目录、不动归档记录，存储目录已经不在的会话更是直接被拒——列表那一行永远留着，重载页面后还在。现在删除成功时宿主半边在同一请求里把该会话从归档集合里移除；归档集合里存储目录已消失的条目（幽灵）也按删除成功处理并移出归档集合，浏览器随即重拉一次会话列表基线，已删除的会话不会再靠旧摘要顶在已归档列表或会话树里。旧版宿主半边对目录缺失的会话回 404 时，浏览器同样移除该行。
+
+<h3 id="en-Unreleased">Bug Fixes</h3>
+
+- **Fixed archived sessions refusing to disappear when deleted**: the delete button removed the stored directory while the archive record kept the id, and a session whose directory was already gone was refused outright — the row stayed on the list and survived a page reload. A successful delete now also drops the session from the archive set in the same request, an archive entry whose stored directory has vanished is answered as deleted and leaves the set, and the browser re-pulls the session baseline right after, so a deleted session no longer lingers on the archived list or in the session tree on a stale summary. Against an older host half that still answers 404 for a missing directory, the browser removes the row just the same.
+
 ## [0.9.0] - 2026-09-26
 
 [中文](#cn-0.9.0) | [English](#en-0.9.0)

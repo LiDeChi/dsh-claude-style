@@ -49,7 +49,7 @@
       let items = null
       /** Ids, titles and times of the rows on screen, joined; a list tick that changes none of them leaves the rows alone. */
       let renderedKey
-      /** Rows deleted through the host half: the archive set keeps their ids until the host forgets them. */
+      /** Rows deleted through the host half, hidden while the host's two lists catch up. */
       const deletedIds = {}
       /**
        * The host's workspace and session services, once both are reachable;
@@ -183,9 +183,14 @@
        * The harness gives the browser half no deletion API of its own (the
        * workspace controller archives and unarchives; the agent protocol's
        * session delete is the host delegating to an ACP agent that owns the
-       * storage), so the skin's host half removes the session's stored directory
-       * and answers here. The row stays on a refusal — the host refuses a live
-       * session — and the refusal is logged the way an unarchive refusal is.
+       * storage), so the skin's host half removes the session's stored
+       * directory and drops the id from the registry's archive set before it
+       * answers. A stored-directory miss answers success too — an archive
+       * entry whose directory is already gone is the ghost this buries — and
+       * a 404 that still carries the host's own "session not found" JSON is
+       * the same miss from an older host half without that branch: the storage
+       * is gone all the same, so the row leaves too. Every other refusal keeps
+       * the row, logged the way an unarchive refusal is.
        */
       function removeArchived(id) {
         fetch(SESSION_DELETE_ROUTE, {
@@ -193,12 +198,33 @@
           credentials: 'same-origin',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify({ sessionId: id }),
-        }).then(response => response.json()).then(result => {
-          if (result.ok !== true) throw new Error(result.error || 'refused')
-          deletedIds[id] = true
-          refreshItems()
+        }).then(response => response.json().then(result => ({ status: response.status, result }))).then(({ status, result }) => {
+          if (result?.ok === true || (status === 404 && result?.error === 'session not found')) {
+            deletedIds[id] = true
+            refreshItems()
+            refreshSessions()
+            return
+          }
+          throw new Error(result?.error || `HTTP ${status}`)
         }).catch(reason => {
           console.warn('dsh-claude-style: session delete rejected:', reason)
+        })
+      }
+
+      /**
+       * Re-pull the host's session baseline right after a delete.
+       *
+       * The full list is what the projection prunes by: the host's fresh list
+       * answer no longer carries the removed id, so its stale summary — the
+       * one that kept a deleted session looking alive — leaves `sessions.list`
+       * at this pull instead of at the next reconnect, and the host's own tree
+       * drops the row with it. The pull is the sessions service's single-flight
+       * refresh, so a pull already under way is reused.
+       */
+      function refreshSessions() {
+        if (typeof sessions?.refresh !== 'function') return
+        sessions.refresh().catch(reason => {
+          console.warn('dsh-claude-style: session baseline refresh rejected:', reason)
         })
       }
 
