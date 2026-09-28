@@ -20,6 +20,8 @@
     "archiveMinutes": { "zh": "{count} 分钟", "en": "{count} min" },
     "archiveHours": { "zh": "{count} 小时", "en": "{count} h" },
     "archiveDays": { "zh": "{count} 天", "en": "{count} d" },
+    "archiveDeleteFailed": { "zh": "删除失败：{detail}", "en": "Delete failed: {detail}" },
+    "archiveDeleteOpen": { "zh": "会话仍被本应用占用，重启后再删除", "en": "The conversation is still held open by this app; restart it, then delete again" },
     "searchPlaceholder": { "zh": "搜索", "en": "Search" },
     "searchClose": { "zh": "关闭", "en": "Close" },
     "searchFilterHint": { "zh": "切换分类", "en": "Filters" },

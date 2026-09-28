@@ -159,22 +159,26 @@
       }
 
       /**
-       * The host's notice for a clicked archived row: the same Toast, warning
-       * glyph and copy (`workspace` namespace, `toast.archivedNotOpenable`) its
-       * own tree raises. The host's notice channel is private to ui-workspace,
-       * so the skin renders the same component itself; the Toast portals to
-       * the body, and a new key restarts it the way the host re-shows it.
+       * The host's Toast, warning glyph included, rendered by the skin itself:
+       * the host's notice channel is private to ui-workspace. The Toast
+       * portals to the body, and a new key restarts it the way the host
+       * re-shows it.
        */
-      function notifyArchivedNotOpenable() {
-        const t = ctx.get('locale').bind('workspace')
+      function notifyToast(text) {
         if (noticeRoot === null) noticeRoot = reactDom.createRoot(document.createElement('div'))
         noticeSeq++
         noticeRoot.render(React.createElement(primitives.Toast, {
           key: `toast-${noticeSeq}`,
-          text: t('toast.archivedNotOpenable'),
+          text,
           icon: React.createElement(primitives.IconWarningOutlineRegular),
           onDone() { if (noticeRoot !== null) noticeRoot.render(null) },
         }))
+      }
+
+      /** The host's own notice for a clicked archived row (`toast.archivedNotOpenable`). */
+      function notifyArchivedNotOpenable() {
+        const t = ctx.get('locale').bind('workspace')
+        notifyToast(t('toast.archivedNotOpenable'))
       }
 
       /**
@@ -190,7 +194,10 @@
        * a 404 that still carries the host's own "session not found" JSON is
        * the same miss from an older host half without that branch: the storage
        * is gone all the same, so the row leaves too. Every other refusal keeps
-       * the row, logged the way an unarchive refusal is.
+       * the row and raises the host's Toast: the "session is open" answer (the
+       * app still holds the session's agent attached, and only a restart
+       * releases it) carries its own copy, everything else names the refusal
+       * the route sent.
        */
       function removeArchived(id) {
         fetch(SESSION_DELETE_ROUTE, {
@@ -205,9 +212,14 @@
             refreshSessions()
             return
           }
-          throw new Error(result?.error || `HTTP ${status}`)
+          const refusal = new Error(result?.error || `HTTP ${status}`)
+          refusal.status = status
+          throw refusal
         }).catch(reason => {
           console.warn('dsh-claude-style: session delete rejected:', reason)
+          notifyToast(reason?.status === 409
+            ? copyLabel('archiveDeleteOpen', 'The conversation is still held open by this app; restart it, then delete again')
+            : copyLabel('archiveDeleteFailed', 'Delete failed: {detail}', { detail: reason?.message ?? String(reason) }))
         })
       }
 
