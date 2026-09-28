@@ -2,6 +2,22 @@
 
 All notable changes to `dsh-claude-style` are documented here, newest first.
 
+## [0.10.1] - 2026-09-28
+
+[中文](#cn-0.10.1) | [English](#en-0.10.1)
+
+<h3 id="cn-0.10.1">其他变更</h3>
+
+- **README 预览换成 Claude 与 DeepSeek 两套配色的截图**：原来只有一组亮暗首页截图，现在两套配色各有工作台首页与一段 Markdown 对话（标题、列表、任务清单、表格、代码高亮、引用）的亮暗截图，共八张；截图里的工作区、会话、用量与昵称都是示例数据。
+- **README 新增鸣谢**：注明像素小鲸鱼 Deepy 的动画帧图出自 calmly-eating-bugs 绘制的 Deepy 小鲸鱼主题包、经作者许可随插件分发，并附上作者贡献到仓库 `showcase/` 目录的展示页与 GIF 原件入口。展示页只在 GitHub 仓库里，npm 包的内容与体积不受影响。
+
+<h3 id="en-0.10.1">Chores</h3>
+
+- **README previews now show both the Claude and the DeepSeek palettes**: the single light/dark pair of the home page gives way to eight shots, each palette showing the Studio home page and a Markdown conversation (headings, lists, task lists, a table, highlighted code, a quote) in light and dark; the workspaces, sessions, usage and nickname in them are sample data.
+- **README acknowledgements**: Deepy's animation frames are credited to the Deepy whale theme pack drawn by calmly-eating-bugs and shipped by the author's permission, with pointers to the showcase page and GIF originals the author contributed under the repository's `showcase/` folder. The showcase lives only in the GitHub repository; the npm package's contents and size are unchanged.
+
+**Full Changelog**: [v0.10.0...v0.10.1](https://github.com/Nwflower/dsh-claude-style/compare/v0.10.0...v0.10.1)
+
 ## [0.10.0] - 2026-09-28
 
 [中文](#cn-0.10.0) | [English](#en-0.10.0)
