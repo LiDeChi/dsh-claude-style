@@ -2,6 +2,18 @@
 
 All notable changes to `dsh-claude-style` are documented here, newest first.
 
+## [Unreleased]
+
+[中文](#cn-unreleased) | [English](#en-unreleased)
+
+<h3 id="cn-unreleased">其他变更</h3>
+
+- **README 的小鲸鱼介绍附上动图**：「特点」里小鲸鱼 Deepy 一条下面加了八张 GIF，分别是空闲、思考、写回答与调用工具、指挥子代理、等你操作、失败、完成与睡着。仓库里的 Deepy 展示页因体积过大（约 7.6 MB）移除，全部 20 个动画的 GIF 仍在 `showcase/gifs/`。
+
+<h3 id="en-unreleased">Chores</h3>
+
+- **The README's Deepy entry now shows it moving**: eight GIFs sit under the Deepy item in Features — idle, thinking, answering and calling tools, conducting subagents, waiting on you, failed, finished and asleep. The repository's Deepy showcase page is removed for its size (about 7.6 MB); GIFs of all 20 animations remain in `showcase/gifs/`.
+
 ## [0.10.1] - 2026-09-28
 
 [中文](#cn-0.10.1) | [English](#en-0.10.1)

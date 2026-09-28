@@ -85,7 +85,7 @@ The assembly order lives in `scripts/build.mjs` (`FRAGMENTS` / `STYLE_FILES`) an
 - `lib/` — build output only. `claude-mark.svg` is `package.json`'s `icon`, copied from `src/assets/brand/claude-mark-clay.svg`; `deepy/` holds Deepy's sheets, copied from `src/assets/mascot/deepy/` against the `DEEPY_SHEETS` table in `src/constants.js`.
 - `locale/` — plugin metadata localization (`meta.title` / `meta.description` per `<language>.json`); `exports` must cover them with `"./locale/*"`, or the host degrades the whole metadata (icon included) to `meta.error`.
 - `skin.json` is the skin manifest; `cordis.patch.yml` inserts `ui-skin-claude-style` into the web roster.
-- `scripts/` — build and regression tools (`fetch-lobe-combines.py` is the only networked script: run by hand, never part of the build); `docs/` — architecture, style guide, screenshots; `fonts/` — font files; `showcase/` — the Deepy author's standalone showcase page and GIF originals, kept out of the npm package (not in `package.json`'s `files`).
+- `scripts/` — build and regression tools (`fetch-lobe-combines.py` is the only networked script: run by hand, never part of the build); `docs/` — architecture, style guide, screenshots; `fonts/` — font files; `showcase/gifs/` — the Deepy author's GIFs of every animation, shown in the README and kept out of the npm package (not in `package.json`'s `files`).
 - `.debug/` and `node_modules/` are never committed.
 
 ## Core Conventions

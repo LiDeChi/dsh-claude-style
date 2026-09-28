@@ -98,6 +98,21 @@ Keep only one theme enabled at a time. After installation, **restart `dsh web`**
 9. **The pixel crab** — in the Studio layout, Claude Code's pixel crab stands on the new-conversation composer card's top edge, near its right end (the Classic layout has none). When it is clicked or the pointer leaves it (and on its own every half minute or so while the page is open), it plays Claude Code's fishing routine, frame for frame from Claude Code's own animation: a blink, the rod raised and cast down past the card's edge, a hop into a side-on stance for a spell of fishing, and the rod reeled in as it turns back — about three and a half seconds. With reduced motion requested (Windows' "Show animations in Windows" turned off, for one), it moves only when clicked.
 10. **Deepy the pixel whale** — under the DeepSeek brand the crab gives way to Deepy, a pixel whale drawn on a 52×52 grid whose every frame comes from the Deepy theme pack's animations, 50 ms a frame. On the home page (both layouts) it stands on the composer card's top edge near its right end; in a conversation it stands on top of the whole input area (the composer card together with the todo, queue and goal cards above it), and while you are asked to approve something, answer a question or review a plan it stands on the panel that takes the card's place. Only the main conversation carries it; the sidebar's subagent chats do not. What it does follows the agent's work: between jobs it breathes, flicks its tail and blinks, and every half minute or so looks around or spouts water; while the model reasons or has not started answering, a thought cloud floats over it; while the model writes an answer or calls tools it types at a keyboard, puts on headphones when two sessions work at once and a hard hat from three; while subagents run it wears headphones for one and conducts a squad of little whale clones with its tail for two or more; a context compaction has it inhale the fragments; while you are asked for something it rings an exclamation bell; a failed tool call or a failed turn gives it a fright, smoke and dizzy stars; a turn or a compaction that finishes gets a flip and confetti (a finish that comes right after a failure is celebrated once the fright has played out). On the home page it reads the whole workspace: how many sessions are working picks the animation, a session waiting on you rings the bell, and one finishing in the background is celebrated. After a minute with no work and no pointer movement or key press it puts on a nightcap and falls asleep, and wakes with a start at the next one. Clicking its face or its tail pokes it into a jelly wobble, four quick clicks tickle it, and pressing it and pulling lifts it into a dangle until you let go. With reduced motion requested, each state holds one frame, and it moves only when clicked. The frames weigh about 0.4 MB, so they stay out of the page script: the plugin's host half serves them over a public route, `GET /dsh-claude-style/deepy/<animation>.png`, and the browser fetches an animation's frames the first time it plays. Against a host half that predates the route (the plugin updated without restarting the host), the frames do not load, the whale stays away and the console says so once.
 
+    <table>
+      <tr>
+        <td align="center" width="25%"><img src="./showcase/gifs/idle.gif" width="120" alt="Idle" /><br />Idle</td>
+        <td align="center" width="25%"><img src="./showcase/gifs/thinking.gif" width="120" alt="Thinking" /><br />Thinking</td>
+        <td align="center" width="25%"><img src="./showcase/gifs/typing.gif" width="120" alt="Answering and calling tools" /><br />Answering and calling tools</td>
+        <td align="center" width="25%"><img src="./showcase/gifs/conducting.gif" width="120" alt="Conducting subagents" /><br />Conducting subagents</td>
+      </tr>
+      <tr>
+        <td align="center" width="25%"><img src="./showcase/gifs/notification.gif" width="120" alt="Waiting on you" /><br />Waiting on you</td>
+        <td align="center" width="25%"><img src="./showcase/gifs/error.gif" width="120" alt="Failed" /><br />Failed</td>
+        <td align="center" width="25%"><img src="./showcase/gifs/happy.gif" width="120" alt="Finished" /><br />Finished</td>
+        <td align="center" width="25%"><img src="./showcase/gifs/sleeping.gif" width="120" alt="Asleep" /><br />Asleep</td>
+      </tr>
+    </table>
+
 ## Disabling and uninstalling
 
 To pause the theme without uninstalling it, add the following to the profile's `cordis.patch.yml` (`~/.dsh/profiles/web/cordis.patch.yml`):
@@ -126,7 +141,7 @@ Then restart `dsh web`. If you previously added this theme's entry to `cordis.pa
 
 ## Acknowledgements
 
-The animation frames of Deepy the pixel whale come from the Deepy whale theme pack drawn by calmly-eating-bugs ([@wp3171216237](https://github.com/wp3171216237)), and ship with the plugin by the author's permission. Many thanks to the author! The author also made a showcase page for the pack, [showcase/deepy-whale.html](showcase/deepy-whale.html): download it and open it in a browser to fire simulated agent events and watch the whale switch animations, step through all 20 animations frame by frame, and download the theme pack and every GIF; the GIFs also sit on their own in [showcase/gifs/](showcase/gifs/).
+The animation frames of Deepy the pixel whale come from the Deepy whale theme pack drawn by calmly-eating-bugs ([@wp3171216237](https://github.com/wp3171216237)), and ship with the plugin by the author's permission. Many thanks to the author! GIFs of all 20 animations, contributed by the author, are in [showcase/gifs/](showcase/gifs/).
 
 ## Related projects
 

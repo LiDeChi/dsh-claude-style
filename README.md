@@ -98,6 +98,21 @@ dsh plugin --profile web add Nwflower/dsh-claude-style         # GitHub 源
 9. **像素螃蟹** —— 工作台版面的新会话页上，输入卡片上沿、靠右的位置站着 Claude Code 的像素螃蟹（经典版面没有）。点它一下、或指针从它身上移开时（页面开着时也会每隔二三十秒自己来一次），它会照 Claude Code 的样子钓一次鱼：眨眨眼，举起鱼竿甩过卡片边沿，跳一下侧过身钓一会儿，再收竿转回正面，逐帧照搬 Claude Code 的动画，前后约三秒半。系统要求减少动态效果时（例如 Windows 关掉了「在 Windows 中显示动画」），它只在被点击时才动。
 10. **像素小鲸鱼 Deepy** —— 品牌选 DeepSeek 时，螃蟹换成小鲸鱼 Deepy（画在 52×52 的像素格上，每一帧照搬 Deepy 主题包的动图，每帧 50 毫秒）。它在首页（两种版面都有）站在输入卡片上沿、靠右的位置；进入对话后站在整块输入区的上沿（输入卡片连同上面的待办、排队、目标卡片），要你批准、回答问题或审阅计划时，站到替换输入卡片的那块面板上。只有主对话区有它，侧栏里的子代理对话没有。它的动作跟着智能体的工作走：没事时慢慢呼吸、甩尾、眨眼，每隔二三十秒东张西望或开心喷水一次；模型在想或还没开始回答时头顶冒思考云；模型写回答、调用工具时趴在键盘后敲代码，同时有两个会话在干活时戴上耳机摇摆，三个以上戴安全帽砌砖；有子代理在跑时，一个戴耳机、两个以上用尾巴打拍子带小鲸鱼分身；压缩上下文时把碎片吸进肚子；等你批准或回答时摇感叹号铃铛；工具调用失败或这一轮失败时受惊冒烟、眼冒金星；一轮或一次压缩顺利结束时空翻撒彩纸（紧跟在失败之后的完成，等冒烟演完再庆祝）。首页上它看的是整个工作区：有几个会话在干活就按几个会话挑动作，有会话在等你时摇铃，别的会话在后台做完时庆祝。闲下来后一分钟没动鼠标、没按键时它会戴上睡帽睡着，再动一下就惊醒。点它的脸或尾巴会被戳得果冻一样晃，连点四下被挠痒痒，按住往外拖会被拎起来晃荡，松手放回。系统要求减少动态效果时，每个状态只停在一张代表帧上，点它才会动。动图帧图共约 0.4 MB，不打进页面脚本：插件的宿主半边经公开路由 `GET /dsh-claude-style/deepy/<动作>.png` 提供，浏览器在某个动作第一次出现时才下载它的帧图；宿主半边还是旧版（更新插件后没有重启宿主）时读不到帧图，小鲸鱼不出现，控制台留一条提示。
 
+    <table>
+      <tr>
+        <td align="center" width="25%"><img src="./showcase/gifs/idle.gif" width="120" alt="空闲" /><br />空闲</td>
+        <td align="center" width="25%"><img src="./showcase/gifs/thinking.gif" width="120" alt="思考" /><br />思考</td>
+        <td align="center" width="25%"><img src="./showcase/gifs/typing.gif" width="120" alt="写回答、调用工具" /><br />写回答、调用工具</td>
+        <td align="center" width="25%"><img src="./showcase/gifs/conducting.gif" width="120" alt="指挥子代理" /><br />指挥子代理</td>
+      </tr>
+      <tr>
+        <td align="center" width="25%"><img src="./showcase/gifs/notification.gif" width="120" alt="等你操作" /><br />等你操作</td>
+        <td align="center" width="25%"><img src="./showcase/gifs/error.gif" width="120" alt="失败" /><br />失败</td>
+        <td align="center" width="25%"><img src="./showcase/gifs/happy.gif" width="120" alt="完成" /><br />完成</td>
+        <td align="center" width="25%"><img src="./showcase/gifs/sleeping.gif" width="120" alt="睡着" /><br />睡着</td>
+      </tr>
+    </table>
+
 ## 停用与卸载
 
 不停用安装、先暂停主题 —— 在 profile 的 `cordis.patch.yml`（`~/.dsh/profiles/web/cordis.patch.yml`）中加入：
@@ -126,7 +141,7 @@ dsh plugin --profile web remove dsh-claude-style   # 卸载
 
 ## 鸣谢
 
-像素小鲸鱼 Deepy 的动画帧图来自 calmly-eating-bugs（[@wp3171216237](https://github.com/wp3171216237)）绘制的 Deepy 小鲸鱼主题包，经作者许可随插件分发。感谢作者！作者还为主题包做了一个展示页 [showcase/deepy-whale.html](showcase/deepy-whale.html)，下载后用浏览器直接打开，就能模拟智能体事件看小鲸鱼切换动作、逐帧查看 20 个动画，并下载主题包与全部 GIF；GIF 原件也单独放在 [showcase/gifs/](showcase/gifs/)。
+像素小鲸鱼 Deepy 的动画帧图来自 calmly-eating-bugs（[@wp3171216237](https://github.com/wp3171216237)）绘制的 Deepy 小鲸鱼主题包，经作者许可随插件分发。感谢作者！作者贡献的全部 20 个动画的 GIF 放在 [showcase/gifs/](showcase/gifs/)。
 
 ## 友链
 
