@@ -56,8 +56,10 @@ npm run build            # src/ → lib/client.js; checks listed files, %%TOKEN%
 npm run smoke            # lib/ against a stand-in host: private-route fences; in headless Chrome: startup, 0 idle passes, no markup injection, Enter stays with the host, feature isolation, no uncaught errors, clean teardown
 node scripts/probe.cjs --token <launch-token>          # composer invariants against a running `dsh web`
 node scripts/probe-timing.cjs --token <launch-token>   # itemized timing: startup, model catalog readiness, open latency, heap
-node scripts/shoot.cjs --token <launch-token>          # re-shoot the README screenshots (docs/light.png / docs/dark.png)
+node scripts/shoot.cjs --token <launch-token> --brand <claude|deepseek> --scene <home|conversation>   # re-shoot one pair of README screenshots (docs/<brand>-<scene>-light.png / -dark.png)
 ```
+
+shoot checks the brand the instance is set to (switch it on the settings page); the conversation scene opens the sidebar conversation titled `Markdown rendering tour` and refuses one holding any user message other than the demo prompt in `scripts/shoot.cjs` — send that prompt in a scratch instance to make it.
 
 probe / probe-timing / shoot need a running `dsh web` instance (default `http://127.0.0.1:3080`; `--url` for another); the token is the `/?token=…` in the GUI URL (or `DSH_WEB_TOKEN`). smoke needs no running instance. All of them need a local Chrome/Edge (`CHROME_PATH` to choose one).
 
