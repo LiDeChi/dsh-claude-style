@@ -99,6 +99,10 @@ Then restart `dsh web`. If you previously added this theme's entry to `cordis.pa
 | [Changelog](CHANGELOG.md) | Version history |
 | [Contributing](CONTRIBUTING.md) | Building from `src/`, commit conventions, and the screenshot and regression tooling (in English) |
 
+## Acknowledgements
+
+The animation frames of Deepy the pixel whale come from the Deepy whale theme pack drawn by calmly-eating-bugs ([@wp3171216237](https://github.com/wp3171216237)), and ship with the plugin by the author's permission. Many thanks to the author!
+
 ## Related projects
 
 > Running several themes at once? Try [dsh-skin-manager](https://github.com/xiaoyangcheng84-svg/dsh-skin-manager) — it switches between all installed themes from a single settings page.

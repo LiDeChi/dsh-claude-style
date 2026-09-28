@@ -99,6 +99,10 @@ dsh plugin --profile web remove dsh-claude-style   # 卸载
 | [更新日志](CHANGELOG.md) | 版本历史 |
 | [贡献指南](CONTRIBUTING.md) | 如何从 `src/` 构建、提交规范与截图/回归工具（英文） |
 
+## 鸣谢
+
+像素小鲸鱼 Deepy 的动画帧图来自 calmly-eating-bugs（[@wp3171216237](https://github.com/wp3171216237)）绘制的 Deepy 小鲸鱼主题包，经作者许可随插件分发。感谢作者！
+
 ## 友链
 
 > 同时启用多个主题？推荐 [dsh-skin-manager](https://github.com/xiaoyangcheng84-svg/dsh-skin-manager)，在其设置页一键切换所有已安装主题。
