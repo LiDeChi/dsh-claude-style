@@ -812,6 +812,9 @@
         '<div data-chain-overlay-fallback="conversation.composer" style="display:contents">' +
         '<div class="_x_composerStack_1"><div class="_x_inputBar_1">input</div></div></div></div></div></div>'
       document.body.appendChild(deepyConversation)
+      // A pass moves the whale onto the conversation first: the home page reads
+      // the whole workspace, where a running session is work.
+      await sleep(200)
       driver.setStatus('smoke-deepy', { running: true })
       driver.setTurn('reasoning')
       wakeDeepyPass()
