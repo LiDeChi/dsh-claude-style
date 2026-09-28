@@ -126,7 +126,7 @@ dsh plugin --profile web remove dsh-claude-style   # 卸载
 
 ## 鸣谢
 
-像素小鲸鱼 Deepy 的动画帧图来自 calmly-eating-bugs（[@wp3171216237](https://github.com/wp3171216237)）绘制的 Deepy 小鲸鱼主题包，经作者许可随插件分发。感谢作者！
+像素小鲸鱼 Deepy 的动画帧图来自 calmly-eating-bugs（[@wp3171216237](https://github.com/wp3171216237)）绘制的 Deepy 小鲸鱼主题包，经作者许可随插件分发。感谢作者！作者还为主题包做了一个展示页 [showcase/deepy-whale.html](showcase/deepy-whale.html)，下载后用浏览器直接打开，就能模拟智能体事件看小鲸鱼切换动作、逐帧查看 20 个动画，并下载主题包与全部 GIF；GIF 原件也单独放在 [showcase/gifs/](showcase/gifs/)。
 
 ## 友链
 

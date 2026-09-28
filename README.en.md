@@ -126,7 +126,7 @@ Then restart `dsh web`. If you previously added this theme's entry to `cordis.pa
 
 ## Acknowledgements
 
-The animation frames of Deepy the pixel whale come from the Deepy whale theme pack drawn by calmly-eating-bugs ([@wp3171216237](https://github.com/wp3171216237)), and ship with the plugin by the author's permission. Many thanks to the author!
+The animation frames of Deepy the pixel whale come from the Deepy whale theme pack drawn by calmly-eating-bugs ([@wp3171216237](https://github.com/wp3171216237)), and ship with the plugin by the author's permission. Many thanks to the author! The author also made a showcase page for the pack, [showcase/deepy-whale.html](showcase/deepy-whale.html): download it and open it in a browser to fire simulated agent events and watch the whale switch animations, step through all 20 animations frame by frame, and download the theme pack and every GIF; the GIFs also sit on their own in [showcase/gifs/](showcase/gifs/).
 
 ## Related projects
 
