@@ -2,11 +2,11 @@
 
 All notable changes to `dsh-claude-style` are documented here, newest first.
 
-## [Unreleased]
+## [0.10.0] - 2026-09-28
 
-[中文](#cn-Unreleased) | [English](#en-Unreleased)
+[中文](#cn-0.10.0) | [English](#en-0.10.0)
 
-<h3 id="cn-Unreleased">新增功能</h3>
+<h3 id="cn-0.10.0">新增功能</h3>
 
 - **DeepSeek 品牌下，输入框上站着像素小鲸鱼 Deepy**：品牌选 DeepSeek 时，螃蟹换成小鲸鱼 Deepy，动画逐帧取自 Deepy 主题包（每帧 50 毫秒）。它在首页（经典与工作台两种版面）站在输入卡片上沿、靠右；进入对话后站在整块输入区的上沿，要你批准、回答问题或审阅计划时站到那块面板上。只有主对话区有它，侧栏里的子代理对话没有。它的动作跟着智能体走：没事时呼吸、眨眼，偶尔东张西望或喷水；模型思考时冒思考云；写回答或调用工具时敲代码，两个会话同时在干活时戴耳机，三个以上戴安全帽砌砖；一个子代理在跑时戴耳机，两个以上指挥小鲸鱼分身；压缩上下文时吸入碎片；等你操作时摇感叹号铃铛；工具调用或这一轮失败时冒烟、眼冒金星；一轮或一次压缩结束时空翻撒彩纸。首页上它看整个工作区：按同时在干活的会话数挑动作，有会话在等你时摇铃，别的会话在后台做完时庆祝。闲下来后一分钟没动鼠标、没按键就睡着，再动一下就惊醒。点脸或尾巴会被戳得晃动，连点四下被挠痒痒，按住往外拖被拎起来。系统要求减少动态效果时每个状态停在一张代表帧上，点它才动。本机实测，小鲸鱼动着时页面主线程每秒多用约 13 毫秒（没有它时约 1–3 毫秒），换帧不触发皮肤的整页刷新，页面切到后台时停止换帧。插件新增公开路由 `GET /dsh-claude-style/deepy/<动作>.png` 提供帧图（共约 0.4 MB，浏览器在某个动作第一次出现时才下载）；更新插件后要重启宿主，小鲸鱼才会出现。
 
@@ -15,7 +15,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - **品牌标识的「关闭」改名为 DeepSeek，整套配色换成 DeepSeek 蓝色系**：设置页「修改品牌标识」原来的「关闭」现在明确写作 DeepSeek（设置值由 `off` 改为 `deepseek`，已经存下的 `off` 照样读作 DeepSeek）。选它时强调色由陶烬橙换成 DeepSeek 的品牌蓝 `#4D6BFE`，主按钮、开关、勾选、焦点框、链接与轮次状态行都跟着变；亮色画布从偏黄的象牙白换成带一点天蓝的亮白 `#F7FAFF`（侧栏 `#F3F7FE`），暗色画布从暖黑换成蓝黑 `#13161D`，边框、各级灰色文字、弹层与菜单卡片、搜索面板、分段控件、表头与滚动条一并换成冷色，用户消息气泡带一点蓝，行内代码用正文颜色。侧栏与首页照旧显示宿主自己的 DeepSeek 鲸鱼与字标，并画成 DeepSeek 蓝；账号行没有头像时、进行中与结束轮次的状态行，原来的 Claude 标也换成 DeepSeek 的鲸鱼标（进行中时摇摆着游动）。Claude 与 Anthropic 两档的样子不变。
 - **已归档列表里删除被拒时弹出提示说明原因**：此前点「删除」被拒绝时界面毫无反应，只在控制台记一条警告。现在会弹出宿主自己的 Toast：会话仍被应用占用时提示「会话仍被本应用占用，重启后再删除」，其余拒绝提示「删除失败：原因」，行保持原样。
 
-<h3 id="en-Unreleased">New Features</h3>
+<h3 id="en-0.10.0">New Features</h3>
 
 - **Deepy the pixel whale on the composer under the DeepSeek brand**: with the DeepSeek brand chosen, the crab gives way to Deepy, whose frames come from the Deepy theme pack one for one (50 ms a frame). On the home page (Classic and Studio alike) it stands on the composer card's top edge near its right end; in a conversation it stands on top of the whole input area, and while you are asked to approve something, answer a question or review a plan it stands on that panel. Only the main conversation carries it; the sidebar's subagent chats do not. What it does follows the agent: between jobs it breathes and blinks, now and then looking around or spouting; a thought cloud while the model thinks; typing while it writes an answer or calls tools, headphones when two sessions work at once and a hard hat from three; headphones for one running subagent and a squad of little whale clones to conduct for two or more; inhaling the fragments during a context compaction; an exclamation bell while something waits on you; smoke and dizzy stars when a tool call or the turn fails; a flip and confetti when a turn or a compaction finishes. On the home page it reads the whole workspace: how many sessions are working picks the animation, a session waiting on you rings the bell, and one finishing in the background is celebrated. A minute with no work and no pointer movement or key presses puts it to sleep, and the next one wakes it with a start. Clicking its face or tail pokes it, four quick clicks tickle it, and pressing and pulling lifts it. With reduced motion requested each state holds one frame, and it moves only when clicked. Measured here, the animating whale adds about 13 ms of main-thread work a second (the page idles at 1–3 ms without it); a frame change wakes none of the skin's page passes, and frames stop while the page is in the background. A new public route, `GET /dsh-claude-style/deepy/<animation>.png`, serves the frames (about 0.4 MB in all, each animation fetched the first time it plays); after updating the plugin, restart the host for the whale to appear.
 
@@ -23,6 +23,8 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 - **The brand mark's "Off" is now DeepSeek, with the whole palette in DeepSeek blue**: the settings page's Brand mark row now names its first choice DeepSeek (the setting's value changes from `off` to `deepseek`, and a stored `off` still reads as DeepSeek). It trades the ember orange accent for DeepSeek's brand blue `#4D6BFE` across primary buttons, switches, checks, focus rings, links and the turn status line; the yellowish ivory light canvas gives way to a white with a touch of sky blue, `#F7FAFF` (sidebar `#F3F7FE`), and the warm-black dark canvas to a blue-black `#13161D`, with the hairlines, grey inks, popover and menu cards, search palette, segmented controls, table headers and scrollbars turning cool, user bubbles taking a touch of blue and inline code set in the body ink. The sidebar and the home page keep the host's own DeepSeek whale and wordmark, painted DeepSeek blue; the account row's picture without an avatar and the status line of running and ended turns trade the Claude mark for DeepSeek's whale (which sways as it swims while the turn runs). The Claude and Anthropic choices look as before.
 - **A Toast now explains a refused delete on the archived list**: a delete the host half refuses used to do nothing visible, leaving one console warning. The host's own Toast now rises: when the conversation is still held open by the app it reads "The conversation is still held open by this app; restart it, then delete again", and every other refusal reads "Delete failed: \<reason\>". The row stays put.
+
+**Full Changelog**: [v0.9.1...v0.10.0](https://github.com/Nwflower/dsh-claude-style/compare/v0.9.1...v0.10.0)
 
 ## [0.9.1] - 2026-09-27
 
