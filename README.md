@@ -18,14 +18,39 @@
 
 ## 预览
 
+设置页「修改品牌标识」可以在 Claude 与 DeepSeek 两套配色之间切换，亮暗跟随系统颜色模式。每组上一行是工作台首页，下一行是一段 Markdown 对话，左亮右暗。
+
+### Claude
+
 <table>
   <tr>
-    <td align="center" width="50%"><img src="./docs/light.png" alt="亮色画布 —— 暖调象牙" /></td>
-    <td align="center" width="50%"><img src="./docs/dark.png" alt="暗色画布 —— 暖调黑" /></td>
+    <td align="center" width="50%"><img src="./docs/claude-home-light.png" alt="Claude 档工作台首页 —— 亮色" /></td>
+    <td align="center" width="50%"><img src="./docs/claude-home-dark.png" alt="Claude 档工作台首页 —— 暗色" /></td>
+  </tr>
+  <tr>
+    <td align="center" width="50%"><img src="./docs/claude-conversation-light.png" alt="Claude 档 Markdown 对话 —— 亮色" /></td>
+    <td align="center" width="50%"><img src="./docs/claude-conversation-dark.png" alt="Claude 档 Markdown 对话 —— 暗色" /></td>
   </tr>
 </table>
 
-> 亮色：象牙白画布 `#FCFCFB` 与浅色侧栏 `#FBFBF9`；暗色：暖黑 `#141413`。主题遵循系统亮暗模式切换，陶烬橙 `#D97757` 是两套画布唯一的操作强调色。
+> 亮色：象牙白画布 `#FCFCFB` 与浅色侧栏 `#FBFBF9`；暗色：暖黑 `#141413`。陶烬橙 `#D97757` 是两套画布唯一的操作强调色，工作台首页的输入框上站着 Claude Code 的像素螃蟹。
+
+### DeepSeek
+
+<table>
+  <tr>
+    <td align="center" width="50%"><img src="./docs/deepseek-home-light.png" alt="DeepSeek 档工作台首页 —— 亮色" /></td>
+    <td align="center" width="50%"><img src="./docs/deepseek-home-dark.png" alt="DeepSeek 档工作台首页 —— 暗色" /></td>
+  </tr>
+  <tr>
+    <td align="center" width="50%"><img src="./docs/deepseek-conversation-light.png" alt="DeepSeek 档 Markdown 对话 —— 亮色" /></td>
+    <td align="center" width="50%"><img src="./docs/deepseek-conversation-dark.png" alt="DeepSeek 档 Markdown 对话 —— 暗色" /></td>
+  </tr>
+</table>
+
+> 亮色：带一点天蓝的亮白 `#F7FAFF` 与侧栏 `#F3F7FE`；暗色：蓝黑 `#13161D`。强调色是 DeepSeek 的品牌蓝 `#4D6BFE`，首页与对话页的输入框上都站着像素小鲸鱼 Deepy。
+
+> 截图里的工作区、会话、用量与昵称都是演示用的示例数据。
 
 ## 字体
 

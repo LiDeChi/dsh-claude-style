@@ -18,14 +18,39 @@
 
 ## Preview
 
+The settings page's Brand mark row switches between the Claude and DeepSeek palettes, and light/dark follows your system's color mode. In each group the top row is the Studio home page and the bottom row a Markdown conversation, light on the left and dark on the right.
+
+### Claude
+
 <table>
   <tr>
-    <td align="center" width="50%"><img src="./docs/light.png" alt="Light canvas — warm ivory" /></td>
-    <td align="center" width="50%"><img src="./docs/dark.png" alt="Dark canvas — warm black" /></td>
+    <td align="center" width="50%"><img src="./docs/claude-home-light.png" alt="Claude brand, Studio home — light" /></td>
+    <td align="center" width="50%"><img src="./docs/claude-home-dark.png" alt="Claude brand, Studio home — dark" /></td>
+  </tr>
+  <tr>
+    <td align="center" width="50%"><img src="./docs/claude-conversation-light.png" alt="Claude brand, Markdown conversation — light" /></td>
+    <td align="center" width="50%"><img src="./docs/claude-conversation-dark.png" alt="Claude brand, Markdown conversation — dark" /></td>
   </tr>
 </table>
 
-> Light mode pairs an ivory canvas `#FCFCFB` with a pale sidebar `#FBFBF9`; dark mode uses warm black `#141413`. The theme follows your system's light/dark setting, and ember orange `#D97757` is the single action accent across both canvases.
+> Light mode pairs an ivory canvas `#FCFCFB` with a pale sidebar `#FBFBF9`; dark mode uses warm black `#141413`. Ember orange `#D97757` is the single action accent across both canvases, and Claude Code's pixel crab stands on the Studio home page's composer.
+
+### DeepSeek
+
+<table>
+  <tr>
+    <td align="center" width="50%"><img src="./docs/deepseek-home-light.png" alt="DeepSeek brand, Studio home — light" /></td>
+    <td align="center" width="50%"><img src="./docs/deepseek-home-dark.png" alt="DeepSeek brand, Studio home — dark" /></td>
+  </tr>
+  <tr>
+    <td align="center" width="50%"><img src="./docs/deepseek-conversation-light.png" alt="DeepSeek brand, Markdown conversation — light" /></td>
+    <td align="center" width="50%"><img src="./docs/deepseek-conversation-dark.png" alt="DeepSeek brand, Markdown conversation — dark" /></td>
+  </tr>
+</table>
+
+> Light mode is a white with a touch of sky blue, `#F7FAFF`, with the sidebar at `#F3F7FE`; dark mode is a blue-black `#13161D`. The accent is DeepSeek's brand blue `#4D6BFE`, and Deepy the pixel whale stands on the composer on the home page and in conversations alike.
+
+> The workspaces, sessions, usage figures and nickname in the screenshots are sample data.
 
 ## Fonts
 
