@@ -170,6 +170,11 @@
 
       /** The room the meter takes at the toolbar row's right end, as last written. */
       let meterRoom = ''
+      /** The meter node the room was measured from, and the reading and scope it had then. */
+      let meterNode = null
+      let meterReading = ''
+      let meterMeasuredActive = false
+      let meterWidth = 0
 
       /**
        * Stamp the context-occupancy meter and keep its room on the toolbar row.
@@ -180,14 +185,35 @@
        * after the model and effort triggers; the trailing cluster keeps that
        * room free through --dsh-claude-meter-room — the meter's width plus the
        * cluster's own 8px gap, written only on a change.
+       *
+       * The meter is re-resolved only when the cached node left the tree, and
+       * its width is re-read only when its reading moved (the trigger IS the
+       * percentage text, whose width follows the text): a pass with an unmoved
+       * meter reads no layout, which during streaming would otherwise force one.
        */
       function stampContextMeter(card) {
-        const meter = card === void 0 ? null : dockedContextMeter(composerDock(card))
+        if (meterNode !== null && !meterNode.isConnected) {
+          meterNode = null
+          meterReading = ''
+          meterWidth = 0
+        }
+        let meter = meterNode
+        if (card === void 0) meter = null
+        else if (meter === null) meter = dockedContextMeter(composerDock(card))
         let room = ''
         if (meter !== null) {
           if (!meter.hasAttribute('data-dsh-claude-context-meter')) meter.setAttribute('data-dsh-claude-context-meter', '')
-          if (active && meter.offsetWidth > 0) room = `${meter.offsetWidth + 8}px`
+          const reading = meter.textContent || ''
+          // Re-measure when the reading moved or the restyle scope flipped:
+          // either can change what the room should be.
+          if (reading !== meterReading || active !== meterMeasuredActive) {
+            meterReading = reading
+            meterMeasuredActive = active
+            meterWidth = active ? meter.offsetWidth : 0
+          }
+          if (active && meterWidth > 0) room = `${meterWidth + 8}px`
         }
+        meterNode = meter
         if (room === meterRoom) return
         meterRoom = room
         if (room === '') document.body.style.removeProperty('--dsh-claude-meter-room')
@@ -305,5 +331,9 @@
           meterRoom = ''
           document.body.style.removeProperty('--dsh-claude-meter-room')
         }
+        meterNode = null
+        meterReading = ''
+        meterMeasuredActive = false
+        meterWidth = 0
       }
     }

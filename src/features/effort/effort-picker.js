@@ -110,9 +110,12 @@
         positionAnchoredPopover(effortBtn, effortPop, { side: 'above', gap: 6 })
       }
 
+      /** The measurements behind the trigger's placement, as of the last positioning. */
+      const effortPlace = { left: -1, top: -1, need: 0, widthLabel: '', height: 0 }
+
       /** Pin the body-mounted trigger beside the model trigger (every pass: the
        * seat moves with the window and the composer's own growth). */
-      function positionEffortTrigger() {
+      function positionEffortTrigger(label) {
         if (effortBtn === null) return
         const modelBtn = modelTrigger()
         if (modelBtn === null) {
@@ -142,11 +145,30 @@
         // (its seat returned) would otherwise read offsetWidth 0, reserve no
         // room for that one pass and overlap the control that follows.
         if (effortBtn.style.display !== 'inline-flex') effortBtn.style.display = 'inline-flex'
-        const need = Math.max(0, effortBtn.offsetWidth - 6)
-        if (modelBtn.style.marginRight !== `${need}px`) modelBtn.style.marginRight = `${need}px`
-        const shifted = modelBtn.getBoundingClientRect()
-        effortBtn.style.left = `${Math.round(shifted.right + 2)}px`
-        effortBtn.style.top = `${Math.round(shifted.top + (shifted.height - effortBtn.offsetHeight) / 2)}px`
+        // The trigger's size follows its label: re-measure only when it moved
+        // (offsetWidth/offsetHeight force a layout the pass would rather not pay).
+        if (label !== effortPlace.widthLabel) {
+          effortPlace.widthLabel = label
+          effortPlace.need = Math.max(0, effortBtn.offsetWidth - 6)
+          effortPlace.height = effortBtn.offsetHeight
+        }
+        const need = effortPlace.need
+        const marginChanged = modelBtn.style.marginRight !== `${need}px`
+        if (marginChanged) modelBtn.style.marginRight = `${need}px`
+        // An unchanged margin leaves the box at the seatBox just read: a second
+        // getBoundingClientRect after the write would force a reflow for the
+        // same numbers every pass.
+        const shifted = marginChanged ? modelBtn.getBoundingClientRect() : seatBox
+        const left = Math.round(shifted.right + 2)
+        const top = Math.round(shifted.top + (shifted.height - effortPlace.height) / 2)
+        if (left !== effortPlace.left) {
+          effortPlace.left = left
+          effortBtn.style.left = `${left}px`
+        }
+        if (top !== effortPlace.top) {
+          effortPlace.top = top
+          effortBtn.style.top = `${top}px`
+        }
       }
 
       /** The slider, built once; the card holds this node for its whole life. */
@@ -215,6 +237,8 @@
        * trigger's reserved margin goes back with it.
        */
       function hideEffortTrigger() {
+        // Re-created later under a fresh measurement (the label gate).
+        effortPlace.widthLabel = ''
         if (effortBtn !== null) {
           if (effortBtn.parentElement !== null) effortBtn.parentElement.removeChild(effortBtn)
           effortBtn = null
@@ -286,7 +310,7 @@
         const aria = `${copyLabel('effortLabel', MODEL_EFFORT_LABEL)} ${info.label}`
         if (effortBtn.getAttribute('aria-label') !== aria) effortBtn.setAttribute('aria-label', aria)
         if (effortSlider !== null) effortSlider.update()
-        positionEffortTrigger()
+        positionEffortTrigger(info.label)
 
         if (effortPop !== null && effortPop.getAttribute('data-open') === 'true') positionEffortPopover()
       }
@@ -304,6 +328,9 @@
         effortBtn = null
         effortPop = null
         effortSlider = null
+        effortPlace.left = -1
+        effortPlace.top = -1
+        effortPlace.widthLabel = ''
         releaseModelMargin()
         unregisterPopover('effort')
       }
