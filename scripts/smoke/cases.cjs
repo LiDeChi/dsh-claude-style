@@ -513,7 +513,7 @@ const CASES = {
     const deepy = r.deepy || {}
     const is = (state, animation, place) => !!state && state.animation === animation && state.place === place && state.ready === true
     check('the brand stored as "off" reads as DeepSeek, and the light canvas turns sky white',
-      deepy.brand === 'deepseek' && deepy.canvas === 'rgb(247, 250, 255)', JSON.stringify({ brand: deepy.brand, canvas: deepy.canvas }))
+      deepy.brand === 'deepseek' && deepy.canvas === 'rgb(250, 251, 255)', JSON.stringify({ brand: deepy.brand, canvas: deepy.canvas }))
     check('the DeepSeek brand turns blue: DeepSeek\'s brand blue for the accent, a blue link, a blue-black dark canvas',
       deepy.accent === '#4d6bfe' && deepy.link === '#3b56d9' && !!deepy.dark && deepy.dark.canvas === 'rgb(19, 22, 29)' &&
         deepy.dark.accent === '#4d6bfe' && deepy.dark.raised === '#1b1f28',

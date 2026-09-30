@@ -181,19 +181,23 @@ body[data-dsh-claude-style]:not([data-ds-dark-theme]) {
    fill, check and focus ring the clay took, with a lighter step for text on
    the dark canvas; the sidebar's whale and wordmark take it as well. The
    neutrals are cool: a sky-tinted white canvas with the host's bluish inks
-   (its neutral-bluish ramp) in light, a blue-black canvas in dark. User
-   bubbles take a blue tint, as the host's own do, and inline code keeps the
-   body ink, as the host draws it. Claude's violet top rung stays. */
+   (its neutral-bluish ramp) in light, a blue-black canvas in dark. The light
+   surfaces keep only a HINT of sky — the canvas sits within a couple of steps
+   of white, and the sidebar, the raised layers and the chips step back from it
+   in the same measure, so the blue reads as a tint on white rather than as a
+   coloured page. User bubbles take a blue tint, as the host's own do, and
+   inline code keeps the body ink, as the host draws it. Claude's violet top
+   rung stays. */
 body[data-dsh-claude-style][%%BRAND_ATTR%%="%%BRAND_DEEPSEEK%%"]:not([data-ds-dark-theme]) {
-  --dsw-alias-bg-base: #f7faff;
-  --dsw-alias-bg-layer-1: #f7faff;
-  --dsw-alias-bg-layer-2: #f3f7fe;
-  --dsw-alias-bg-layer-3: #eff4fd;
-  --dsw-alias-border-l1: #e1e8f4;
-  --dsw-alias-border-l2: #d6dfee;
-  --dsw-alias-border-l3: #c7d2e6;
+  --dsw-alias-bg-base: #fafbff;
+  --dsw-alias-bg-layer-1: #fafbff;
+  --dsw-alias-bg-layer-2: #f7f9ff;
+  --dsw-alias-bg-layer-3: #f4f7fe;
+  --dsw-alias-border-l1: #e7ecf7;
+  --dsw-alias-border-l2: #dde4f1;
+  --dsw-alias-border-l3: #cfd8ea;
   --dsw-alias-brand-primary: #4d6bfe;
-  --dsw-alias-brand-text: #f7faff;
+  --dsw-alias-brand-text: #fafbff;
   --dsw-alias-button-primary-fill: #4d6bfe;
   --dsw-alias-button-primary-hover: #3a57e8;
   --dsw-alias-button-info-fill: #4d6bfe;
@@ -205,13 +209,13 @@ body[data-dsh-claude-style][%%BRAND_ATTR%%="%%BRAND_DEEPSEEK%%"]:not([data-ds-da
   --dsw-alias-label-tertiary: #81858c;
   --dsw-alias-label-caption: #adb2b8;
   --dsw-alias-state-business-primary: #4d6bfe;
-  --dsw-alias-state-business-tertiary: #e3e9ff;
+  --dsw-alias-state-business-tertiary: #e9eeff;
   --dsw-alias-link: #3b56d9;
   --dsw-alias-brand-primary-new-colorprimary-new-color: #4d6bfe;
-  --dsw-specific-selector: #f3f7fe;
-  --dsw-specific-sidebar-fill: #f3f7fe;
-  --dsw-specific-bubble: #e6edfd;
-  --dsw-alias-interactive-bg-hover-solid: #e9eff9;
+  --dsw-specific-selector: #f7f9ff;
+  --dsw-specific-sidebar-fill: #f7f9ff;
+  --dsw-specific-bubble: #eaf0fe;
+  --dsw-alias-interactive-bg-hover-solid: #eef3fc;
   --dsh-claude-hover-bg: rgba(38, 49, 72, 0.08);
   --dsh-claude-inline-code-bg: rgba(38, 49, 72, 0.05);
   --dsh-claude-inline-code-fg: var(--dsw-alias-label-primary);
@@ -219,11 +223,11 @@ body[data-dsh-claude-style][%%BRAND_ATTR%%="%%BRAND_DEEPSEEK%%"]:not([data-ds-da
   --dsh-claude-link-underline: rgba(59, 86, 217, 0.6);
   --dsh-claude-link-hover: #2c43b8;
   --dsh-claude-logo-ink: #4d6bfe;
-  --dsh-claude-canvas: #f7faff;
-  --dsh-claude-sidebar-canvas: #f3f7fe;
-  --dsh-claude-chip: #eef3fb;
-  --dsh-claude-table-head: #eaf0f9;
-  --dsh-claude-scrollbar: rgba(199, 210, 230, 0.9);
+  --dsh-claude-canvas: #fafbff;
+  --dsh-claude-sidebar-canvas: #f7f9ff;
+  --dsh-claude-chip: #f2f6fd;
+  --dsh-claude-table-head: #eff3fb;
+  --dsh-claude-scrollbar: rgba(206, 216, 233, 0.9);
   --dsh-claude-scrollbar-hover: rgba(129, 133, 140, 0.8);
 }
 
@@ -289,7 +293,7 @@ html:has(body[data-dsh-claude-style]:not([data-ds-dark-theme])) {
 }
 
 html:has(body[data-dsh-claude-style][%%BRAND_ATTR%%="%%BRAND_DEEPSEEK%%"]:not([data-ds-dark-theme])) {
-  background-color: #f7faff !important;
+  background-color: #fafbff !important;
 }
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) #root {
   background-color: var(--dsh-claude-canvas) !important;
