@@ -191,6 +191,14 @@
     "usernamePlaceholder": { "zh": "自动解析账号或系统用户", "en": "Auto-detect account or host user" },
     "brandDeepseek": { "zh": "DeepSeek", "en": "DeepSeek" },
     "brandClaude": { "zh": "Claude", "en": "Claude" },
+    "motionTitle": { "zh": "动画效果", "en": "Animation" },
+    "motionDesc": {
+      "zh": "「随系统」跟随 Windows 自己的「显示动画」设置；「减弱」无论系统怎么设置都把动画停在代表帧上；「总是」无论系统怎么设置都播放动画。后台任务的转圈在三种设置下都照常转动——停住的圈读起来像坏了，而不是安静。",
+      "en": "Follow the system keeps Windows' own \"show animations\" setting in charge. Reduced holds every animation on its still frame whatever the system says, and Always plays them whatever the system says; the background-work ring turns in every setting, since a still ring reads as broken rather than as calm."
+    },
+    "motionSystem": { "zh": "随系统", "en": "Follow the system" },
+    "motionReduced": { "zh": "减弱", "en": "Reduced" },
+    "motionFull": { "zh": "总是", "en": "Always" },
     "scopeOff": { "zh": "关闭", "en": "Off" },
     "scopeHero": { "zh": "仅首页", "en": "Home only" },
     "scopeConversation": { "zh": "仅对话", "en": "Conversation only" },
