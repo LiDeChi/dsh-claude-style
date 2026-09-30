@@ -530,7 +530,10 @@
       // The crab rides the hero card, drawn from the two inlined strips. The
       // pointer leaving it starts the routine: under half a second in it is
       // blinking, off the resting frame, and past the routine's 3.44 seconds it
-      // rests again — and no frame of it wakes a pass.
+      // rests again — and no frame of it wakes a pass. The wait is the routine's
+      // own duration plus a quarter, not a race: timer callbacks run late on a
+      // loaded machine, and a margin of a few hundred milliseconds read a crab
+      // still mid-routine as one that never came back to rest.
       var mascot = document.querySelector('[data-composer-card] > .dsh-claude-mascot')
       var mascotFrame = function () { return mascot.style.getPropertyValue('--dsh-claude-mascot-frame') }
       r.mascot = { mounted: mascot !== null }
@@ -551,24 +554,24 @@
         await sleep(450)
         r.mascot.early = mascotFrame()
         r.mascot.earlyShift = getComputedStyle(mascotBody).backgroundPositionX
-        await sleep(3300)
+        await sleep(4300)
         r.mascot.settled = mascotFrame()
         r.mascot.passesDuring = window.__passes - passesBefore
-        // Under reduced motion the pointer passing by leaves it still, and a
-        // click still plays it.
-        var matchMedia = window.matchMedia
-        window.matchMedia = function (query) {
-          return query === '(prefers-reduced-motion: reduce)' ? { matches: true } : matchMedia.call(window, query)
-        }
+        // With the animation choice set to "reduced" the pointer passing by
+        // leaves it still, and a click still plays it. The choice is pushed
+        // through the host form, which is what the settings row does.
+        window.__pushForm({ motion: 'reduced' })
+        await sleep(150)
+        r.mascot.reducedAttr = document.body.getAttribute('data-dsh-claude-motion')
         mascot.querySelector('.dsh-claude-mascot-hit').dispatchEvent(new PointerEvent('pointerleave'))
         await sleep(450)
         r.mascot.reducedLeave = mascotFrame()
         mascot.querySelector('.dsh-claude-mascot-hit').dispatchEvent(new MouseEvent('click', { bubbles: true }))
         await sleep(450)
         r.mascot.clicked = mascotFrame()
-        await sleep(3300)
+        await sleep(4300)
         r.mascot.clickSettled = mascotFrame()
-        window.matchMedia = matchMedia
+        window.__pushForm({ motion: 'full' })
       }
       // The cold start screen: no session yet, so the host renders no dock
       // under the hero stack and no access button, and the card is the

@@ -171,6 +171,11 @@
         { value: BRAND_CLAUDE, label: settingsCopy('brandClaude', 'Claude') },
         { value: BRAND_ANTHROPIC, label: settingsCopy('brandAnthropic', 'Anthropic') },
       ]
+      const motionOptions = [
+        { value: MOTION_SYSTEM, label: settingsCopy('motionSystem', 'Follow the system') },
+        { value: MOTION_REDUCED, label: settingsCopy('motionReduced', 'Reduced') },
+        { value: MOTION_FULL, label: settingsCopy('motionFull', 'Always') },
+      ]
       const scopeOptions = [
         { value: 'off', label: settingsCopy('scopeOff', 'Off') },
         { value: 'hero', label: settingsCopy('scopeHero', 'Home only') },
@@ -232,6 +237,12 @@
           settingsCopy('brandTitle', 'Brand mark'),
           settingsCopy('brandDesc', 'The brand mark in the sidebar and on the home page. DeepSeek keeps the host\'s own DeepSeek mark in DeepSeek blue, turns the whole palette blue (a sky-tinted white in light, a blue-black in dark) and puts Deepy the pixel whale on the composer in place of the crab.'),
           segment(brandOptions, prefs.brand, value => { write({ brand: value }) }),
+        ),
+        row(
+          'motion',
+          settingsCopy('motionTitle', 'Animation'),
+          settingsCopy('motionDesc', 'Follow the system keeps Windows\' own "show animations" setting in charge. Reduced holds every animation on its still frame whatever the system says, and Always plays them whatever the system says; the background-work ring turns in every setting, since a still ring reads as broken rather than as calm.'),
+          segment(motionOptions, prefs.motion, value => { write({ motion: value }) }),
         ),
         row(
           'collapseFooter',

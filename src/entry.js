@@ -22,6 +22,7 @@
         disposePrefsBinding()
         body.removeAttribute('data-dsh-claude-style')
         body.removeAttribute(BRAND_ATTR)
+        body.removeAttribute(MOTION_ATTR)
         body.removeAttribute(FOOTER_ATTR)
         body.removeAttribute(COMPOSER_ATTR)
         body.removeAttribute(HOME_LAYOUT_ATTR)

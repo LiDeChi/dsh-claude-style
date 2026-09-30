@@ -182,12 +182,23 @@
   }
   var launcherCase = LAUNCHER[CASE] !== undefined
   var username = CASE === 'markup' ? MARKUP : CASE === 'desktop' || launcherCase ? '' : 'Tester'
+  var formListeners = []
+  var formValue = { username: username, collapseFooter: true, homeLayout: CASE === 'studio' ? 'studio' : 'classic', brand: CASE === 'deepy' ? 'off' : undefined }
   var form = {
     // The deepy case stores the DeepSeek brand under the value earlier builds
     // wrote for it ("off"), which has to read as the DeepSeek brand.
-    getSnapshot: function () { return { status: 'ready', value: { username: username, collapseFooter: true, homeLayout: CASE === 'studio' ? 'studio' : 'classic', brand: CASE === 'deepy' ? 'off' : undefined } } },
-    subscribe: function () { return function () {} },
+    getSnapshot: function () { return { status: 'ready', value: formValue } },
+    subscribe: function (listener) {
+      formListeners.push(listener)
+      return function () {}
+    },
     set: function () { return Promise.resolve(true) },
+  }
+  // The settings store, driven by hand: __pushForm writes a value and notifies
+  // the skin's subscription, which is what the settings page's own writes do.
+  window.__pushForm = function (patch) {
+    Object.assign(formValue, patch)
+    for (var i = 0; i < formListeners.length; i++) formListeners[i]()
   }
   var profile = CASE === 'markup'
     ? { name: MARKUP, avatarUrl: 'https://cdn.example.invalid/a.png?"><img src=x onerror=window.__pwned=1> onmouseover=window.__pwned=1' }

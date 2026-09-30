@@ -53,6 +53,7 @@
 
     let prefs = {
       brand: DEFAULT_BRAND,
+      motion: DEFAULT_MOTION,
       collapseFooter: true,
       autoPopover: DEFAULT_AUTO_POPOVER,
       composerScope: 'all',
@@ -292,9 +293,53 @@
       // The brand is one attribute write; the other preferences gate rules the
       // stylesheet and the scheduler read directly.
       document.body.setAttribute(BRAND_ATTR, next.brand)
+      writeMotionAttribute(next.motion)
       if (next.collapseFooter && !footerTakeoverRetired) document.body.setAttribute(FOOTER_ATTR, '')
       else document.body.removeAttribute(FOOTER_ATTR)
       notifyAll(prefsListeners, next)
+    }
+
+    /** Whether the operating system asks for reduced motion right now. */
+    function systemPrefersReducedMotion() {
+      return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    }
+
+    /**
+     * Resolve the animation choice onto the document.
+     *
+     * Only the two answers the rest of the plugin acts on reach the attribute:
+     * a stylesheet cannot rewrite its own media queries, so "always play" has to
+     * be expressible as a value the rules can test.
+     *
+     * @param mode - one of MOTION_MODES.
+     */
+    function writeMotionAttribute(mode) {
+      const reduced = mode === MOTION_REDUCED || (mode !== MOTION_FULL && systemPrefersReducedMotion())
+      document.body.setAttribute(MOTION_ATTR, reduced ? MOTION_REDUCED : MOTION_FULL)
+    }
+
+    /**
+     * Re-resolve the current choice. The scheduler calls this when the system's
+     * own setting flips, which "follow the system" has to pick up mid-session.
+     */
+    function refreshMotionAttribute() {
+      writeMotionAttribute(prefs.motion)
+    }
+
+    /**
+     * Whether the skin must hold its animations still, right now.
+     *
+     * The mascots ask this instead of the media query: the query cannot express
+     * "always play" while the system asks for reduced motion, and the resolved
+     * attribute can. Before the first adoption (or with no settings store at
+     * all) the shipped answer is the system's, which is what the attribute is
+     * written with at install.
+     */
+    function motionReduced() {
+      const resolved = document.body.getAttribute(MOTION_ATTR)
+      if (resolved === MOTION_REDUCED) return true
+      if (resolved === MOTION_FULL) return false
+      return systemPrefersReducedMotion()
     }
 
     /**
@@ -361,6 +406,7 @@
       const section = value && typeof value === 'object' ? value : {}
       return {
         brand: normalizeBrand(section.brand),
+        motion: MOTION_MODES.includes(section.motion) ? section.motion : DEFAULT_MOTION,
         collapseFooter: section.collapseFooter !== false,
         autoPopover: normalizeAutoPopover(section.autoPopover),
         composerScope: !COMPOSER_SCOPES.includes(section.composerScope) ? 'all' : section.composerScope,

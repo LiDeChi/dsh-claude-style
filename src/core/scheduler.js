@@ -228,6 +228,16 @@
       const prefsUnsubscribe = subscribePrefs(onCopyChange)
       loadPrefs()
 
+      // The system's own reduced-motion setting can flip while the page runs.
+      // Under "follow the system" that is a preference change like any other: it
+      // is re-resolved onto <body> here and one pass repaints what reads it.
+      const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+      function onSystemMotionChange() {
+        refreshMotionAttribute()
+        schedule()
+      }
+      motionQuery.addEventListener('change', onSystemMotionChange)
+
       const modelCopyUnsubscribe = onModelCopyLoaded(onCopyChange)
 
       const usernameUnsubscribe = onUsernameLoaded(() => {
@@ -326,6 +336,7 @@
         window.removeEventListener('scroll', onFixedPopoverViewportChange, true)
         if (localeUnsubscribe !== null) localeUnsubscribe()
         prefsUnsubscribe()
+        motionQuery.removeEventListener('change', onSystemMotionChange)
         modelCopyUnsubscribe()
         usernameUnsubscribe()
         hdslUnsubscribe()

@@ -310,8 +310,9 @@ const CASES = {
       mascot.early !== '0' && mascot.early !== '' && mascot.earlyShift === `${-68 * Number(mascot.early)}px` &&
         mascot.settled === '0' && mascot.passesDuring === 0,
       JSON.stringify(mascot))
-    check('a click reaches the crab; under reduced motion only a click plays the routine',
-      mascot.reachable === true && mascot.reducedLeave === '0' && mascot.clicked !== '0' && mascot.clickSettled === '0',
+    check('a click reaches the crab; with the animation choice on "reduced" only a click plays the routine',
+      mascot.reachable === true && mascot.reducedAttr === 'reduced' && mascot.reducedLeave === '0' &&
+        mascot.clicked !== '0' && mascot.clickSettled === '0',
       JSON.stringify(mascot))
     check('the crab leaves with the hero page', mascot.afterHero === false, JSON.stringify(mascot))
     check('the studio hero mark is on the document on the hero page and off it elsewhere, and the studio rules reach the stack',

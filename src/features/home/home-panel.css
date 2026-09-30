@@ -241,10 +241,8 @@ body[data-dsh-claude-style] .dsh-claude-home-heat[data-skeleton] .dsh-claude-hom
   50% { opacity: 1; }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  body[data-dsh-claude-style] .dsh-claude-home-panel[data-computing] .dsh-claude-home-stat[data-skeleton] .dsh-claude-home-stat-value,
-  body[data-dsh-claude-style] .dsh-claude-home-panel[data-computing] .dsh-claude-home-models[data-skeleton] .dsh-claude-home-model-swatch,
-  body[data-dsh-claude-style] .dsh-claude-home-heat[data-skeleton] .dsh-claude-home-heat-cell {
-    animation: none;
-  }
-}
+/* The skeleton pulse stands down with the rest of the skin's motion when the
+   animation choice resolves to "reduced" (theme/chrome.css): the shared rule
+   holds it on its first frame, and it covers "Always" as well — the media query
+   this used to hang on could not be talked out of the system's own setting. */
+

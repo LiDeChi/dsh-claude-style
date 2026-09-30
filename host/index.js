@@ -170,6 +170,7 @@ function entryIdOf(ctx) {
 /** Defaults, mirrored by the browser half's constants. */
 const PREFS_DEFAULT = Object.freeze({
   brand: 'claude',
+  motion: 'system',
   collapseFooter: true,
   autoPopover: 'all',
   composerScope: 'all',
@@ -241,6 +242,7 @@ export const Config = SchemaFactory === null
   ? undefined
   : SchemaFactory.object({
       brand: volatileField(SchemaFactory.string().default(PREFS_DEFAULT.brand)),
+      motion: volatileField(SchemaFactory.string().default(PREFS_DEFAULT.motion)),
       collapseFooter: volatileField(SchemaFactory.boolean().default(PREFS_DEFAULT.collapseFooter)),
       autoPopover: volatileField(SchemaFactory.string().default(PREFS_DEFAULT.autoPopover)),
       composerScope: volatileField(SchemaFactory.string().default(PREFS_DEFAULT.composerScope)),
@@ -283,6 +285,7 @@ async function loadSchema() {
 function buildPrefsSchema(Schema) {
   return Schema.object({
     brand: Schema.any().default(PREFS_DEFAULT.brand),
+    motion: Schema.any().default(PREFS_DEFAULT.motion),
     collapseFooter: Schema.any().default(PREFS_DEFAULT.collapseFooter),
     autoPopover: Schema.any().default(PREFS_DEFAULT.autoPopover),
     composerScope: Schema.any().default(PREFS_DEFAULT.composerScope),

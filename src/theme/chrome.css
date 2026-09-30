@@ -237,3 +237,23 @@ body[data-dsh-claude-style] [class*="_header"]:has([class*="_tabs"])::after {
   pointer-events: none !important;
   z-index: 1 !important;
 }
+
+/* ---------- the animation choice: reduced motion ---------- */
+/* "Reduced" (the settings page's choice, or the system's own setting while the
+   choice is "follow the system") holds the skin's own animations and transitions
+   still; "always" plays them whatever the system says. The resolved answer rides
+   <body data-dsh-claude-motion> (src/core/prefs.js) because a stylesheet cannot
+   talk a media query out of the system's setting.
+   Scoped to the skin's own nodes by their `dsh-claude-` class prefix and
+   `data-dsh-claude-` marks, so the host's own transitions stay exactly as the
+   host wrote them. Two things keep moving on purpose and are untouched: the
+   segmented controls' sliding pill (its transition rides the pill
+   pseudo-element, and durations do not inherit, so the control's own
+   `transition-duration` never reaches it — the user asked for that slide in
+   every mode) and the background-work ring (theme/sidebar.css — a still ring
+   reads as broken, not as calm). */
+body[data-dsh-claude-style][%%MOTION_ATTR%%="%%MOTION_REDUCED%%"] :is([class*="dsh-claude-"], [data-dsh-claude-]) {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}

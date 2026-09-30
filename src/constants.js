@@ -200,6 +200,23 @@
     const BRAND_ATTR = 'data-dsh-claude-brand'
 
     /**
+     * The animation choice, and the document attribute it resolves onto.
+     *
+     * Three values in the settings page, two on the document: `system` follows
+     * the operating system's own reduced-motion setting, `reduced` holds every
+     * animation still whatever the system says, and `full` always plays them.
+     * The resolved answer rides <body> as MOTION_ATTR (`reduced` / `full`), so
+     * the mascots and the stylesheets read one value instead of asking the
+     * system separately — which is the only way "always play" can override it.
+     */
+    const MOTION_SYSTEM = 'system'
+    const MOTION_REDUCED = 'reduced'
+    const MOTION_FULL = 'full'
+    const MOTION_MODES = [MOTION_SYSTEM, MOTION_REDUCED, MOTION_FULL]
+    const DEFAULT_MOTION = MOTION_SYSTEM
+    const MOTION_ATTR = 'data-dsh-claude-motion'
+
+    /**
      * Deepy's animations (src/features/mascot/whale.js), one sheet each under
      * src/assets/mascot/deepy/. The build copies the sheets to lib/deepy/ and
      * the host half serves them under DEEPY_ROUTE, so the browser loads a

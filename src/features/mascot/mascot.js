@@ -47,11 +47,6 @@
       let stepTimer = null
       let idleTimer = null
 
-      /** Whether the reader asks the system for reduced motion, as of now. */
-      function reducedMotion() {
-        return window.matchMedia('(prefers-reduced-motion: reduce)').matches
-      }
-
       function build() {
         root = buildElement('span', 'dsh-claude-mascot')
         root.setAttribute('aria-hidden', 'true')
@@ -77,13 +72,14 @@
       }
 
       /**
-       * Play the routine once. Under reduced motion only a click plays it — the
-       * reader asked for it by name; the pointer passing by and the idle timer
-       * do not.
+       * Play the routine once. With the skin holding animations still (the
+       * settings page's animation choice, resolved onto <body>) only a click
+       * plays it — the reader asked for it by name; the pointer passing by and
+       * the idle timer do not.
        */
       function play(event) {
         if (playing || root === null || !root.isConnected) return
-        if (reducedMotion() && !(event && event.type === 'click')) return
+        if (motionReduced() && !(event && event.type === 'click')) return
         playing = true
         let step = 0
         function next() {
