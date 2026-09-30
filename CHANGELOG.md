@@ -2,17 +2,65 @@
 
 All notable changes to `dsh-claude-style` are documented here, newest first.
 
-## [Unreleased]
+## [0.10.2] - 2026-09-30
 
-[中文](#cn-unreleased) | [English](#en-unreleased)
+[中文](#cn-0.10.2) | [English](#en-0.10.2)
 
-<h3 id="cn-unreleased">其他变更</h3>
+<h3 id="cn-0.10.2">新增功能</h3>
+
+- **设置页新增「动画效果」，三档可选**：「随系统」跟随 Windows 自己的「显示动画」设置（原来的行为）；「减弱」把动画停在代表帧上、界面的过渡压到瞬时；「总是」无论系统怎么设置都播放动画。系统设置中途变化时立即按新值生效。后台任务的转圈在三种设置下都照常转动，停住的圈读起来像坏了而不是安静。
+
+### 体验优化
+
+- **小鲸鱼 Deepy 的帧图改为浏览器端矢量化播放**：每张动画表图第一次被用到时，在页面里把 PNG 像素重建成 SVG（按颜色合并同行游程）再播放——浏览器按显示尺寸栅格化矢量，内存里只留显示大小的小图（原先整张大位图常驻，18 张全解码的理论上限约 144 MB），且任意屏幕缩放比例下都锐利。转换结果以表图自己的内容戳为键缓存，一张表只有自己的像素变了才重转；转换失败的表按原 PNG 播放，与之前行为一致。实测每张表的一次性转换约 50–95 毫秒，生成的矢量与原图逐像素一致。
+- **流式输出期间界面的每帧开销约减半**：一轮功能刷新的实测中位耗时从 6.6 毫秒降到 3.0 毫秒（p90 从 9.4 降到 3.2，同页同法对比）。三处改动：思考档位开关的摆放原来每轮都「写外边距再读位置」强制两次重排，现在只在档位文字变化时量一次、位置值不变不写（该功能单轮耗时 2.24 → 0.007 毫秒）；上下文计量环的宽度原来每轮读取（流式期间等于每轮一次强制布局），现在只在百分比读数或重绘范围变化时量；其余功能的刷新维持「只读必要节点、只写变化值」。
+- **小鲸鱼 Deepy 的播放交给浏览器的动画引擎**：换帧从「每 50 毫秒一次定时器改写 background-position（每帧一次主线程重绘）」改为「胶片条 transform 平移 + WAAPI steps 关键帧」——循环动画播放期间主线程完全没有 JS 运行，换帧只走合成器。状态机、减弱动态效果下的静止帧、点击戳刺与抬起反应的行为不变；冒烟测试核对帧在前进、且不唤醒任何界面刷新。
+- **DeepSeek 档的亮色背景蓝更淡**：亮色画布由 `#F7FAFF` 换成 `#FAFBFF`，侧栏 `#F7F9FF`，各层底色、分段控件与开关底板、表头、滚动条按同样的幅度调淡，整页的蓝现在只是白底上的一层色调。暗色配色不变。
+- **会话的数字收进上下文弹层，输入行不再挂那行小字**：输入卡片下方原来那行「2 轮 158 步 · 242 tok/s · 32M tok · 缓存命中 99%」及其悬停展开的卡片一并去掉；这些数字（模型用时、工具调用用时、首 token 平均、输出速度，以及缓存命中、未缓存输入、缓存读取、输出）现在追加在上下文计量环的弹层里，排在宿主自己的上下文明细下方，弹层开着的时候跟着会话实时更新。该弹层改为悬停弹起（跟随「悬停打开弹层」偏好，指针离开即收起），点击打开也照旧可用；它本来是「啪」地出现，现在与皮肤自建的卡片一样淡入上浮。数字还没到时，那块位置先按同样的高度占住（两个小标题下面是与真实行等高的占位条），不会出现弹层先矮后高；占位最多保留 2 秒，之后让位给宿主自己画的版面。
+
+### 问题修复
+
+- **已归档列表的会话标题不再默认是黑色**：静止时与进行中的会话一样用次级灰，只有指针停在行上或键盘焦点进入行时才是主文字色。
+- **桌面端封号彩蛋页不再重复出现窗口按钮，Claude 标贴着顶栏**：Windows 桌面壳的最上面一行是系统层，它自己画了最小化、最大化、关闭三个按钮；彩蛋页以前又画了一套，顶栏上于是出现两排按钮。现在这页不画自己那套，星芒标与字标、「退出登录」直接排进系统顶栏那一行，那一行也跟着页面换成象牙白或暖黑；按住这一行的空白处仍然可以拖动窗口。
+- **封号彩蛋页在 DeepSeek 档下也显示 Claude 标**：以前选 DeepSeek 时页面上只剩「Claude」文字、旁边的星芒被去掉；这页复刻的是 Claude 自己的界面，现在两档都画完整的 Claude 字标。
+- **账号弹层不再先贴着底部出现再往上跳**：宿主的账号卡片挂载时只带它自己那三行，皮肤的行晚一帧进入，卡片随之变高，宿主再晚一帧按新的高度重新摆位。此前这次重新摆位发生在卡片已经淡入到约三分之一的时候，于是看到的是它先停在偏下的位置、再跳上去。现在卡片在皮肤的行走位完成之前不上色，入场动画从它最终的高度与位置开始播放。
+
+### 移除
+
+- **删除 Anthropic 品牌档**：设置页「修改品牌标识」只剩 DeepSeek 与 Claude 两档；已经存过 `anthropic` 的设置读作 Claude（这一档的标识与配色本来就与 Claude 相同）。
+
+### 其他变更
 
 - **README 的小鲸鱼介绍附上动图**：「特点」里小鲸鱼 Deepy 一条下面加了八张 GIF，分别是空闲、思考、写回答与调用工具、指挥子代理、等你操作、失败、完成与睡着。仓库里的 Deepy 展示页因体积过大（约 7.6 MB）移除，全部 20 个动画的 GIF 仍在 `showcase/gifs/`。
 
-<h3 id="en-unreleased">Chores</h3>
+<h3 id="en-0.10.2">New Features</h3>
+
+- **A new Animation setting with three choices**: Follow the system keeps Windows' own "show animations" setting in charge (the previous behaviour); Reduced holds every animation on its still frame and takes the interface's transitions down to nothing; Always plays them whatever the system says. A change to the system setting lands immediately. The background-work ring turns in all three, since a still ring reads as broken rather than as calm.
+
+### Improvements
+
+- **Deepy's animation sheets now play as vectors generated in the browser**: the first time an animation is wanted, its sheet's PNG pixels are rebuilt as SVG (same-color runs of a row merged into one path per color) and that vector is what plays — the browser rasterizes it at the size the whale is drawn, so memory holds only that small image (the sheets used to stay decoded whole, with a theoretical ceiling around 144 MB for all eighteen), and the whale is sharp at every display scale. Generated vectors are cached under each sheet's own content stamp, so a sheet is re-converted only when its own pixels change; a sheet that decodes but does not convert plays as the PNG it came from, exactly as before. Measured locally: a one-time 50–95 ms per sheet, and the generated vector is pixel-identical to the source.
+- **The per-frame cost of streaming is roughly halved**: a measured feature-refresh pass went from a 6.6 ms median to 3.0 ms (p90 from 9.4 to 3.2, same page, same method). The effort control's placement used to force two reflows per pass (write a margin, read the box back); it now measures only when the level's label changes and writes only moved values (that feature alone went from 2.24 ms to 0.007 ms a pass). The context meter's width used to be read every pass — a forced layout each pass while streaming — and is now re-measured only when the percentage reading or the restyle scope changes.
+- **Deepy now plays on the browser's animation engine**: frame changes move from a 50 ms timer rewriting background-position (a main-thread repaint per frame) to a filmstrip translated by WAAPI steps keyframes — while a loop plays, no JS runs on the main thread at all and frames composite instead of repaint. The state machine, the still frames under reduced motion, and the poke/lift reactions behave exactly as before; the smoke suite checks that frames advance without waking a single skin pass.
+- **A paler blue behind the DeepSeek brand's light palette**: the light canvas moves from `#F7FAFF` to `#FAFBFF`, the sidebar to `#F7F9FF`, and the raised layers, segmented-control and switch plates, table headers and scrollbars step back with them, so the blue now reads as a tint on white. The dark palette is unchanged.
+- **The session's numbers moved into the context popover, and the composer row no longer carries them**: the "2 turns 158 steps · 242 tok/s · 32M tok · Cache hit 99%" line under the input card and the card it opened on hover are both gone; those numbers (model time, tool-call time, average time to first token, output speed, and cache hits, uncached input, cache reads, output) are appended to the context meter's popover, under the host's own context rows, and follow the session while that popover stays open. The popover now opens on hover — following the "open popovers on hover" preference, and folding away when the pointer leaves — while a click still opens it, and it fades and rises in the way the skin's own cards do instead of popping. Until the numbers arrive, that block holds their height (bars as tall as real rows, under the two real headings), so the popover never opens short and grows; the place is held for at most 2 seconds, after which the host's own layout stands.
+
+### Bug Fixes
+
+- **Archived conversations no longer rest in black**: an archived title sits in the same grey as the host's own session rows and takes the primary ink only while the pointer is on its row or the keyboard focus is in it.
+- **The account-hold page on the Desktop no longer draws a second set of window buttons, and its Claude lockup sits on the titlebar row**: the top row of a Windows Desktop window belongs to the system, which paints minimize, maximize and close there; the page used to draw its own three as well, so the titlebar showed two rows of buttons. It draws none of its own now — the starburst and wordmark and the Sign out button take their place in that row, the row takes the page's ivory or warm black, and the window is still dragged by the empty part of it.
+- **The account-hold page shows the Claude lockup under the DeepSeek brand too**: choosing DeepSeek used to leave the bare "Claude" text with the starburst dropped; the page reproduces Claude's own screen, so both brands now draw the full Claude lockup.
+- **The account popover no longer appears against the bottom edge and jumps up**: the host mounts its card with its own three rows and places it from that geometry, the skin's rows arrive a frame later so the card grows, and the host re-places it a frame after that. That re-placement used to land when the card had already faded to about a third, so it read as appearing low and then jumping. The card now stays unpainted until the skin's rows are in it and its placement has settled, and the entrance animation plays from its final height and place.
+
+### Removals
+
+- **The Anthropic brand choice is deleted**: the settings page's Brand mark row offers DeepSeek and Claude only, and a stored `anthropic` reads as Claude, whose marks and palette it already shared.
+
+### Chores
 
 - **The README's Deepy entry now shows it moving**: eight GIFs sit under the Deepy item in Features — idle, thinking, answering and calling tools, conducting subagents, waiting on you, failed, finished and asleep. The repository's Deepy showcase page is removed for its size (about 7.6 MB); GIFs of all 20 animations remain in `showcase/gifs/`.
+
+**Full Changelog**: [v0.10.1...v0.10.2](https://github.com/Nwflower/dsh-claude-style/compare/v0.10.1...v0.10.2)
 
 ## [0.10.1] - 2026-09-28
 
