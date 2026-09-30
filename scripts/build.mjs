@@ -323,6 +323,8 @@ const SVG_TOKENS = {
   CLAUDE_MARK: 'claude-mark.svg',
   CLAUDE_WORD: 'claude-word.svg',
   CLAUDE_MARK_CLAY: 'claude-mark-clay.svg',
+  // The account row's picture when no avatar is behind it, under the Claude
+  // brand: Anthropic's own mark.
   ANTHROPIC_MARK: 'anthropic-mark.svg',
   // The host's own whale mark (ui-primitives FishLogo, FISH_LOGO_PATH), in
   // DeepSeek's brand blue: a picture where it is painted, a shape where it masks.

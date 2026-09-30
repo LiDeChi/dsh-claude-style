@@ -26,9 +26,10 @@ blue. The single accent is DeepSeek's brand blue `#4D6BFE` — the colour of its
 whale logo and of Deepy — with a darker step for text links on the light canvas
 and a lighter one on the dark; the sidebar's whale and wordmark and the hero's
 fish take it as their ink. The neutrals are the host's own cool family (its
-`neutral-bluish` ramp) under a sky-tinted white in light and a blue-black in
-dark. User bubbles take a blue tint as the host's own do, and inline code keeps
-the body ink as the host draws it. The skin's Claude marks (the account row's
+`neutral-bluish` ramp) under a white carrying only a hint of sky in light and a
+blue-black in dark. User bubbles take a blue tint as the host's own do, and
+inline code keeps the body ink as the host draws it. The skin's Claude marks
+(the account row's
 picture without an avatar, the turn status line's spark) become DeepSeek's
 whale (`src/assets/brand/deepseek-mark.svg`, the host's `FISH_LOGO_PATH`); the
 violet top rung of the reasoning slider stays.
@@ -40,16 +41,16 @@ violet top rung of the reasoning slider stays.
 | link | `#C6613F` / `#A94F2F` | `#3B56D9` / `#2C43B8` | `#E08A6D` / `#F0A488` | `#8FA4FF` / `#B0C0FF` | text link at rest / under the pointer |
 | markdown link | `#184F95` | `#3B56D9` | `#8AB4F8` | `#8FA4FF` | `--dsh-claude-link` |
 | brand art | `#141413` | `#4D6BFE` | `#FAF9F5` | `#4D6BFE` | sidebar whale and wordmark, `--dsh-claude-logo-ink` |
-| canvas | `#FCFCFB` | `#F7FAFF` | `#141413` | `#13161D` | bg base / layer 1, `--dsh-claude-canvas` |
-| sidebar | `#FBFBF9` | `#F3F7FE` | `#141413` | `#13161D` | sidebar, `--dsh-claude-sidebar-canvas` |
-| layers | `#FBFBF9` / `#F9F9F6` | `#F3F7FE` / `#EFF4FD` | `#242320` / `#2E2C29` | `#212631` / `#2A303C` | layer 2 / layer 3 |
+| canvas | `#FCFCFB` | `#FAFBFF` | `#141413` | `#13161D` | bg base / layer 1, `--dsh-claude-canvas` |
+| sidebar | `#FBFBF9` | `#F7F9FF` | `#141413` | `#13161D` | sidebar, `--dsh-claude-sidebar-canvas` |
+| layers | `#FBFBF9` / `#F9F9F6` | `#F7F9FF` / `#F4F7FE` | `#242320` / `#2E2C29` | `#212631` / `#2A303C` | layer 2 / layer 3 |
 | raised card | canvas | canvas | `#1E1E1D` | `#1B1F28` | popovers, menus, search palette, `--dsh-claude-raised` |
-| hairlines | `#E8E6DC` / `#DEDCD2` / `#D0CDC1` | `#E1E8F4` / `#D6DFEE` / `#C7D2E6` | `#242320` / `#2E2C29` / `#3A3833` | `#212631` / `#2A303C` / `#363D4B` | border l1 / l2 / l3 |
-| solid hover | `#F0EFE9` | `#E9EFF9` | `#2E2C29` | `#2A303C` | the host's solid hover chip |
-| chip | `#F6F6F4` | `#EEF3FB` | selector | selector | segmented control and switch at rest, `--dsh-claude-chip` |
-| table head | `#F0F0EF` | `#EAF0F9` | `#242320` | `#212631` | `--dsh-claude-table-head` |
+| hairlines | `#E8E6DC` / `#DEDCD2` / `#D0CDC1` | `#E7ECF7` / `#DDE4F1` / `#CFD8EA` | `#242320` / `#2E2C29` / `#3A3833` | `#212631` / `#2A303C` / `#363D4B` | border l1 / l2 / l3 |
+| solid hover | `#F0EFE9` | `#EEF3FC` | `#2E2C29` | `#2A303C` | the host's solid hover chip |
+| chip | `#F6F6F4` | `#F2F6FD` | selector | selector | segmented control and switch at rest, `--dsh-claude-chip` |
+| table head | `#F0F0EF` | `#EFF3FB` | `#242320` | `#212631` | `--dsh-claude-table-head` |
 | inks | `#141413` / `#6E6A60` / `#8F8A7E` / `#A6A094` | `#0F1115` / `#61666B` / `#81858C` / `#ADB2B8` | `#FAF9F5` / `#B0AEA5` / `#8F8D84` / `#6B6A65` | `#EEF1F8` / `#AEB5C4` / `#8A92A3` / `#666E7E` | label primary / secondary / tertiary / caption |
-| user bubble | hover wash | `#E6EDFD` | host's | `#232A3A` | `--dsw-specific-bubble` |
+| user bubble | hover wash | `#EAF0FE` | host's | `#232A3A` | `--dsw-specific-bubble` |
 | hover wash | `rgba(0, 0, 0, 0.08)` | `rgba(38, 49, 72, 0.08)` | `rgba(255, 255, 255, 0.08)` | `rgba(255, 255, 255, 0.08)` | `--dsh-claude-hover-bg` |
 
 **Host token bindings.** The skin supplies its palette through the host's own
@@ -144,21 +145,24 @@ start clipping descenders. The fill, hairline, radius and size are unchanged.
 ## Popovers · 多选一弹层
 
 Every single-choice popover in the skin — the permission menu, the model picker,
-the account drawer, the session-stats card, and the host's own menu primitive
-under the hero row's workspace and preset pickers — is meant to start from one
-recipe. New popovers take it rather than inventing a card.
+the account drawer, and the host's own menu primitive under the hero row's
+workspace and preset pickers — is meant to start from one recipe. New popovers
+take it rather than inventing a card.
 
 Two rules hold across all of them, both owned by `shared/popover.js`. A
 pointer opens a card only after a **100 ms dwell** — long enough that crossing a
 28px trigger on the way somewhere else unfolds nothing — and the card closes
-100 ms after the pointer leaves. Two cards keep their own numbers with the reason
-written where they are used: the model picker's levels close after 150 ms (the
-pointer has to cross level 1 to reach level 2) and the session-stats card waits
-300 ms to open (its sentence sits mid-row, where a passing pointer would trip
-it). And **only one card is on screen at a time**: each popover registers its
-close path with `registerPopover(name, close)` and calls
-`closeOtherPopovers(name)` on the way open, so opening the model picker folds the
-permission menu, the account drawer, the stats card and the host's hero menu.
+100 ms after the pointer leaves. One card keeps its own number with the reason
+written where it is used: the model picker's levels close after 150 ms (the
+pointer has to cross level 1 to reach level 2). And **only one card is on screen
+at a time**: each popover registers its close path with `registerPopover(name,
+close)` and calls `closeOtherPopovers(name)` on the way open, so opening the
+model picker folds the permission menu, the account drawer and the host's hero
+menu.
+
+The context meter's popover is the host's own panel (it portals it, places it,
+and dismisses it), so the skin drives its trigger on hover and paints nothing of
+the shell itself. What it carries is described under "Context popover" below.
 
 **Card**
 
@@ -217,9 +221,56 @@ two-line entries. The workspace card is Claude Code's folder menu: a 180px-min
 card with 4px padding, 26px plain-text rows (no folder glyph in front of each
 folder, no `＋` on the pinned add row) and the accent check on the current one.
 
-**All five are aligned**: the account drawer and the stats card were the outliers
+**The account card** is that primitive too, and it carries the skin's rows
+inside it. The host mounts it with nothing but its own three entries and places
+it from that geometry; `features/account/surface.js` injects the skin's container
+a frame later, the card grows, and the host re-places it on the frame after the
+list changed. Nothing may be painted in between: the card would fade in at the
+height and the place it is about to leave — low, then jumping up mid-fade. So
+while the account row is armed the card stays unpainted (the same armed window
+that carries its one-shot entrance), and the feature stamps
+`data-dsh-claude-account-ready` once the skin's rows are inside it and its
+placement has been read twice with the same value. The entrance animation hangs
+on that stamp, so it plays on the card the reader will actually see.
+
+## Context popover · 上下文弹层
+
+The context meter's popover is the host's own panel: the skin opens it by
+pressing the host's trigger (hover, with the shared 100 ms dwell and close
+grace, gated on the "open popovers on hover" preference; a click still works),
+and paints nothing of its shell, its placement or its dismissal. It mounts
+instead of toggling `data-open`, so the feature stamps the panel and it takes
+the cards' own short rise as a one-shot animation — same 4px, same `scale(.98)`,
+same 0.15s — and a surface the skin opens arrives the same way wherever it is
+the host's.
+
+What the skin appends to it is the session's numbers
+(`features/permissions/session-stats.js`), read from the host's `sessionStats`
+and `tokenUsage` projections — the same durable whole-log values the host's own
+pills render — never by opening the host's stat dialogs. The labels and the
+duration / token templates come from the host's `chat` locale namespace, so the
+two surfaces read the same words; the host's small formatting rules
+(`formatDuration`, `formatTokensPerSecond`, `formatExactTokens`,
+`formatCacheHitPercent`) are mirrored so the figures match character for
+character.
+
+The block: a 1px `var(--dsw-alias-border-l1)` rule and 10px above it, then per
+section an 11px / 16px heading at 600 in `label-tertiary` and a two-column grid
+(6px by 10px). A row is a stack: 12px / 16px label in `label-tertiary` over a
+14px / 20px value at 500 in `label-primary`, the value in tabular figures so
+numbers do not dance as they change. Rows follow the host's own rules — one
+appears only when its input exists — and the block is rewritten on every
+projection frame while the panel is open.
+
+While the projections have answered nothing, the block holds the numbers' place
+under the two real headings: bars at a row's own 37px (16 + 1 + 20) in the host's
+solid hover fill, pulsing over 1.6s (still under the reduced animation choice).
+The place is given up after 2s, so a host that serves no such projection ends at
+the panel it drew itself rather than keeping placeholder bars.
+
+**All five are aligned**: the account drawer was the outlier
 (8px row radius, 2px and 4px card gap, 8px padding, 220 / 260px min-width,
-z-index 1000 and 100000) and now follow the table above. The hero row's pickers are the host's own menu primitive, which differs in
+z-index 1000 and 100000) and now follows the table above. The hero row's pickers are the host's own menu primitive, which differs in
 two ways that CSS cannot change: it mounts instead of toggling a `data-open`
 attribute, so it takes the same fade/scale as a one-shot `0.15s` animation; and
 the host places it *below* its trigger, which is where the composer sits — so
@@ -273,9 +324,10 @@ content size (13px, 24px line), one line with an ellipsis. Parts are joined by
 ` · `: `elapsed · N tokens · action` while the turn runs, `Stopped` or `Failed`
 (the host's words) `· duration · N tokens` after; the token part is left out
 until a finished step has reported usage. While the turn runs the spark turns a
-full circle every 2.4s, breathing down to 78% at the half turn, in every motion
-setting, like the sidebar's background-work ring; a stopped or failed turn's
-spark stands still. A turn that finishes normally keeps the host's own control.
+full circle every 2.4s, breathing down to 78% at the half turn, in every
+animation setting, like the sidebar's background-work ring; a stopped or failed
+turn's spark stands still. A turn that finishes normally keeps the host's own
+control.
 
 ## Home layouts · 首页版面
 
@@ -404,9 +456,10 @@ when the pointer leaves it, and on its own every 25–45 seconds while the page 
 in view, it plays Claude Code's fishing routine, 43 frames of 80ms (3.44s): a
 blink, the rod raised overhead and cast down past the card's edge, a hop into a
 side-on stance, a spell of fishing, and the rod reeled in as it turns back to
-face front. With reduced motion requested, only a click plays it: the pointer
-passing by and the idle timer leave it still. Only the crab takes the pointer;
-the room the rod swings through does not.
+face front. With the animation choice resolved to "reduced" (the settings page's
+Animation row, or the system's own setting under "follow the system"), only a
+click plays it: the pointer passing by and the idle timer leave it still. Only
+the crab takes the pointer; the room the rod swings through does not.
 
 ## Deepy · 小鲸鱼
 
@@ -423,8 +476,9 @@ screens without `image-rendering: pixelated`, which would drop rows on a
 downscale. The body is Deepy's blue `#4E6FFF` with a navy `#142660` outline and
 a white belly in both themes; on the dark canvas the outline and the soft shadow
 recede and the blue body carries the shape. Only the resting body (columns
-12–44, rows 30–48) takes the pointer. With reduced motion requested each state
-holds its still frame; a click or a pull still plays its reaction.
+12–44, rows 30–48) takes the pointer. With the animation choice resolved to
+"reduced" each state holds its still frame; a click or a pull still plays its
+reaction.
 
 | State | Animation | Still frame |
 |---|---|---|
