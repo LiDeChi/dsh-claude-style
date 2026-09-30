@@ -536,8 +536,10 @@ const CASES = {
     check('a finished compaction is celebrated', is(deepy.celebrating, 'happy', 'stack'), JSON.stringify(deepy.celebrating))
     check('a failed tool call shakes it, over the celebration', is(deepy.failed, 'error', 'stack'), JSON.stringify(deepy.failed))
     // The error sheet's still frame is its 24th: column 0, row 3 of 33-pixel-high frames at 2px a pixel.
-    check('under reduced motion it holds the state\'s still frame',
-      !!deepy.still && deepy.still.before === '0px -198px' && deepy.still.after === '0px -198px', JSON.stringify(deepy.still))
+    check('the animation choice resolves onto the document: reduced holds the still frame, always plays',
+      deepy.stillAttr === 'reduced' && deepy.alwaysAttr === 'full' &&
+        !!deepy.still && deepy.still.before === '0px -198px' && deepy.still.after === '0px -198px',
+      JSON.stringify({ stillAttr: deepy.stillAttr, alwaysAttr: deepy.alwaysAttr, frames: deepy.still }))
     check('a compaction whose end comes back with the whole feed after a reconnect stops playing, uncelebrated',
       is(deepy.resendBefore, 'compacting', 'stack') && is(deepy.resent, 'idle', 'stack'),
       JSON.stringify({ before: deepy.resendBefore, after: deepy.resent }))
