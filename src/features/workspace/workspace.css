@@ -161,11 +161,23 @@ body[data-dsh-claude-style] .dsh-claude-archive-row {
   padding: 0 6px !important;
   border-radius: 6px !important;
   cursor: pointer !important;
-  color: var(--dsw-alias-label-primary, #141413) !important;
+  /* The host's 进行中 rows rest in the secondary ink and darken under the pointer;
+     the archived list reads the same way, so an archived conversation does not
+     sit there looking selected. */
+  color: var(--dsw-alias-label-secondary, #787672) !important;
   font-family: var(--dsw-font-family) !important;
   font-size: 13px !important;
   font-weight: 400 !important;
-  transition: background-color 0.12s ease !important;
+  transition: background-color 0.12s ease, color 0.12s ease !important;
+}
+body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-archive-row {
+  color: var(--dsh-claude-session-ink) !important;
+}
+body[data-dsh-claude-style] .dsh-claude-archive-row:is(:hover, :focus-visible) {
+  color: var(--dsw-alias-label-primary, #141413) !important;
+}
+body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-archive-row:is(:hover, :focus-visible) {
+  color: var(--dsh-claude-ink-strong) !important;
 }
 /* The leading slot the host's rows carry (a 5px circle centred in 14px), so the
    two lists start their titles at the same x. */
