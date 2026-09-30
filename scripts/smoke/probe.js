@@ -280,26 +280,12 @@
     var from = window.__passes
     await sleep(1000)
     r.idlePasses = window.__passes - from
-    // The stats row's host mode and the two structures' treatment. Detailed
-    // gets the merged sentence (icons hidden, our separator); compact keeps the
-    // host's icon readings and spacing and opens no card.
+    // The host's stats row is hidden outright, in both of its shapes: its pills
+    // stay in the document as the read's own click targets, and their dialogs
+    // are read into the context popover instead (the 'default' case below).
     var statsRoot = document.querySelector('[data-composer-stats]')
-    r.statsMode = statsRoot ? statsRoot.getAttribute('data-dsh-claude-stats-mode') : null
-    r.statsIcons = statsRoot ? Array.prototype.map.call(statsRoot.querySelectorAll('svg'), function (svg) {
-      return getComputedStyle(svg).display
-    }) : null
-    var statsSpans = statsRoot ? statsRoot.children : null
-    r.statsSep = statsSpans && statsSpans.length > 1 ? getComputedStyle(statsSpans[1], '::before').content : null
-    if (window.SMOKE_CASE === 'stats-compact' && statsRoot) {
-      // Dwell past the 300 ms hover delay: a compact row has no trigger to read.
-      statsRoot.dispatchEvent(new MouseEvent('mouseenter'))
-      await sleep(450)
-    }
-    r.statsOpen = document.querySelectorAll('.dsh-claude-stats-popover[data-open="true"]').length
-    if (window.SMOKE_CASE === 'stats-compact' && statsRoot) {
-      statsRoot.dispatchEvent(new MouseEvent('mouseleave'))
-      await sleep(150)
-    }
+    r.statsHidden = statsRoot ? getComputedStyle(statsRoot).display === 'none' : null
+    r.statsStrayCards = document.querySelectorAll('.dsh-claude-stats-popover').length
     // The session list's leading seat. The host's newer rows render it through a
     // slot outlet, so an idle row's seat is not :empty — the circle has to hang
     // on the empty outlet anchor. A seat carrying the running status dot keeps
@@ -430,20 +416,64 @@
         }
       }
     }
-    if (window.SMOKE_CASE === 'default' && statsRoot) {
-      // The host's panels mount on its own commit, later than the skin's old
-      // read window: both sections must still reach the card.
-      statsRoot.dispatchEvent(new MouseEvent('mouseenter'))
-      await sleep(2600)
-      r.statsCardOpen = document.querySelectorAll('.dsh-claude-stats-popover[data-open="true"]').length
-      r.statsCardSections = Array.prototype.map.call(document.querySelectorAll('.dsh-claude-stats-popover-section'), function (s) {
-        return (s.textContent || '').trim()
-      })
-      r.statsCardLabels = Array.prototype.map.call(document.querySelectorAll('.dsh-claude-stats-popover-label'), function (s) {
-        return (s.textContent || '').trim()
-      })
-      statsRoot.dispatchEvent(new MouseEvent('mouseleave'))
+    if (window.SMOKE_CASE === 'context-stats') {
+      // The shown conversation, marked the way the host marks it: the skin reads
+      // the session id off the conversation column, so the card and its dock are
+      // wrapped in the case's own phase/column pair (the dock stays the card's
+      // next sibling, which is what the composer pass measures).
+      var statsCard = document.querySelector('[data-composer-card]')
+      var statsDock = statsCard.nextElementSibling
+      var statsPhase = document.createElement('div')
+      statsPhase.setAttribute('data-phase', 'active')
+      var statsColumn = document.createElement('div')
+      statsColumn.setAttribute('data-conversation-session', 'smoke-stats')
+      statsCard.parentElement.insertBefore(statsPhase, statsCard)
+      statsPhase.appendChild(statsColumn)
+      statsColumn.appendChild(statsCard)
+      statsColumn.appendChild(statsDock)
       await sleep(300)
+      var statsMeter = document.querySelector('[data-dsh-claude-context-meter]')
+      if (statsMeter !== null) statsMeter.dispatchEvent(new MouseEvent('mouseenter'))
+      await sleep(700)
+      // No projection frame yet: the block holds the numbers' place, under the
+      // host's own headings, at a row's own size.
+      var statsSkeleton = document.querySelector('[data-dsh-claude-context-skeleton]')
+      r.context = {
+        panelStamped: document.querySelector('[data-dsh-claude-context-panel]') !== null,
+        skeletonSections: statsSkeleton === null ? null : Array.prototype.map.call(statsSkeleton.querySelectorAll('.dsh-claude-context-stats-section'), function (s) {
+          return (s.textContent || '').trim()
+        }),
+        skeletonRows: statsSkeleton === null ? 0 : statsSkeleton.querySelectorAll('.dsh-claude-context-stats-skeleton-value').length,
+        skeletonItemHeight: statsSkeleton === null ? null : Math.round(statsSkeleton.querySelector('.dsh-claude-context-stats-item').getBoundingClientRect().height),
+      }
+      // The first projection frame: the numbers replace the place, in full.
+      window.__pushStats('sessionStats', { turns: 2, steps: 3, llmMs: 1200, toolMs: 400, ttftMs: 800, ttftSteps: 1, decodeMs: 2000, decodeTokens: 210 })
+      window.__pushStats('tokenUsage', { uncachedInputTokens: 1000, outputTokens: 105, cacheReadTokens: 9000, cacheWriteTokens: 0 })
+      await sleep(200)
+      var statsBlock = document.querySelector('.dsh-claude-context-stats')
+      var statsPanel = statsBlock === null ? null : statsBlock.closest('[role="dialog"]')
+      r.context.opened = statsPanel !== null
+      r.context.expanded = statsMeter === null ? null : statsMeter.querySelector('button').getAttribute('aria-expanded')
+      r.context.hostRows = statsPanel === null ? 0 : statsPanel.querySelectorAll('dl dt').length
+      r.context.skeletonGone = statsBlock !== null && !statsBlock.hasAttribute('data-dsh-claude-context-skeleton')
+      r.context.sections = statsBlock === null ? null : Array.prototype.map.call(statsBlock.querySelectorAll('.dsh-claude-context-stats-section'), function (s) {
+        return (s.textContent || '').trim()
+      })
+      r.context.labels = statsBlock === null ? null : Array.prototype.map.call(statsBlock.querySelectorAll('.dsh-claude-context-stats-label'), function (s) {
+        return (s.textContent || '').trim()
+      })
+      r.context.values = statsBlock === null ? null : Array.prototype.map.call(statsBlock.querySelectorAll('.dsh-claude-context-stats-value'), function (s) {
+        return (s.textContent || '').trim()
+      })
+      // A projection frame while the popover is open: the block is rewritten
+      // from the new value, with no pass and no second hover.
+      window.__pushStats('sessionStats', { llmMs: 61000 })
+      await sleep(150)
+      var statsPushed = document.querySelector('.dsh-claude-context-stats .dsh-claude-context-stats-value')
+      r.context.pushed = statsPushed === null ? null : (statsPushed.textContent || '').trim()
+      if (statsMeter !== null) statsMeter.dispatchEvent(new MouseEvent('mouseleave'))
+      await sleep(500)
+      r.context.closedAfterLeave = document.querySelector('.dsh-claude-context-stats') === null
     }
     var drawer = document.querySelector('.dsh-claude-account-popover-body')
     r.drawer = drawer ? Array.prototype.map.call(drawer.children, function (c) {
@@ -1000,7 +1030,7 @@
       await sleep(200)
       r.passesAfterTeardown = window.__passes - before
       r.leftNodes = document.querySelectorAll('[class*="dsh-claude-"]').length
-      r.leftMarkers = document.querySelectorAll('[data-dsh-claude-footer-entry], [data-dsh-claude-footer-hidden], [data-dsh-claude-footer-overlay], [data-dsh-claude-model-host], [data-dsh-claude-account-host-row], [data-dsh-claude-stats-mode], [data-dsh-claude-turn-state], [data-dsh-claude-turn-status], [style*="--dsh-claude-turn-order"], [data-dsh-claude-deepy-anchor]').length
+      r.leftMarkers = document.querySelectorAll('[data-dsh-claude-footer-entry], [data-dsh-claude-footer-hidden], [data-dsh-claude-footer-overlay], [data-dsh-claude-model-host], [data-dsh-claude-account-host-row], [data-dsh-claude-context-stats], [data-dsh-claude-motion], [data-dsh-claude-turn-state], [data-dsh-claude-turn-status], [style*="--dsh-claude-turn-order"], [data-dsh-claude-deepy-anchor]').length
       r.leftAttrs = Array.prototype.filter.call(document.body.attributes, function (a) { return /^data-dsh-(claude|window)/.test(a.name) }).map(function (a) { return a.name })
       r.leftStylesheet = !!document.getElementById('dsh-claude-style-style')
       if (viewStrip) r.viewPill.left = viewStrip.hasAttribute('data-dsh-claude-pill') || viewStrip.hasAttribute('data-dsh-view-tabs') || viewStrip.style.length > 0

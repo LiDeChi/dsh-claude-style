@@ -98,10 +98,9 @@ const CASES = {
       controls.stopping === 'stop' && controls.back === 'send', JSON.stringify(controls))
     check('teardown takes the control marks off the host controls', r.leftControlMarks === 0, `${r.leftControlMarks} left`)
     check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
-    check('detailed stats keep the merged sentence: host icons hidden, our separator in',
-      r.statsMode === 'detailed' && r.statsIcons !== null && r.statsIcons.length === 2 &&
-        r.statsIcons.every((d) => d === 'none') && r.statsSep !== null && r.statsSep.indexOf('·') !== -1,
-      JSON.stringify({ mode: r.statsMode, icons: r.statsIcons, sep: r.statsSep }))
+    check('the host\'s stats row is hidden and no stats card of the skin\'s own is left',
+      r.statsHidden === true && r.statsStrayCards === 0,
+      JSON.stringify({ hidden: r.statsHidden, cards: r.statsStrayCards }))
     check('synthetic path: the popover carries the header, the plugin rows and the settings row',
       r.drawer !== null && same(r.drawer, ['action', 'embed', 'settings']) && r.syntheticHeader === true,
       JSON.stringify({ drawer: r.drawer, header: r.syntheticHeader }))
@@ -122,15 +121,38 @@ const CASES = {
       r.permAutoRowDisplay !== null && r.permAutoRowDisplay !== 'none' &&
         r.permRows[2].text.indexOf('Auto review') === 0,
       JSON.stringify({ popoverRow: r.permAutoRowDisplay, row: r.permRows[2] }))
-    check('the stats card keeps both sections when the host panels mount late',
-      r.statsCardOpen === 1 && same(r.statsCardSections, ['会话统计', 'Token 用量']),
-      JSON.stringify({ open: r.statsCardOpen, sections: r.statsCardSections }))
-    check('the late card carries both sections\' rows',
-      same(r.statsCardLabels, ['模型用时', '工具调用用时', '缓存命中', '输出']),
-      JSON.stringify(r.statsCardLabels))
     check('the closed drawer takes its parked rows out of the paint tree',
       r.syntheticVisibility === 'hidden' && r.syntheticRowVisibility === 'hidden',
       JSON.stringify({ panel: r.syntheticVisibility, row: r.syntheticRowVisibility }))
+    commonChecks(r)
+  },
+  // The context popover's numbers: read from the host's session projections
+  // (never by opening its stat dialogs) and rendered into the panel's block.
+  'context-stats'(r) {
+    check('apply() completes', r.applyError === null, r.applyError)
+    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    check('the host\'s stats row is hidden, its pills left as the data\'s own surface',
+      r.statsHidden === true && r.statsStrayCards === 0,
+      JSON.stringify({ hidden: r.statsHidden, cards: r.statsStrayCards }))
+    check('the host\'s panel takes the skin\'s own entrance, stamped by the feature',
+      r.context.panelStamped === true, JSON.stringify(r.context.panelStamped))
+    check('with no projection frame yet the block holds the numbers\' place under the real headings',
+      same(r.context.skeletonSections, ['Session statistics', 'Token usage']) &&
+        r.context.skeletonRows === 8 && r.context.skeletonItemHeight === 37,
+      JSON.stringify({ sections: r.context.skeletonSections, rows: r.context.skeletonRows, itemHeight: r.context.skeletonItemHeight }))
+    check('the first projection frame replaces the place with the numbers read from the projections',
+      r.context.opened === true && r.context.expanded === 'true' && r.context.hostRows === 3 &&
+        r.context.skeletonGone === true &&
+        same(r.context.sections, ['Session statistics', 'Token usage']) &&
+        same(r.context.labels, ['LLM time', 'Tool call time', 'Avg time to first token (TTFT)', 'Tokens per second (TPS)', 'Cache hit', 'Uncached input', 'Cached input', 'Output']),
+      JSON.stringify({ opened: r.context.opened, hostRows: r.context.hostRows, gone: r.context.skeletonGone, sections: r.context.sections, labels: r.context.labels }))
+    check('the rows carry the host\'s own formatting: compact durations, exact token counts, a cache-hit share',
+      same(r.context.values, ['1.2s', '0.4s', '0.8s', '105 tok/s', '90%', '1,000 tok', '9,000 tok', '105 tok']),
+      JSON.stringify(r.context.values))
+    check('a projection frame rewrites the block while the popover is open',
+      r.context.pushed === '1m1s', JSON.stringify(r.context.pushed))
+    check('leaving the meter closes the popover and takes the block with it',
+      r.context.closedAfterLeave === true, JSON.stringify(r.context.closedAfterLeave))
     commonChecks(r)
   },
   // The auto mode cases: the ladder follows the host catalog, so a third-party
@@ -236,11 +258,11 @@ const CASES = {
   'stats-compact'(r) {
     check('apply() completes', r.applyError === null, r.applyError)
     check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
-    check('compact stats carry the skin sentence: icons hidden, our separator in',
-      r.statsMode === 'compact' && r.statsIcons !== null && r.statsIcons.length === 2 &&
-        r.statsIcons.every((d) => d === 'none') && r.statsSep.indexOf('·') !== -1,
-      JSON.stringify({ mode: r.statsMode, icons: r.statsIcons, sep: r.statsSep }))
-    check('a hover on compact stats opens no card', r.statsOpen === 0, r.statsOpen + ' open')
+    check('the compact row is hidden too, and no card of the skin\'s own is left',
+      r.statsHidden === true && r.statsStrayCards === 0,
+      JSON.stringify({ hidden: r.statsHidden, cards: r.statsStrayCards }))
+    check('the compact row carries no trigger, so no popover opens for it',
+      r.context === undefined, JSON.stringify(r.context))
     commonChecks(r)
   },
   markup(r) {

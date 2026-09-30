@@ -5,6 +5,15 @@
    the same short rise. Each card's own stylesheet adds only what differs — its
    placement, its width limits, the corner it grows from — and comes later in
    the cascade, so it wins where the two overlap. */
+
+/* The same short rise as a one-shot animation, for a surface that MOUNTS
+   instead of toggling `data-open` (the host's own panels, which the skin opens
+   but does not build). Same distance, same duration, same curve as the card
+   transition above, so every surface the skin opens arrives the same way. */
+@keyframes dsh-claude-popover-in {
+  from { opacity: 0; transform: translateY(4px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
 body[data-dsh-claude-style] .dsh-claude-popover-card {
   background: var(--dsw-alias-bg-overlay, #ffffff) !important;
   border: 1px solid var(--dsw-alias-border-l1, #e8e6dc) !important;

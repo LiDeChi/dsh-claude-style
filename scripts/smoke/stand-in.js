@@ -413,22 +413,46 @@
       binding: function () { return { target: function () { return { getSnapshot: function () { return snapshot } } } } },
     }
   })() : undefined
-  var turnStatusLocale = CASE === 'turn-status' ? {
+  // The host's `chat` locale namespace, the one its own pills read: the skin's
+  // context-popover block takes its labels and its duration / token templates
+  // from here, so the fixture carries the same keys the host registers.
+  var chatTemplates = {
+    'duration.compactSeconds': '{seconds}s',
+    'duration.compactMinutes': '{minutes}m{seconds}s',
+    'number.groupSeparator': ',',
+    'message.tokensPerSecond': '{tps} tok/s',
+    'message.turnUsage.count': '{count} tok',
+    'message.turnUsage.cacheHit': 'Cache hit',
+    'message.turnUsage.input': 'Uncached input',
+    'message.turnUsage.cacheRead': 'Cached input',
+    'message.turnUsage.cacheWrite': 'Cache write',
+    'message.turnUsage.output': 'Output',
+    'stats.dialog.title': 'Session statistics',
+    'stats.dialog.usageTitle': 'Token usage',
+    'stats.dialog.llmTime': 'LLM time',
+    'stats.dialog.toolTime': 'Tool call time',
+    'stats.dialog.ttft': 'Avg time to first token (TTFT)',
+    'stats.dialog.speed': 'Tokens per second (TPS)',
+  }
+  var localeFixture = CASE === 'turn-status' || CASE === 'context-stats' ? {
     getSnapshot: function () { return { active: 'en' } },
     subscribe: function () { return function () {} },
     bind: function () {
-      var templates = {
+      var templates = Object.assign({
         'duration.seconds': '{seconds}s',
         'duration.minutes': '{minutes}m {seconds}s',
         'duration.hours': '{hours}h {minutes}m {seconds}s',
         'message.stopped': 'Stopped',
         'message.turnProcess.failed': 'Failed',
-      }
+      }, chatTemplates)
       return function (key, params) {
-        return (templates[key] || key).replace(/\{(\w+)\}/g, function (match, name) { return String(params[name]) })
+        var template = templates[key] || key
+        if (params === undefined) return template
+        return template.replace(/\{(\w+)\}/g, function (match, name) { return String(params[name]) })
       }
     },
   } : undefined
+  var turnStatusLocale = localeFixture
   // The deepy case: the session the DeepSeek brand's whale follows, as the
   // host's services describe it — the session status (uiSession), the session
   // list with its subagent catalog, the chat snapshot's open turn and the
@@ -517,7 +541,51 @@
       },
     }
   })() : undefined
-  var sessions = CASE === 'deepy' ? deepy.sessions : CASE === 'turn-status' ? {
+  // The context-popover case: the host's two session projections, served as
+  // key-addressed read faces on the session binding — the seat the host's own
+  // useProjection resolves (window.__pushStats writes a new whole value and
+  // notifies the subscribed face, the way a projection frame lands).
+  var statsCase = CASE === 'context-stats' ? (function () {
+    // Both projections start absent, the way a session whose baseline has not
+    // landed yet answers: the skin's block holds the numbers' place until
+    // __pushStats delivers the first frame.
+    var values = { sessionStats: undefined, tokenUsage: undefined }
+    var listeners = {}
+    var faces = {}
+    // Every key answers with a face — absence is an undefined snapshot, never a
+    // missing face (the host's ProjectionValueStore contract), so a reader of a
+    // key this fixture does not carry gets `undefined` instead of a crash.
+    function faceOf(key) {
+      if (faces[key] === undefined) {
+        listeners[key] = []
+        faces[key] = {
+          getSnapshot: function () { return values[key] },
+          subscribe: function (listener) {
+            listeners[key].push(listener)
+            return function () {
+              var at = listeners[key].indexOf(listener)
+              if (at !== -1) listeners[key].splice(at, 1)
+            }
+          },
+        }
+      }
+      return faces[key]
+    }
+    window.__pushStats = function (key, patch) {
+      values[key] = values[key] === undefined ? patch : Object.assign({}, values[key], patch)
+      ;(listeners[key] || []).slice().forEach(function (listener) { listener() })
+    }
+    return {
+      sessions: {
+        list: { getSnapshot: function () { return { current: 'smoke-stats' } } },
+        binding: function (id) {
+          if (id !== 'smoke-stats') return undefined
+          return { sessionId: id, session: { projections: { faceOf: faceOf } } }
+        },
+      },
+    }
+  })() : undefined
+  var sessions = CASE === 'deepy' ? deepy.sessions : CASE === 'context-stats' ? statsCase.sessions : CASE === 'turn-status' ? {
     list: { getSnapshot: function () { return { current: undefined } } },
     binding: function (id) { return id === 'smoke-session' ? {} : undefined },
   } : CASE === 'sync-fault'
@@ -665,6 +733,34 @@
         }, STATS_DIALOG_DELAY_MS)
       })
     })(statsPills[sp], sp)
+  }
+  // The host's context panel: the meter's own trigger opens and closes it, and
+  // the host portals it to <body>. Its rows are a <dl> like the stats dialogs',
+  // so the skin tells the three apart by their markers (the stats dialogs carry
+  // data-session-stats-*, this one carries neither) — see
+  // features/permissions/session-stats.js contextPanel().
+  var meterTrigger = document.getElementById('context-meter')
+  var contextPanel = null
+  if (meterTrigger !== null) {
+    meterTrigger.addEventListener('click', function () {
+      if (contextPanel !== null) {
+        if (contextPanel.parentElement) contextPanel.parentElement.removeChild(contextPanel)
+        contextPanel = null
+        meterTrigger.setAttribute('aria-expanded', 'false')
+        return
+      }
+      meterTrigger.setAttribute('aria-expanded', 'true')
+      contextPanel = document.createElement('div')
+      contextPanel.setAttribute('role', 'dialog')
+      contextPanel.setAttribute('aria-label', '上下文已用')
+      contextPanel.innerHTML = '<div class="_m_header_1"><span>上下文已用</span><span>42%</span></div>' +
+        '<dl class="_m_rows_1">' +
+          '<div class="_m_row_1"><dt>系统提示词</dt><dd>~1.5K</dd></div>' +
+          '<div class="_m_row_1"><dt>工具定义</dt><dd>~7.8K</dd></div>' +
+          '<div class="_m_row_1"><dt>对话消息</dt><dd>~242K</dd></div>' +
+        '</dl>'
+      document.body.appendChild(contextPanel)
+    })
   }
   // Elements are inert unless the probe renders a registered component: then
   // function components run eagerly into a plain tree, and "states" stands in

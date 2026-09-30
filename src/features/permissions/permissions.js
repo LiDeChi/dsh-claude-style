@@ -235,7 +235,7 @@
       let permDocPointerListener = null
       let permResizeListener = null
       /** The session-stats card (src/features/permissions/session-stats.js). */
-      const stats = createSessionStats()
+      const stats = createSessionStats(ctx)
 
       /** Every dismiss route (item pick, outside pointer, resize/scroll, Escape) closes the menu through this one path. */
       function closePermMenu() {

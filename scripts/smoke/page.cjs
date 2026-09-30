@@ -36,8 +36,9 @@ function page(name) {
   // The host's statistics row (ui-chat StatsPills) in each of its two shapes.
   // Detailed wraps each pill in an anchor span and makes the dialog-carrying
   // ones buttons; compact renders bare icon+reading spans with no trigger. The
-  // skin must leave compact's icons and spacing alone and keep its own merged
-  // sentence for detailed.
+  // skin hides the row outright and reads the two dialogs into the context
+  // popover, so the row is the dock's first child here, the way the host parks
+  // it, with the context meter beside it.
   var stats = name === 'stats-compact'
     ? '<div data-composer-stats>' +
         '<span class="_p_pill_1"><svg viewBox="0 0 16 16" width="14" height="14"></svg>20 tok/s</span>' +
@@ -49,6 +50,12 @@ function page(name) {
         '<span class="_a_anchor_1"><button type="button" class="_p_pill_1" aria-haspopup="dialog" aria-expanded="false" aria-label="105 tok · Cache hit 90%">' +
           '<svg viewBox="0 0 16 16" width="14" height="14"></svg><span class="_l_label_1">105 tok · Cache hit 90%</span></button></span>' +
       '</div>'
+  // The host's dock line: the stats row plus the context meter, whose trigger
+  // shows the occupancy reading (that reading is what identifies the meter —
+  // features/composer/composer.js reads the dock's own buttons by it).
+  var dock = '<div class="_x_dock_1">' + stats +
+      '<span class="_m_meter_1"><button type="button" id="context-meter" class="_m_trigger_1" aria-haspopup="dialog" aria-expanded="false" aria-label="Context used 42%">42%</button></span>' +
+    '</div>'
   // The hero row's two pickers, only where the popovers case drives them: each is
   // its own host menu, opened and closed by pressing its own trigger.
   var heroRow = name === 'popovers'
@@ -92,7 +99,7 @@ ${heroRow}
     <div class="_x_trailing_1"><button class="_x_primary_1" aria-label="Send message" id="send"><svg viewBox="0 0 16 16" width="16" height="16"><path d="M8 1v14"/></svg></button></div>
   </div>
 </div>
-${stats}
+${dock}
 ${hostControls}
 <script>window.SMOKE_CASE = ${JSON.stringify(name)}; window.SMOKE_MARKUP = ${JSON.stringify(MARKUP)}; window.SMOKE_PNG = ${JSON.stringify(PNG_1PX)}</script>
 <script>${STAND_IN}</script>
