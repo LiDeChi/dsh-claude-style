@@ -43,6 +43,41 @@
         if (options.onMenu) options.onMenu(menu)
       }
 
+      /**
+       * Reveal the host's card once it is the card the reader will see.
+       *
+       * The host mounts its card with its own rows and places it from that
+       * geometry; our container lands a frame later, the card grows, and the host
+       * re-places it on the frame after the list changed. Revealing on the mount
+       * frame would fade the card in at the height and the place it is about to
+       * leave, so the stylesheet holds it (the armed window, constants.js) until
+       * our rows are in the list AND its placement has stopped moving — a
+       * placement read twice with the same value, after the rows landed. A card
+       * that carries no inline placement has nothing to wait for and is revealed
+       * as soon as the rows are in; one that never settles is revealed at the
+       * bound rather than staying unpainted. The watch stops with the card.
+       */
+      function revealMenu(menu) {
+        if (menu.hasAttribute(ACCOUNT_READY_ATTR)) return
+        let lastTop = null
+        let stable = 0
+        let tries = 0
+        const look = () => {
+          if (!menu.isConnected || menu.hasAttribute(ACCOUNT_READY_ATTR)) return
+          const rows = hostContainer !== null && hostContainer.isConnected && hostContainer.childElementCount > 0
+          const top = menu.style.top
+          stable = rows && top !== '' && top === lastTop ? stable + 1 : 0
+          lastTop = top
+          if (stable >= 1 || (rows && top === '') || tries >= 10) {
+            menu.setAttribute(ACCOUNT_READY_ATTR, '')
+            return
+          }
+          tries += 1
+          requestAnimationFrame(look)
+        }
+        requestAnimationFrame(look)
+      }
+
       function syncHost() {
         const menu = options.findMenu()
         if (menu === null) {
@@ -55,12 +90,14 @@
         const viewport = options.menuViewport(menu)
         if (viewport === null) {
           hostContainer = null
+          revealMenu(menu)
           return
         }
         if (hostContainer === null) hostContainer = options.buildContainer()
         // Re-insert whenever the host has moved or dropped us. This is the
         // self-heal, and it is also what keeps our container first.
         if (viewport.firstChild !== hostContainer) viewport.insertBefore(hostContainer, viewport.firstChild)
+        revealMenu(menu)
       }
 
       function sync() {

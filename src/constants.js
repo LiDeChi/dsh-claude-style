@@ -294,6 +294,19 @@
      */
     const ACCOUNT_ARMED_ATTR = 'data-dsh-claude-account-armed'
     /**
+     * Stamped on the host's account card by src/features/account/surface.js once
+     * the card carries the skin's rows and the host has finished placing it.
+     *
+     * The host mounts the card with its own rows and places it from that
+     * geometry; the skin's container lands a frame later and the card grows, and
+     * the host re-places it a frame after that. Revealing on the mount frame
+     * fades the card in at a height and a place it is about to leave — it appears
+     * low and jumps up mid-fade — so features/account/account-footer.css holds it
+     * inside the armed window until this marker lands, and the entry animation
+     * hangs on this marker.
+     */
+    const ACCOUNT_READY_ATTR = 'data-dsh-claude-account-ready'
+    /**
      * Stamped on the host's shared menu card while it is the hero row's picker
      * (the workspace chip or the agent-preset seat opened it). The host portals
      * that card to <body> with no marker of its own, so the stylesheet cannot

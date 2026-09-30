@@ -436,6 +436,11 @@ const CASES = {
     check('the host account menu carries the skin entry animation',
       r.menuEntryKeyframes === true && r.menuEntryAnimation === true,
       JSON.stringify({ keyframes: r.menuEntryKeyframes, animation: r.menuEntryAnimation }))
+    check('the card stays unpainted until the skin\'s rows are in it and the host has placed it',
+      r.accountReveal.paintedWhileUnready === false && r.accountReveal.revealedAt > 0 &&
+        r.accountReveal.rowsAtReveal === true && r.accountReveal.placedAtReveal === true &&
+        r.accountReveal.mountTop !== r.accountReveal.topAtReveal,
+      JSON.stringify(r.accountReveal))
     check('a host re-render is healed: container first and rows unchanged',
       r.injectHealedFirst === true && r.injectHealedSame === true,
       JSON.stringify({ first: r.injectHealedFirst, same: r.injectHealedSame }))

@@ -172,9 +172,38 @@
       var cssText = styleEl ? styleEl.textContent : ''
       r.menuEntryKeyframes = cssText.indexOf('@keyframes dsh-claude-account-menu-in') !== -1
       r.menuEntryAnimation = cssText.indexOf('animation: dsh-claude-account-menu-in 0.15s ease') !== -1
-      // Open the host's own menu; the skin injects our container into its list.
+      // Open the host's own menu: the card mounts with the host's rows, the skin
+      // injects ours a frame later, and the host re-places the card a frame after
+      // that. The card must stay unpainted until both have happened.
+      var frame = function () { return new Promise(function (resolve) { requestAnimationFrame(function () { resolve() }) }) }
+      var cardFrames = []
       if (hostRow) hostRow.click()
-      await sleep(500)
+      for (var cardFrame = 0; cardFrame < 24; cardFrame++) {
+        await frame()
+        var card = document.querySelector('body > [role="menu"]')
+        if (card === null) continue
+        var cardRows = card.querySelector('.dsh-claude-account-inject')
+        cardFrames.push({
+          ready: card.hasAttribute('data-dsh-claude-account-ready'),
+          rows: cardRows !== null && cardRows.childElementCount > 0,
+          top: card.style.top,
+          painted: getComputedStyle(card).visibility !== 'hidden',
+        })
+      }
+      var revealedAt = -1
+      for (var cf = 0; cf < cardFrames.length; cf++) { if (cardFrames[cf].ready) { revealedAt = cf; break } }
+      var lastTop = cardFrames.length === 0 ? null : cardFrames[cardFrames.length - 1].top
+      r.accountReveal = {
+        frames: cardFrames.length,
+        revealedAt: revealedAt,
+        paintedWhileUnready: cardFrames.some(function (f) { return !f.ready && f.painted }),
+        rowsAtReveal: revealedAt !== -1 && cardFrames[revealedAt].rows,
+        placedAtReveal: revealedAt !== -1 && cardFrames[revealedAt].top === lastTop,
+        mountTop: cardFrames.length === 0 ? null : cardFrames[0].top,
+        topAtReveal: revealedAt === -1 ? null : cardFrames[revealedAt].top,
+        topAtEnd: lastTop,
+      }
+      await sleep(400)
       var viewport = document.querySelector('body > [role="menu"] [role="presentation"]')
       var inject = document.querySelector('.dsh-claude-account-inject')
       // The marker the stylesheet hangs the skin's card on. It sits on the

@@ -27,8 +27,17 @@
 
   var menu = null
   var menuViewport = null
+  var menuSizer = null
   var hostRowsHtml = ''
+  /** The host's own placement: the card sits above its trigger, by its height. */
+  function placeHostMenu() {
+    if (!menu || !menu.parentElement || !accountTrigger) return
+    var row = accountTrigger.getBoundingClientRect()
+    menu.style.top = Math.round(row.top - menu.offsetHeight - 6) + 'px'
+    window.__hostMenuTops.push({ at: Math.round(performance.now()), top: menu.style.top })
+  }
   function closeHostMenu() {
+    if (menuSizer) { menuSizer.disconnect(); menuSizer = null }
     if (menu && menu.parentElement) menu.parentElement.removeChild(menu)
     menu = null
     menuViewport = null
@@ -75,11 +84,25 @@
         '<div class="itemWrap"><button type="button" role="menuitem">Sign out</button></div>'
     menu = document.createElement('div')
     menu.setAttribute('role', 'menu')
+    // The host's shared menu card carries this material marker (ui-primitives'
+    // Menu), which is what the skin's card rules are keyed on.
+    menu.setAttribute('data-menu-material', '')
     menuViewport = document.createElement('div')
     menuViewport.className = 'viewport'
     menuViewport.setAttribute('role', 'presentation')
     menu.appendChild(menuViewport)
     fillHostRows()
+    // The host places the card from its own geometry when it mounts it, and
+    // re-places it on the frame after its list changes (measured on the real
+    // menu: the skin's container lands a frame after the mount, the card grows,
+    // and the host follows one frame later). __hostMenuTops records every
+    // placement so the probe can tell the frames apart.
+    window.__hostMenuTops = []
+    placeHostMenu()
+    if (typeof ResizeObserver === 'function') {
+      menuSizer = new ResizeObserver(function () { requestAnimationFrame(placeHostMenu) })
+      menuSizer.observe(menu)
+    }
     menu.addEventListener('click', function (e) {
       var item = e.target && e.target.closest ? e.target.closest('button[role="menuitem"]') : null
       if (!item) return
