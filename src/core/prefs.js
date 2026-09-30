@@ -393,11 +393,13 @@
     }
 
     /**
-     * Clamp the brand. A value stored by an earlier build under the DeepSeek
-     * choice's old name reads as that choice.
+     * Clamp the brand: DeepSeek, or Claude. A value stored by an earlier build
+     * under the DeepSeek choice's old name reads as that choice, and the retired
+     * third choice (`anthropic`) reads as Claude, whose marks and palette it
+     * shared.
      */
     function normalizeBrand(value) {
-      if (value === BRAND_ANTHROPIC || value === BRAND_DEEPSEEK) return value
+      if (value === BRAND_DEEPSEEK) return value
       return value === BRAND_DEEPSEEK_LEGACY ? BRAND_DEEPSEEK : BRAND_CLAUDE
     }
 

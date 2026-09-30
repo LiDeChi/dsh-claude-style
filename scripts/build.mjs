@@ -197,12 +197,12 @@ function loadTokens() {
   const factory = new Function(`
     ${constants}
     return {
-      SANS, SERIF, PROSE, MONO, BRAND_ATTR, BRAND_ANTHROPIC, BRAND_CLAUDE, BRAND_DEEPSEEK, MOTION_ATTR, MOTION_REDUCED, FOOTER_ATTR, COMPOSER_ATTR, PERMISSIONS_ATTR, ACCOUNT_MENU_ATTR, ACCOUNT_ARMED_ATTR, HERO_MENU_ATTR,
-      // "a skin brand is selected": the brand preference's third value is
-      // "deepseek", which must match neither variant — so the shared rules
-      // that hide the host's mark and paint the ::before are gated on this
-      // rather than on :not(anthropic), which "deepseek" would satisfy.
-      BRAND_ACTIVE: ':is([' + BRAND_ATTR + '="' + BRAND_CLAUDE + '"], [' + BRAND_ATTR + '="' + BRAND_ANTHROPIC + '"])',
+      SANS, SERIF, PROSE, MONO, BRAND_ATTR, BRAND_CLAUDE, BRAND_DEEPSEEK, MOTION_ATTR, MOTION_REDUCED, FOOTER_ATTR, COMPOSER_ATTR, PERMISSIONS_ATTR, ACCOUNT_MENU_ATTR, ACCOUNT_ARMED_ATTR, HERO_MENU_ATTR,
+      // "this brand is drawn by the skin": of the two brands, DeepSeek keeps the
+      // host's own brand area, so the shared rules that hide the host's mark and
+      // paint the ::before are gated on the Claude brand rather than on
+      // :not(deepseek), which would have them paint over the host's whale.
+      BRAND_ACTIVE: '[' + BRAND_ATTR + '="' + BRAND_CLAUDE + '"]',
       CLAUDE_WORD_WIDTH: (18 * CLAUDE_WORD_ASPECT).toFixed(1),
     }
   `)
@@ -324,8 +324,6 @@ const SVG_TOKENS = {
   CLAUDE_WORD: 'claude-word.svg',
   CLAUDE_MARK_CLAY: 'claude-mark-clay.svg',
   ANTHROPIC_MARK: 'anthropic-mark.svg',
-  ANTHROPIC_BRAND_MARK: 'anthropic-brand-mark.svg',
-  ANTHROPIC_BRAND_WORD: 'anthropic-brand-word.svg',
   // The host's own whale mark (ui-primitives FishLogo, FISH_LOGO_PATH), in
   // DeepSeek's brand blue: a picture where it is painted, a shape where it masks.
   DEEPSEEK_MARK: 'deepseek-mark.svg',

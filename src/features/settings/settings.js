@@ -169,7 +169,6 @@
       const brandOptions = [
         { value: BRAND_DEEPSEEK, label: settingsCopy('brandDeepseek', 'DeepSeek') },
         { value: BRAND_CLAUDE, label: settingsCopy('brandClaude', 'Claude') },
-        { value: BRAND_ANTHROPIC, label: settingsCopy('brandAnthropic', 'Anthropic') },
       ]
       const motionOptions = [
         { value: MOTION_SYSTEM, label: settingsCopy('motionSystem', 'Follow the system') },

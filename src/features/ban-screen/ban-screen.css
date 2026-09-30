@@ -96,6 +96,8 @@ body[data-dsh-claude-style] .dsh-claude-ban-brand {
   color: var(--dsh-ban-word);
 }
 
+/* The page is Claude's own, so its lockup is the Claude one in every brand: the
+   ember starburst beside the wordmark, both masked over the page's ink. */
 body[data-dsh-claude-style] .dsh-claude-ban-mark {
   flex: none;
   width: 21px;
@@ -112,22 +114,6 @@ body[data-dsh-claude-style] .dsh-claude-ban-word {
   background-color: var(--dsh-ban-word);
   -webkit-mask: %%CLAUDE_WORD%% center / contain no-repeat;
   mask: %%CLAUDE_WORD%% center / contain no-repeat;
-}
-
-/* The brand preference applies here too: Anthropic swaps both marks, and "off"
-   keeps the Claude lockup with the starburst dropped (a bare text wordmark is
-   exactly what this page is). */
-body[data-dsh-claude-style][%%BRAND_ATTR%%="%%BRAND_ANTHROPIC%%"] .dsh-claude-ban-mark {
-  width: 30px;
-  background-color: var(--dsh-ban-word);
-  -webkit-mask: %%ANTHROPIC_BRAND_MARK%% center / contain no-repeat;
-  mask: %%ANTHROPIC_BRAND_MARK%% center / contain no-repeat;
-}
-
-body[data-dsh-claude-style][%%BRAND_ATTR%%="%%BRAND_ANTHROPIC%%"] .dsh-claude-ban-word {
-  width: 188px;
-  -webkit-mask: %%ANTHROPIC_BRAND_WORD%% center / contain no-repeat;
-  mask: %%ANTHROPIC_BRAND_WORD%% center / contain no-repeat;
 }
 
 body[data-dsh-claude-style] .dsh-claude-ban-bar-actions {

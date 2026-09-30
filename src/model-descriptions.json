@@ -191,7 +191,6 @@
     "usernamePlaceholder": { "zh": "自动解析账号或系统用户", "en": "Auto-detect account or host user" },
     "brandDeepseek": { "zh": "DeepSeek", "en": "DeepSeek" },
     "brandClaude": { "zh": "Claude", "en": "Claude" },
-    "brandAnthropic": { "zh": "Anthropic", "en": "Anthropic" },
     "scopeOff": { "zh": "关闭", "en": "Off" },
     "scopeHero": { "zh": "仅首页", "en": "Home only" },
     "scopeConversation": { "zh": "仅对话", "en": "Conversation only" },

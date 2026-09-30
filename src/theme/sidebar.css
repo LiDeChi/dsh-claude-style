@@ -5,10 +5,10 @@
    document attribute rather than by swapping the stylesheet, so the settings
    page only has to flip one attribute and the whole UI follows.
 
-   Sizing: both marks are set to an 18px cap height to match the shipped
-   brandName box, and each wordmark takes its natural width from that height
-   via the artwork aspect ratios (Claude 4.214:1, ANTHROPIC ~8.94:1). The
-   wordmark keeps a max-width so a longer brand can never clip the row. */
+   Sizing: the mark is set to an 18px cap height to match the shipped brandName
+   box, and the wordmark takes its natural width from that height via the
+   artwork aspect ratio (Claude 4.214:1). The wordmark keeps a max-width so a
+   longer brand can never clip the row. */
 body[data-dsh-claude-style]%%BRAND_ACTIVE%% :is([class*="brandMark"], [class*="railMark"]) > * {
   display: none !important;
 }
@@ -51,22 +51,6 @@ body[data-dsh-claude-style][%%BRAND_ATTR%%="%%BRAND_CLAUDE%%"] [class*="brandIde
   height: 18px;
   -webkit-mask: %%CLAUDE_WORD%% center / contain no-repeat;
   mask: %%CLAUDE_WORD%% center / contain no-repeat;
-}
-
-/* Anthropic (alternate): the A\ lockup + the ANTHROPIC wordmark. */
-body[data-dsh-claude-style][%%BRAND_ATTR%%="%%BRAND_ANTHROPIC%%"] :is([class*="brandMark"], [class*="railMark"])::before {
-  width: 25.9px;
-  height: 18px;
-  -webkit-mask: %%ANTHROPIC_BRAND_MARK%% center / contain no-repeat;
-  mask: %%ANTHROPIC_BRAND_MARK%% center / contain no-repeat;
-}
-
-body[data-dsh-claude-style][%%BRAND_ATTR%%="%%BRAND_ANTHROPIC%%"] [class*="brandIdentity"] > [class*="brandName"]::before {
-  width: 160.9px;
-  max-width: 100%;
-  height: 18px;
-  -webkit-mask: %%ANTHROPIC_BRAND_WORD%% center / contain no-repeat;
-  mask: %%ANTHROPIC_BRAND_WORD%% center / contain no-repeat;
 }
 
 /* DeepSeek: the host's own whale and wordmark, in DeepSeek's brand blue the
@@ -449,7 +433,9 @@ body[data-dsh-claude-style] svg[data-state="ongoing"] * {
    with "show animations in Windows" off — a common default on Windows 11 — the
    ring was drawn and then frozen, so it read as "sometimes it spins, sometimes
    it does not". A 0.85s rotation is the whole signal that background work is
-   alive; standing it still removes the meaning rather than the motion. */
+   alive; standing it still removes the meaning rather than the motion. The
+   settings page's own animation choice (src/constants.js MOTION_MODES) does not
+   govern it either: this is the one animation that always runs. */
 @media (prefers-reduced-motion: reduce) {
   body[data-dsh-claude-style] svg[data-state="ongoing"] {
     animation: 0.85s linear infinite dsh-claude-win11-spin !important;

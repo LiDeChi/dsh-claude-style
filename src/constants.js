@@ -185,12 +185,11 @@
 
     /** Brand marks selectable from the settings page. `claude` is the default. */
     const BRAND_CLAUDE = 'claude'
-    const BRAND_ANTHROPIC = 'anthropic'
     /**
-     * The DeepSeek brand: the host's own brand area stays (neither Claude
-     * variant matches) and takes DeepSeek's brand blue, both palettes turn
-     * blue (theme/tokens.css), the skin's Claude marks give way to DeepSeek's
-     * whale, and Deepy the pixel whale takes the crab's place on the composer.
+     * The DeepSeek brand: the host's own brand area stays (no Claude variant
+     * matches) and takes DeepSeek's brand blue, both palettes turn blue
+     * (theme/tokens.css), the skin's Claude marks give way to DeepSeek's whale,
+     * and Deepy the pixel whale takes the crab's place on the composer.
      */
     const BRAND_DEEPSEEK = 'deepseek'
     /** What earlier builds stored for the DeepSeek choice, when it was labelled "Off". */
