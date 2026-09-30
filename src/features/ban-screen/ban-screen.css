@@ -166,6 +166,51 @@ body[data-dsh-claude-style] .dsh-claude-ban-win:hover {
   color: var(--dsh-ban-text);
 }
 
+/* ---------- Desktop caption band: the bar rides the native titlebar row ---------- */
+/* Windows titlebar mode (ban-screen.js stamps data-dsh-ban-titlebar, once per
+   open) puts the top --dsh-ban-caption-height pixels under a NATIVE layer: the
+   shell paints that band with the colour it measures off
+   --dsw-specific-sidebar-fill and draws the window buttons at its right end, and
+   no page content can cover it. So the bar stops drawing its own three window
+   buttons — the band already shows a cluster — and moves its content up onto the
+   band; the overlay lends the band the page's canvas colour while it is open
+   (holdCaptionFill), which is what lets the lockup and Sign out read as that
+   row's own content the way Claude's titlebar carries them. The right padding
+   keeps Sign out clear of the native buttons.
+   The band has to keep moving the window, so the bar claims the DRAG region for
+   itself and only the one control inside it opts out: the overlay covers the
+   host's own caption strip (`.frame::before`), and a drag region the pointer
+   cannot reach is no region at all. */
+body[data-dsh-claude-style] .dsh-claude-ban[data-dsh-ban-titlebar] .dsh-claude-ban-bar {
+  height: var(--dsh-ban-caption-height, var(--dsh-windows-titlebar-height, 40px)) !important;
+  padding: 0 calc(var(--dsh-ban-caption-controls, 140px) + 10px) 0 44px !important;
+  -webkit-app-region: drag;
+}
+
+/* The lockup sits a touch below the row's midline: the wordmark's ink fills its
+   whole 21px box, so centring it beside the platform's 10px-tall caption glyphs
+   leaves it reading high. */
+body[data-dsh-claude-style] .dsh-claude-ban[data-dsh-ban-titlebar] .dsh-claude-ban-brand {
+  position: relative;
+  top: 4px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-ban[data-dsh-ban-titlebar] .dsh-claude-ban-signout {
+  -webkit-app-region: no-drag;
+}
+
+body[data-dsh-claude-style] .dsh-claude-ban[data-dsh-ban-titlebar] .dsh-claude-ban-window {
+  display: none !important;
+}
+
+body[data-dsh-claude-style] .dsh-claude-ban[data-dsh-ban-titlebar] .dsh-claude-ban-scroll {
+  inset: calc(var(--dsh-ban-caption-height, var(--dsh-windows-titlebar-height, 40px)) + 6px) 0 0 0;
+}
+
+body[data-dsh-claude-style] .dsh-claude-ban[data-dsh-ban-titlebar] .dsh-claude-ban-toast {
+  top: calc(var(--dsh-ban-caption-height, var(--dsh-windows-titlebar-height, 40px)) + 16px);
+}
+
 /* ---------- account_banned toast ---------- */
 body[data-dsh-claude-style] .dsh-claude-ban-toast {
   position: absolute;

@@ -26,6 +26,22 @@
      */
     function installBanScreen(ctx, ui) {
       let banRoot = null
+      /** Whether the open overlay has lent its canvas colour to the caption band. */
+      let captionFillHeld = false
+      /**
+       * The width the Desktop's window buttons occupy when the Window Controls
+       * Overlay API is there but carries no measurement yet: Windows' three
+       * caption buttons at their standard size. A fallback only.
+       */
+      const CAPTION_CONTROLS_FALLBACK = 140
+
+      // A client hot reload drops a generation's disposals without running them,
+      // so an overlay left open across one keeps its node — and the caption fill
+      // it lent the Desktop's band — behind. Both belong to this feature alone
+      // (no other rule writes that token inline), so the new generation sweeps
+      // them before it can open its own.
+      removeStrayNodes(document, '.dsh-claude-ban', [])
+      document.body.style.removeProperty('--dsw-specific-sidebar-fill')
 
       /**
        * Close the easter egg. Safe to call at any time (teardown, a second
@@ -33,10 +49,76 @@
        * is idempotent, so the caller never has to know the current state.
        */
       function closeBanScreen() {
+        releaseCaptionFill()
         if (banRoot !== null && banRoot.parentElement !== null) {
           banRoot.parentElement.removeChild(banRoot)
         }
         banRoot = null
+      }
+
+      /**
+       * The Desktop caption band's shape, or null when the window has none.
+       *
+       * Windows titlebar mode (`html[data-windows-titlebar]`) hands the top
+       * `--dsh-windows-titlebar-height` pixels to a NATIVE layer: the shell
+       * paints it with the colour it measures off `--dsw-specific-sidebar-fill`
+       * and draws the three window buttons at its right end, and no page
+       * content can cover it. Two things follow for this overlay — the band
+       * already shows a window cluster, so the page must not draw its own
+       * (that is the duplicate the Desktop showed), and the lockup and Sign out
+       * can ride the caption row only while the band carries the page's own
+       * canvas colour (holdCaptionFill).
+       *
+       * The band's height and the width its buttons occupy come from the Window
+       * Controls Overlay API, so they follow the platform's own metrics rather
+       * than a constant; a window whose overlay is hidden (fullscreen) has no
+       * band and keeps the shipped layout.
+       *
+       * @returns `{ height, controls }` in CSS pixels, or null.
+       */
+      function captionMetrics() {
+        if (!document.documentElement.hasAttribute('data-windows-titlebar')) return null
+        const overlay = navigator.windowControlsOverlay
+        if (!overlay || overlay.visible !== true) return null
+        const rect = typeof overlay.getTitlebarAreaRect === 'function' ? overlay.getTitlebarAreaRect() : null
+        if (rect && rect.width > 0 && rect.height > 0) {
+          return {
+            height: Math.round(rect.height),
+            controls: Math.max(0, Math.round(window.innerWidth - rect.right)),
+          }
+        }
+        // The API is there but has no measurement yet: the declared caption
+        // height and Windows' three caption buttons at their standard size.
+        const declared = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--dsh-windows-titlebar-height'))
+        return {
+          height: isFinite(declared) && declared > 0 ? Math.round(declared) : 40,
+          controls: CAPTION_CONTROLS_FALLBACK,
+        }
+      }
+
+      /**
+       * Lend the page's canvas colour to the caption band while the overlay is
+       * open.
+       *
+       * The Desktop measures `--dsw-specific-sidebar-fill` off a probe inside
+       * `<body>` and repaints the band whenever `<body>`'s style attribute
+       * changes, so an inline value here reaches the band and `closeBanScreen`
+       * gives the theme's own colour back. Nothing else is visible while the
+       * page is up — it covers the sidebar whose fill this token names.
+       */
+      function holdCaptionFill() {
+        if (banRoot === null) return
+        const canvas = getComputedStyle(banRoot).getPropertyValue('--dsh-ban-canvas').trim()
+        if (canvas === '') return
+        document.body.style.setProperty('--dsw-specific-sidebar-fill', canvas)
+        captionFillHeld = true
+      }
+
+      /** Give the caption band the theme's own colour back. Idempotent. */
+      function releaseCaptionFill() {
+        if (!captionFillHeld) return
+        captionFillHeld = false
+        document.body.style.removeProperty('--dsw-specific-sidebar-fill')
       }
 
       /** Whether `node` is one of the overlay's own dismiss controls. */
@@ -213,6 +295,19 @@
 
         banRoot = root
         document.body.appendChild(root)
+
+        // On the Desktop the bar rides the native caption band: the page's own
+        // window cluster goes (the band draws one) and the band is repainted in
+        // the page's canvas so the lockup and Sign out read as that band's own
+        // content. Both are decided here, once per open — the band cannot appear
+        // or vanish while the page is up.
+        const caption = captionMetrics()
+        if (caption !== null) {
+          root.setAttribute('data-dsh-ban-titlebar', '')
+          root.style.setProperty('--dsh-ban-caption-height', `${caption.height}px`)
+          root.style.setProperty('--dsh-ban-caption-controls', `${caption.controls}px`)
+          holdCaptionFill()
+        }
       }
 
       // The account row reaches this through the shared `ui` handle registry —
