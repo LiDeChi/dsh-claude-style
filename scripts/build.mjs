@@ -407,6 +407,24 @@ function copyDeepySheets() {
 }
 
 /**
+ * A content stamp per Deepy sheet, emitted into the bundle as DEEPY_STAMPS.
+ * The browser half keys its generated vector cache on the sheet's own stamp,
+ * so a sheet is re-converted only when its own pixels change — a build that
+ * touches no sheet leaves every cached vector valid.
+ */
+function stampDeepySheets() {
+  const constants = fs.readFileSync(path.join(SRC, 'constants.js'), 'utf8')
+  const sheets = new Function(`${constants}\n    return DEEPY_SHEETS`)()
+  const stamps = {}
+  for (const name of Object.keys(sheets)) {
+    const file = path.join(DEEPY_ASSETS, `${name}.png`)
+    if (!fs.existsSync(file)) throw new Error(`build: DEEPY_SHEETS["${name}"] has no sheet in src/assets/mascot/deepy/`)
+    stamps[name] = createHash('sha256').update(fs.readFileSync(file)).digest('hex').slice(0, 12)
+  }
+  return stamps
+}
+
+/**
  * The vendored vendor lockups, keyed by brand id.
  *
  * One file per vendor, already composed from Lobe's mark and wordmark by
@@ -609,12 +627,22 @@ function main() {
     `    var BUILD_ID = '${BUILD_ID_SLOT}'`,
   ].join('\n')
 
+  // Deepy sheet stamps: content hashes of the sheets, for the browser half's
+  // vector cache keys (stampDeepySheets).
+  const deepyStampDecl = [
+    '    // ============================================================================',
+    '    // Deepy 帧图内容戳（由 scripts/build.mjs 按帧图字节生成） (Deepy sheet stamps)',
+    '    // ============================================================================',
+    `    var DEEPY_STAMPS = ${JSON.stringify(stampDeepySheets())}`,
+  ].join('\n')
+
   const draft = [
     HEADER,
     fragment(FRAGMENTS[0]),
     cssDecl,
     combineDecl,
     buildDecl,
+    deepyStampDecl,
     ...FRAGMENTS.slice(1).map(fragment),
     FOOTER,
   ].join('\n\n')

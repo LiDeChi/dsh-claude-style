@@ -25,11 +25,14 @@
      * pressing it and pulling lifts it for as long as the press lasts.
      *
      * Each animation is one sheet (DEEPY_SHEETS): the sprite's box and sheet
-     * are custom properties on the whale's own node, and a frame change moves
-     * the sprite's own background — the `style` attribute, which the
-     * scheduler's observer does not watch, so playing never wakes a pass. A
-     * sheet loads the first time its animation is wanted; the animation on
-     * screen keeps playing until the new sheet is decoded, so a switch never
+     * are custom properties on the whale's own node, and a frame change is a
+     * translation of the strip inside the sprite's overflow-hidden window,
+     * played by the browser's animation engine (WAAPI steps keyframes) — no
+     * timer, no DOM mutation, so playing never wakes a pass. A
+     * sheet loads the first time its animation is wanted — its pixels are
+     * rebuilt as SVG, so the bitmap kept in memory is the size the whale is
+     * drawn at and every display density gets a sharp one — and the animation
+     * on screen keeps playing until the new sheet is ready, so a switch never
      * blinks. A reader who asks for reduced motion gets each state's still
      * frame, and the reactions only when they click.
      *
@@ -61,13 +64,9 @@
       /** A marker on the host element the whale stands on, which makes it the whale's containing block. */
       const ANCHOR_ATTR = 'data-dsh-claude-deepy-anchor'
 
-      /** Whether the reader asks the system for reduced motion, as of now. */
-      function reducedMotion() {
-        return window.matchMedia('(prefers-reduced-motion: reduce)').matches
-      }
-
       let root = null
       let sprite = null
+      let strip = null
       let anchor = null
       let signals = null
       let alive = true
@@ -84,9 +83,10 @@
       /** Where the quiet spell starts: the reader's last pointer move or key, or the whale's last work. */
       let quietSince = Date.now()
       let nextExtraAt = 0
-      /** The animation on screen: `{ key, mode, priority, start }`. */
+      /** The animation on screen: `{ key, mode, priority, start, done? }`. */
       let current = null
-      let drawnFrame = -1
+      /** The WAAPI animation playing on the strip; null while a still frame is pinned. */
+      let animation = null
       let timer = null
       /** Sheet key → 'loading' | 'ready' | 'failed'. */
       const sheets = new Map()
@@ -98,6 +98,142 @@
       }
 
       /**
+       * The address the sprite paints a sheet from. Sheets ship as PNG (the
+       * format compresses this art best), but a vector is rasterized at the
+       * size it is drawn and only that small bitmap is kept — so the first
+       * time an animation is wanted, its sheet's pixels are rebuilt here as
+       * SVG (one path per color, a row's runs of one color merged) and the
+       * SVG is what plays. The text is cached under the sheet's own
+       * content stamp (DEEPY_STAMPS, built from the sheet's bytes), so a
+       * sheet is re-converted only when its own pixels change; a sheet that
+       * decodes yet does not convert plays as the PNG it came from.
+       */
+
+      /** Cache API store for the generated SVG texts; entries key on the sheet's content stamp. */
+      const SHEET_CACHE = 'dsh-claude-style-deepy'
+      /** Bumped when the conversion below changes: cached vectors key on it too. */
+      const CONVERTER_VERSION = 1
+      /** The address each loaded sheet plays from. */
+      const sheetUrls = new Map()
+      /** Blob addresses handed out, revoked on dispose. */
+      const objectUrls = []
+      let cacheUsable = typeof caches !== 'undefined'
+
+      /** The cache address of a sheet's vector: its own stamp plus the converter's version. */
+      function sheetCacheKey(key) {
+        return `${location.origin}${DEEPY_ROUTE}${key}.svg?v=${DEEPY_STAMPS[key]}-${CONVERTER_VERSION}`
+      }
+
+      /** The cached SVG text for a sheet, or null on a miss. */
+      async function sheetCacheRead(key) {
+        if (!cacheUsable) return null
+        try {
+          const store = await caches.open(SHEET_CACHE)
+          const hit = await store.match(sheetCacheKey(key))
+          return hit === undefined ? null : hit.text()
+        } catch (error) {
+          // A cache that refuses is a cache that always misses: convert per load.
+          cacheUsable = false
+          console.warn("[dsh-claude-style] Deepy's sheet cache is unavailable; sheets convert once per page load instead.", error)
+          return null
+        }
+      }
+
+      function sheetCacheWrite(key, svg) {
+        if (!cacheUsable) return
+        caches.open(SHEET_CACHE).then(store => {
+          // Stale stamps of this same sheet are dead weight: drop them on a write.
+          store.keys().then(requests => {
+            for (const request of requests) {
+              if (request.url.includes(`${DEEPY_ROUTE}${key}.svg`) && request.url !== sheetCacheKey(key)) store.delete(request)
+            }
+          })
+          store.put(sheetCacheKey(key), new Response(svg, { headers: { 'content-type': 'image/svg+xml' } }))
+        }).catch(error => {
+          // Same standing as a read refusal: the cache is a miss from here on.
+          cacheUsable = false
+          console.warn("[dsh-claude-style] Deepy's sheet cache refused a write; sheets convert once per page load instead.", error)
+        })
+      }
+
+      /**
+       * Rebuild a decoded sheet as SVG text: one path per color, each made of
+       * a row's runs of that color. Transparent pixels are simply absent.
+       */
+      function vectorizeSheet(image) {
+        const width = image.naturalWidth
+        const height = image.naturalHeight
+        const canvas = document.createElement('canvas')
+        canvas.width = width
+        canvas.height = height
+        const pen = canvas.getContext('2d')
+        pen.drawImage(image, 0, 0)
+        const data = pen.getImageData(0, 0, width, height).data
+        /** Color string → the path chunks of its runs so far. */
+        const paths = new Map()
+        for (let y = 0; y < height; y++) {
+          let x = 0
+          while (x < width) {
+            const at = (y * width + x) * 4
+            const r = data[at]
+            const g = data[at + 1]
+            const b = data[at + 2]
+            const a = data[at + 3]
+            let end = x + 1
+            while (end < width) {
+              const next = (y * width + end) * 4
+              if (data[next] !== r || data[next + 1] !== g || data[next + 2] !== b || data[next + 3] !== a) break
+              end++
+            }
+            if (a !== 0) {
+              const color = a === 255
+                ? `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`
+                : `rgba(${r},${g},${b},${(a / 255).toFixed(3)})`
+              const chunk = `M${x} ${y}h${end - x}v1h${x - end}z`
+              const known = paths.get(color)
+              if (known === undefined) paths.set(color, [chunk])
+              else known.push(chunk)
+            }
+            x = end
+          }
+        }
+        const parts = [`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">`]
+        for (const [color, chunks] of paths) parts.push(`<path fill="${color}" d="${chunks.join('')}"/>`)
+        parts.push('</svg>')
+        return parts.join('')
+      }
+
+      function sheetObjectUrl(text) {
+        const url = URL.createObjectURL(new Blob([text], { type: 'image/svg+xml' }))
+        objectUrls.push(url)
+        return url
+      }
+
+      /**
+       * Resolve the address one sheet plays from: the cached vector text, a
+       * fresh conversion of its pixels, or — when the sheet decodes but does
+       * not convert — the PNG itself. Rejects only when the sheet does not
+       * load at all.
+       */
+      async function prepareSheet(key) {
+        const url = sheetUrl(key)
+        const cached = await sheetCacheRead(key)
+        if (cached !== null) return sheetObjectUrl(cached)
+        const image = new Image()
+        image.src = url
+        await image.decode()
+        try {
+          const svg = vectorizeSheet(image)
+          sheetCacheWrite(key, svg)
+          return sheetObjectUrl(svg)
+        } catch (error) {
+          // The PNG fallback the reader asked for: the sheet plays as-is.
+          console.warn(`[dsh-claude-style] Deepy's "${key}" sheet could not be vectorized; playing the PNG as-is.`, error)
+          return url
+        }
+      }
+
+      /**
        * Whether a sheet is ready to paint, starting its load the first time.
        * A sheet that does not load leaves its animation out and says so once:
        * the host half serves the sheets, and one that predates them answers 404.
@@ -106,15 +242,14 @@
         const known = sheets.get(key)
         if (known !== undefined) return known === 'ready'
         sheets.set(key, 'loading')
-        const image = new Image()
-        image.src = sheetUrl(key)
-        image.decode().then(() => {
+        prepareSheet(key).then(url => {
+          sheetUrls.set(key, url)
           sheets.set(key, 'ready')
           if (alive && root !== null) step()
         }, () => {
           // The host half did not serve the sheet: the animation stays out.
           sheets.set(key, 'failed')
-          console.warn(`[dsh-claude-style] Deepy's "${key}" sheet did not load from ${image.src}; the host half serves it, so restart the host after an update.`)
+          console.warn(`[dsh-claude-style] Deepy's "${key}" sheet did not load from ${sheetUrl(key)}; the host half serves it, so restart the host after an update.`)
         })
         return false
       }
@@ -123,6 +258,8 @@
         root = buildElement('span', 'dsh-claude-deepy')
         root.setAttribute('aria-hidden', 'true')
         sprite = buildElement('span', 'dsh-claude-deepy-sprite')
+        strip = buildElement('span', 'dsh-claude-deepy-strip')
+        sprite.appendChild(strip)
         root.appendChild(sprite)
         const hit = buildElement('span', 'dsh-claude-deepy-hit')
         hit.addEventListener('pointerdown', onPressStart)
@@ -241,7 +378,7 @@
         }
         if (asleep) return { key: 'sleeping', mode: 'loop', priority: 1 }
         if (waking) return { key: 'waking', mode: 'once', priority: 1 }
-        if (extra === null && !reducedMotion() && !document.hidden) {
+        if (extra === null && !motionReduced() && !document.hidden) {
           if (nextExtraAt === 0) nextExtraAt = now + EXTRA_MIN_MS + Math.random() * EXTRA_SPAN_MS
           else if (now >= nextExtraAt) extra = EXTRAS[Math.floor(Math.random() * EXTRAS.length)]
         }
@@ -260,19 +397,68 @@
         if (key === 'waking') waking = false
       }
 
-      /** Whether the reader asks for stillness for what is on screen now. */
+      /** Whether the animation choice holds what is on screen now still. */
       function still() {
-        return reducedMotion() && reaction === null
+        return motionReduced() && reaction === null
+      }
+
+      /** The strip translation that puts one frame of a sheet in the window. */
+      function frameOffset(sheet, frame) {
+        return `translate(${-(frame % 8) * sheet.box[2] * 2}px, ${-Math.floor(frame / 8) * sheet.box[3] * 2}px)`
       }
 
       /**
-       * Advance the whale: settle what is on screen, then draw its frame. Runs
-       * on the tick, on every state read and whenever a sheet lands.
+       * Put an animation on the strip: a WAAPI animation whose keyframes hold
+       * each frame for DEEPY_FRAME_MS (steps(1) jumps at the slot's end), so a
+       * loop runs entirely on the browser's animation engine with no tick of
+       * the whale's own; or the state's still frame, pinned while the motion
+       * choice says so. A once animation's end is reported by its `finished`;
+       * the deadline schedule() arms is the backstop for a throttled tab.
+       */
+      function play(key, mode, now) {
+        if (animation !== null) {
+          animation.cancel()
+          animation = null
+        }
+        const sheet = DEEPY_SHEETS[key]
+        if (still()) {
+          strip.style.transform = frameOffset(sheet, sheet.still)
+          return
+        }
+        strip.style.transform = ''
+        const keyframes = []
+        for (let frame = 0; frame < sheet.frames; frame++) {
+          keyframes.push({ offset: frame / sheet.frames, transform: frameOffset(sheet, frame), easing: 'steps(1)' })
+        }
+        keyframes.push({ offset: 1, transform: frameOffset(sheet, mode === 'loop' ? 0 : sheet.frames - 1) })
+        const playing = strip.animate(keyframes, {
+          duration: sheet.frames * DEEPY_FRAME_MS,
+          iterations: mode === 'loop' ? Infinity : 1,
+          fill: 'forwards',
+        })
+        animation = playing
+        if (mode !== 'once') return
+        playing.finished.then(() => {
+          if (animation !== playing || current === null || current.key !== key || current.done === true) return
+          current.done = true
+          finish(key, Date.now())
+          step()
+        }, () => {
+          // finished rejects on cancel(): a newer animation took the strip.
+        })
+      }
+
+      /**
+       * Advance the whale: settle what is on screen, then arm the one timer at
+       * the next moment a time-based decision can flip. Runs on state reads,
+       * sheet arrivals, reactions, the reader's hand and that timer — playing
+       * itself needs no tick (play()).
        */
       function step() {
         if (root === null || level === null) return
         const now = Date.now()
-        if (current !== null && current.mode === 'once' && now - current.start >= DEEPY_SHEETS[current.key].frames * DEEPY_FRAME_MS) {
+        if (current !== null && current.mode === 'once' && current.done !== true && now - current.start >= DEEPY_SHEETS[current.key].frames * DEEPY_FRAME_MS) {
+          current.done = true
           finish(current.key, now)
         }
         const next = decide(now)
@@ -290,49 +476,61 @@
             if (reaction !== null) reaction.fresh = false
             finish(next.key, now)
           }
+        } else if (!switching && current !== null) {
+          // The motion choice flipped under the animation on stage: pin its
+          // still frame, or set it playing again from where it stands.
+          if (still() && animation !== null) {
+            animation.cancel()
+            animation = null
+            strip.style.transform = frameOffset(DEEPY_SHEETS[current.key], DEEPY_SHEETS[current.key].still)
+          } else if (!still() && animation === null) {
+            play(current.key, current.mode, now)
+            if (animation !== null && current.mode === 'loop') {
+              animation.currentTime = (now - current.start) % (DEEPY_SHEETS[current.key].frames * DEEPY_FRAME_MS)
+            }
+          }
         }
-        if (!document.hidden) draw(now)
-        schedule()
+        schedule(now, switching && !settled)
       }
 
       function show(next, now) {
         const sheet = DEEPY_SHEETS[next.key]
         current = { key: next.key, mode: next.mode, priority: next.priority, start: now }
         if (reaction !== null && reaction.key === next.key) reaction.fresh = false
-        drawnFrame = -1
         const style = root.style
-        style.setProperty('--dsh-claude-deepy-sheet', `url("${sheetUrl(next.key)}")`)
+        style.setProperty('--dsh-claude-deepy-sheet', `url("${sheetUrls.get(next.key)}")`)
         style.setProperty('--dsh-claude-deepy-x', String(sheet.box[0]))
         style.setProperty('--dsh-claude-deepy-y', String(sheet.box[1]))
         style.setProperty('--dsh-claude-deepy-w', String(sheet.box[2]))
         style.setProperty('--dsh-claude-deepy-h', String(sheet.box[3]))
+        style.setProperty('--dsh-claude-deepy-strip-h', String(sheet.box[3] * Math.ceil(sheet.frames / 8)))
         if (root.getAttribute('data-animation') !== next.key) root.setAttribute('data-animation', next.key)
-      }
-
-      function draw(now) {
-        if (current === null) return
-        const sheet = DEEPY_SHEETS[current.key]
-        let frame = sheet.still
-        if (!still()) {
-          frame = Math.floor((now - current.start) / DEEPY_FRAME_MS)
-          frame = current.mode === 'once' ? Math.min(frame, sheet.frames - 1) : frame % sheet.frames
-        }
-        if (frame === drawnFrame) return
-        drawnFrame = frame
-        // The frame moves the sprite's own background, so a frame restyles that
-        // one element and nothing around it.
-        sprite.style.backgroundPosition = `${(frame % 8) * sheet.box[2] * -2}px ${Math.floor(frame / 8) * sheet.box[3] * -2}px`
+        play(next.key, next.mode, now)
         if (!root.hasAttribute('data-ready')) root.setAttribute('data-ready', '')
       }
 
-      /** The next step: one a frame while the whale moves, slower when it holds still or the page is away. */
-      function schedule() {
+      /**
+       * The one timer: the next moment a time-based decision can flip — a
+       * moment's hold ending, a deferred switch settling, a once animation's
+       * last frame (backstop for its `finished`), the quiet minute to sleep,
+       * the next idle extra. Everything else arrives as an event.
+       */
+      function schedule(now, waitSettle) {
         if (timer !== null) clearTimeout(timer)
-        const delay = document.hidden ? 1000 : still() ? 250 : DEEPY_FRAME_MS
+        timer = null
+        let at = Infinity
+        if (moment !== null) at = Math.min(at, moment.until)
+        if (waitSettle && current !== null) at = Math.min(at, current.start + MIN_SHOW_MS)
+        if (current !== null && current.mode === 'once' && current.done !== true) {
+          at = Math.min(at, current.start + DEEPY_SHEETS[current.key].frames * DEEPY_FRAME_MS)
+        }
+        if (!asleep && level !== null && level.state === 'idle') at = Math.min(at, quietSince + SLEEP_AFTER_MS)
+        if (extra === null && nextExtraAt > now) at = Math.min(at, nextExtraAt)
+        if (at === Infinity) return
         timer = setTimeout(() => {
           timer = null
           step()
-        }, delay)
+        }, Math.max(at - now, 0))
       }
 
       /**
@@ -394,21 +592,26 @@
 
       /**
        * The reader is at the page: a sleeping whale wakes up, startled unless
-       * stillness was asked for. The hook only records it — the whale's own
-       * next tick plays the waking — so the scheduler's pointer and key paths
-       * run none of the whale's drawing.
+       * stillness was asked for. The hook fires once at the wake (a quiet
+       * reader's pointer sweep only rewrites quietSince), so the scheduler's
+       * pointer and key paths stay cheap.
        */
       function onActivity() {
         quietSince = Date.now()
         if (!asleep) return
         asleep = false
-        waking = !reducedMotion()
+        waking = !motionReduced()
+        step()
       }
 
       /** The page shows no stand: the whale leaves it, and its reading stops. */
       function release() {
         if (timer !== null) clearTimeout(timer)
         timer = null
+        if (animation !== null) {
+          animation.cancel()
+          animation = null
+        }
         if (root !== null && root.parentNode !== null) root.parentNode.removeChild(root)
         setAnchor(null, null)
         if (signals !== null) signals.dispose()
@@ -423,7 +626,6 @@
         asleep = false
         nextExtraAt = 0
         current = null
-        drawnFrame = -1
         press = null
         clicks = []
       }
@@ -431,8 +633,12 @@
       function dispose() {
         alive = false
         release()
+        for (const url of objectUrls) URL.revokeObjectURL(url)
+        objectUrls.length = 0
+        sheetUrls.clear()
         root = null
         sprite = null
+        strip = null
       }
 
       return { sync, release, onActivity, dispose }

@@ -5,9 +5,10 @@
    pixel, so the browser scales them down smoothly at every pixel density
    (`image-rendering` stays at its default: a pixelated downscale drops rows).
    The whale writes the sheet and the sprite's crop box as custom properties
-   when an animation starts, and each frame as the sprite's own
-   background-position (src/features/mascot/whale.js); the sheet holds eight
-   frames to a row. Only the whale's body takes the pointer. */
+   when an animation starts; each frame is a translation of the strip inside
+   the sprite's window, played by the browser's animation engine
+   (src/features/mascot/whale.js); the sheet holds eight frames to a row.
+   Only the whale's body takes the pointer. */
 
 body[data-dsh-claude-style] .dsh-claude-deepy {
   position: absolute;
@@ -49,6 +50,15 @@ body[data-dsh-claude-style] .dsh-claude-deepy-sprite {
   top: calc(var(--dsh-claude-deepy-y, 0) * 2px);
   width: calc(var(--dsh-claude-deepy-w, 0) * 2px);
   height: calc(var(--dsh-claude-deepy-h, 0) * 2px);
+  overflow: hidden;
+}
+
+/* The strip carries the whole sheet and is translated frame to frame: a
+   transform composites, where a background-position would repaint. */
+body[data-dsh-claude-style] .dsh-claude-deepy-strip {
+  display: block;
+  width: calc(var(--dsh-claude-deepy-w, 0) * 16px);
+  height: calc(var(--dsh-claude-deepy-strip-h, 0) * 2px);
   background-image: var(--dsh-claude-deepy-sheet, none);
   background-repeat: no-repeat;
   background-size: calc(var(--dsh-claude-deepy-w, 0) * 16px) auto;

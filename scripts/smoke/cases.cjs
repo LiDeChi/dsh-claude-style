@@ -491,8 +491,8 @@ const CASES = {
       deepy.accent === '#4d6bfe' && deepy.link === '#3b56d9' && !!deepy.dark && deepy.dark.canvas === 'rgb(19, 22, 29)' &&
         deepy.dark.accent === '#4d6bfe' && deepy.dark.raised === '#1b1f28',
       JSON.stringify({ accent: deepy.accent, link: deepy.link, dark: deepy.dark }))
-    check('the whale takes the crab\'s place on the home card, idling, drawn from its sheet on the host half\'s route',
-      is(deepy.home, 'idle', 'card') && deepy.crab === false && /\/dsh-claude-style\/deepy\/idle\.png\?v=/.test(deepy.home.sheet),
+    check('the whale takes the crab\'s place on the home card, idling, playing the vector rebuilt from its sheet',
+      is(deepy.home, 'idle', 'card') && deepy.crab === false && /^url\("blob:/.test(deepy.home.sheet),
       JSON.stringify({ home: deepy.home, crab: deepy.crab }))
     check('its frames change on its own node without waking a pass',
       !!deepy.idle && deepy.idle.before !== deepy.idle.after && deepy.idle.passes === 0, JSON.stringify(deepy.idle))

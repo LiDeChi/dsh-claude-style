@@ -756,12 +756,17 @@
       var whaleNow = function () {
         var node = document.querySelector('.dsh-claude-deepy')
         if (node === null) return null
+        // The frame is the strip's translation: read the computed matrix (a
+        // running WAAPI animation has no inline style) as "Xpx Ypx".
+        var strip = node.querySelector('.dsh-claude-deepy-strip')
+        var matrix = getComputedStyle(strip).transform
+        var offsets = matrix === 'none' ? null : matrix.match(/matrix\([^,]+,[^,]+,[^,]+,[^,]+,\s*(-?[\d.]+),\s*(-?[\d.]+)\)/)
         return {
           animation: node.getAttribute('data-animation'),
           ready: node.hasAttribute('data-ready'),
           place: node.parentElement === null ? null : node.parentElement.getAttribute('data-dsh-claude-deepy-anchor'),
-          frame: node.querySelector('.dsh-claude-deepy-sprite').style.backgroundPosition,
-          sheet: getComputedStyle(node.querySelector('.dsh-claude-deepy-sprite')).backgroundImage,
+          frame: offsets === null ? '0px 0px' : offsets[1] + 'px ' + offsets[2] + 'px',
+          sheet: getComputedStyle(strip).backgroundImage,
         }
       }
       var wakeDeepyPass = function () {
@@ -859,21 +864,26 @@
       r.deepy.compacting = whaleNow()
       await sleep(100)
       driver.emit({ type: 'compaction/end', seq: 2, time: Date.now(), data: { compactionId: 'c1', turn: null } })
-      await sleep(600)
+      // The celebration's sheet converts on its first use (one of the biggest
+      // sheets); the switch holds the current animation until the vector is
+      // ready, so wait it out instead of landing on a fixed delay.
+      for (var ci = 0; ci < 60 && (whaleNow() || {}).animation !== 'happy'; ci++) await sleep(50)
       r.deepy.celebrating = whaleNow()
       driver.emit({ type: 'tool/result', seq: 3, time: Date.now(), data: { turn: 2, step: 1, message: { isError: true } } })
       await sleep(400)
       r.deepy.failed = whaleNow()
-      // Reduced motion: the state's still frame, held.
-      var deepyMatchMedia = window.matchMedia
-      window.matchMedia = function (query) {
-        return query === '(prefers-reduced-motion: reduce)' ? { matches: true } : deepyMatchMedia.call(window, query)
-      }
+      // Reduced motion: the settings page's animation choice, pushed through the
+      // host form the way the settings row writes it. The choice resolves onto
+      // <body> (src/core/prefs.js) and the whale holds the state's still frame.
+      window.__pushForm({ motion: 'reduced' })
       await sleep(150)
+      r.deepy.stillAttr = document.body.getAttribute('data-dsh-claude-motion')
       var stillBefore = whaleNow().frame
       await sleep(400)
       r.deepy.still = { before: stillBefore, after: whaleNow().frame }
-      window.matchMedia = deepyMatchMedia
+      window.__pushForm({ motion: 'full' })
+      await sleep(150)
+      r.deepy.alwaysAttr = document.body.getAttribute('data-dsh-claude-motion')
       // A compaction starts; the connection drops and the feed comes back
       // whole with the compaction's end in it. The shake above holds 4.8s.
       driver.emit({ type: 'compaction/start', seq: 4, time: Date.now(), data: { compactionId: 'c2', turn: null } })
@@ -897,12 +907,16 @@
       await sleep(1200)
       r.deepy.afterWork = whaleNow()
       deepyAhead += 61000
+      // The probe's clock is fake while setTimeout runs on the real one: wake a
+      // pass to stand in for the sleep deadline the whale's timer would fire.
+      wakeDeepyPass()
       await sleep(400)
       r.deepy.asleep = whaleNow()
       // Asleep for its second on stage first, as any state holds it.
       await sleep(700)
       document.dispatchEvent(new PointerEvent('pointermove', { bubbles: true }))
       await sleep(400)
+      for (var wi = 0; wi < 60 && (whaleNow() || {}).animation !== 'waking'; wi++) await sleep(50)
       r.deepy.woken = whaleNow()
       Date.now = deepyClock
       deepyConversation.remove()
