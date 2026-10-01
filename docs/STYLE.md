@@ -173,7 +173,7 @@ the shell itself. What it carries is described under "Context popover" below.
 | radius | 12px |
 | shadow | `0 8px 30px rgba(20,20,19,.12), 0 2px 8px rgba(20,20,19,.06)`; dark `rgba(0,0,0,.5)` / `rgba(0,0,0,.3)` |
 | padding | 6px |
-| layout | flex column, `gap: 6px` |
+| layout | flex column, `gap: 6px`; a list body stacks its rows 3px apart |
 | z-index | 99999, above the host's own menus (1100) |
 | open | `opacity 0 → 1`, `translateY(4px) scale(.98) → none`, `.15s ease`, origin on the anchor's side |
 
@@ -238,11 +238,23 @@ on that stamp, so it plays on the card the reader will actually see.
 The context meter's popover is the host's own panel: the skin opens it by
 pressing the host's trigger (hover, with the shared 100 ms dwell and close
 grace, gated on the "open popovers on hover" preference; a click still works),
-and paints nothing of its shell, its placement or its dismissal. It mounts
+and paints nothing of its shell or its dismissal. It mounts
 instead of toggling `data-open`, so the feature stamps the panel and it takes
 the cards' own short rise as a one-shot animation — same 4px, same `scale(.98)`,
 same 0.15s — and a surface the skin opens arrives the same way wherever it is
 the host's.
+
+Its horizontal place is the one thing the skin takes over. ui-chat hangs the
+panel from the anchor's LEFT edge and only then clamps it into the viewport
+(`useStatDialog`, align `start`), so a trigger at the end of the composer row
+leaves the panel against the window's right margin instead of under the ring.
+`features/permissions/session-stats.js` reads the meter's right edge and the
+panel's own layout width — `offsetWidth`, not its rect: the entrance scales the
+box, and a transformed rect is two per cent narrower than the one that settles —
+and writes `--dsh-claude-context-panel-left` with the mark that turns it on;
+`features/composer/inline-bar.css` reads it with `!important`, which outranks the
+host's inline value. The reading is re-taken when the panel's box changes (a
+`ResizeObserver`) and when the viewport moves (`reposition('viewport')`).
 
 What the skin appends to it is the session's numbers
 (`features/permissions/session-stats.js`), read from the host's `sessionStats`
@@ -253,6 +265,14 @@ two surfaces read the same words; the host's small formatting rules
 (`formatDuration`, `formatTokensPerSecond`, `formatExactTokens`,
 `formatCacheHitPercent`) are mirrored so the figures match character for
 character.
+
+Which figures appear follows the host's statistics row. Its detailed form gets
+the whole list. Its compact form carries only the output speed and the cache-hit
+share on the composer line, so the block keeps the four that row leaves out —
+the total time, the first-token average, the output speed and the cache-hit
+share. The total is the one figure the host has no word for (its dialog names
+the model's time and the tool calls' separately): it is their sum, labelled from
+the skin's own copy (`contextTotalTime`).
 
 The block: a 1px `var(--dsw-alias-border-l1)` rule and 10px above it, then per
 section an 11px / 16px heading at 600 in `label-tertiary` and a two-column grid
@@ -274,13 +294,15 @@ z-index 1000 and 100000) and now follows the table above. The hero row's pickers
 two ways that CSS cannot change: it mounts instead of toggling a `data-open`
 attribute, so it takes the same fade/scale as a one-shot `0.15s` animation; and
 the host places it *below* its trigger, which is where the composer sits — so
-`src/features/hero-menu/hero-menu.js` re-places it beside the trigger (bottom-aligned,
-growing upward into the empty hero space, flipping left when the viewport is
-tight). The host re-runs its own placement from its anchor geometry on every
-frame while the card is open, so the position is handed over in two custom
-properties on the card (`--dsh-claude-hero-menu-x` / `--dsh-claude-hero-menu-y`,
-written by the same pass that stamps it) which `features/hero-menu/hero-menu.css` reads
-with `!important`; that declaration outranks the host's plain inline value.
+`src/features/hero-menu/hero-menu.js` re-places it on the trigger the way the
+skin's own composer pickers sit: right-aligned with the trigger and opening
+upward by the same 6px air, flipping below only when the viewport leaves no room
+above, and clamped to the 8px viewport margin (`POPOVER_MARGIN`). The host
+re-runs its own placement from its anchor geometry on every frame while the card
+is open, so the position is handed over in two custom properties on the card
+(`--dsh-claude-hero-menu-x` / `--dsh-claude-hero-menu-y`, written by the same
+pass that stamps it) which `features/hero-menu/hero-menu.css` reads with
+`!important`; that declaration outranks the host's plain inline value.
 
 ## Search · 搜索
 
