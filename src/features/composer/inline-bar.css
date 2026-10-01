@@ -66,13 +66,14 @@ body[data-dsh-claude-style] [class*="_trailing"] .dsh-claude-model-btn-label {
    itself leaves the flow for the row's line, with the meter at the row's right
    end. The dock is the card's next sibling; the queue, todo and goal overlays
    above the card name their roots `dock` too and keep the host's own
-   placement. */
+   placement. The 4px is the inset the card leaves under itself inside the
+   stack: the dock's 28px line is then exactly the control row's line. */
 body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) {
   position: relative !important;
 }
 body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] + [class*="_dock"] {
   position: absolute !important;
-  bottom: 6px !important;
+  bottom: 4px !important;
   left: var(--dsh-composer-side-clearance, 0px) !important;
   right: var(--dsh-composer-side-clearance, 0px) !important;
   height: 28px !important;
