@@ -31,7 +31,7 @@
       function heatTip(format, cell) {
         const date = homeShortDate(format, cell.date)
         if (cell.messages !== null) return `${date} — ${formatHomeCount(cell.messages)}`
-        return copyLabel('homeHeatTipTokens', '{date} — {tokens} tokens', { date, tokens: formatHomeTokens(cell.tokens) })
+        return copyLabel('homeHeatTipTokens', '{date} — {tokens} tokens', { date, tokens: formatCompactTokens(cell.tokens) })
       }
 
       function view(data) {
@@ -46,7 +46,7 @@
             { className: 'dsh-claude-home-stats' },
             statCell('sessions', copyLabel('homeSessions', 'Sessions'), data.sessions === null ? '—' : formatHomeCount(data.sessions), skeleton),
             statCell('calls', copyLabel('homeCalls', 'Messages'), data.calls === null ? '—' : formatHomeCount(data.calls), skeleton),
-            statCell('tokens', copyLabel('homeTokens', 'Total tokens'), formatHomeTokens(data.tokens), skeleton),
+            statCell('tokens', copyLabel('homeTokens', 'Total tokens'), formatCompactTokens(data.tokens), skeleton),
             statCell('days', copyLabel('homeActiveDays', 'Active days'), data.activeDays === null ? '—' : formatHomeCount(data.activeDays), skeleton),
             statCell('peak', copyLabel('homePeakHour', 'Peak hour'), data.peakHour === null ? '—' : data.peakHour, skeleton),
             statCell('model', copyLabel('homeTopModel', 'Favorite model'), data.model === null ? '—' : data.model, skeleton),

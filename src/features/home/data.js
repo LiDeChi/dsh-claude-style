@@ -143,15 +143,6 @@
       return homeDayKey(start)
     }
 
-    /** One token count, short enough for a stat cell or an axis label. */
-    function formatHomeTokens(count) {
-      const value = Number(count) || 0
-      if (value >= 1e9) return `${(value / 1e9).toFixed(2)}B`
-      if (value >= 1e6) return `${(value / 1e6).toFixed(1)}M`
-      if (value >= 1e3) return `${(value / 1e3).toFixed(1)}K`
-      return String(Math.round(value))
-    }
-
     function formatHomeCount(count) {
       const value = Math.round(Number(count) || 0)
       return String(value).replace(/\B(?=(\d{3})+(?!\d))/g, ',')

@@ -87,12 +87,6 @@
         return t('duration.seconds', { seconds })
       }
 
-      function formatTokens(count) {
-        if (count < 1000) return String(count)
-        const scaled = count < 1000000 ? count / 1000 : count / 1000000
-        return `${scaled.toFixed(1).replace(/\.0$/, '')}${count < 1000000 ? 'k' : 'M'}`
-      }
-
       /** Output tokens the turn's settled steps report; the streaming step joins when it settles. */
       function outputTokens(turn) {
         let total = 0
@@ -156,7 +150,7 @@
       function statusText(key, snapshot, turn, state, t) {
         const parts = []
         const tokens = outputTokens(turn)
-        const tokenText = tokens > 0 ? copyLabel('turnStatusTokens', '{count} tokens', { count: formatTokens(tokens) }) : null
+        const tokenText = tokens > 0 ? copyLabel('turnStatusTokens', '{count} tokens', { count: formatCompactTokens(tokens) }) : null
         if (state === 'live') {
           const now = Date.now()
           if (turn.start !== undefined) parts.push(formatDuration(Math.max(1000, now - turn.start.time), t, false))

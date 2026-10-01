@@ -32,22 +32,6 @@
         return step * magnitude
       }
 
-      /**
-       * One token count the way Claude Code's chart and list write it: one
-       * decimal at most, a whole number without its ".0", and a lowercase k —
-       * "109M", "4.4M", "963.6k". The unit is picked on the rounded value, so a
-       * count just under a million reads "1M", never "1000k".
-       */
-      function compactTokens(count) {
-        const value = Number(count) || 0
-        const units = [[1e9, 'B'], [1e6, 'M'], [1e3, 'k']]
-        for (let u = 0; u < units.length; u++) {
-          const scaled = Math.round(value / units[u][0] * 10) / 10
-          if (scaled >= 1) return String(scaled) + units[u][1]
-        }
-        return String(Math.round(value))
-      }
-
       /** The four buckets' two sides, as the list writes them. */
       function sides(entry) {
         return {
@@ -87,7 +71,7 @@
             ticks.map(at => React.createElement(
               'span',
               { key: at, className: 'dsh-claude-home-chart-tick', style: { bottom: `${at * 100}%` } },
-              skeleton || top === 0 ? '' : compactTokens(top * at),
+              skeleton || top === 0 ? '' : formatCompactTokens(top * at),
             )),
             React.createElement(
               'div',
@@ -112,7 +96,7 @@
                   {
                     key: column.date,
                     className: 'dsh-claude-home-chart-col',
-                    title: `${homeShortDate(format, column.date)} · ${compactTokens(dayTotal)}`,
+                    title: `${homeShortDate(format, column.date)} · ${formatCompactTokens(dayTotal)}`,
                     style: { height: `${top > 0 ? dayTotal / top * 100 : 0}%` },
                   },
                   stack.map(slice => React.createElement('span', {
@@ -201,8 +185,8 @@
                   'span',
                   { className: 'dsh-claude-home-model-split' },
                   hasSplit(entry)
-                    ? `${compactTokens(parts.input)} in · ${compactTokens(parts.output)} out`
-                    : compactTokens(entry.tokens),
+                    ? `${formatCompactTokens(parts.input)} in · ${formatCompactTokens(parts.output)} out`
+                    : formatCompactTokens(entry.tokens),
                 ),
                 React.createElement('span', { className: 'dsh-claude-home-model-share' }, share(entry.tokens, total)),
               )
