@@ -234,11 +234,17 @@
        * which beats an inline `display: none`, so a hidden trigger stayed on
        * screen at its last coordinates after the seat lost its box (the
        * trajectory and context views) or went away with the composer. The model
-       * trigger's reserved margin goes back with it.
+       * trigger's reserved margin goes back with it, and so does every value
+       * the placement caches: the replacement is a new node.
        */
       function hideEffortTrigger() {
-        // Re-created later under a fresh measurement (the label gate).
+        // The next trigger is a NEW node, so the placement cache starts over.
+        // A left/top left behind here is a value the new node never received:
+        // the same-value guards below would skip both writes and the trigger
+        // would sit at its static position, the end of the document.
         effortPlace.widthLabel = ''
+        effortPlace.left = -1
+        effortPlace.top = -1
         if (effortBtn !== null) {
           if (effortBtn.parentElement !== null) effortBtn.parentElement.removeChild(effortBtn)
           effortBtn = null
