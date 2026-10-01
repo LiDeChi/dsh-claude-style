@@ -537,6 +537,10 @@
     "homeHeatTipTokens": {
       "zh": "{date} — {tokens} Token",
       "en": "{date} — {tokens} tokens"
+    },
+    "contextTotalTime": {
+      "zh": "总用时",
+      "en": "Total time"
     }
   },
   "settings": {

@@ -2,25 +2,45 @@
 
 All notable changes to `dsh-claude-style` are documented here, newest first.
 
-## [Unreleased]
+## [0.10.3] - 2026-10-01
 
-[中文](#cn-unreleased) | [English](#en-unreleased)
+[中文](#cn-0.10.3) | [English](#en-0.10.3)
 
-<h3 id="cn-unreleased">体验优化</h3>
+<h3 id="cn-0.10.3">体验优化</h3>
 
+- **上下文弹层与计量环右缘对齐**：宿主把弹层从计量环的左缘往下放，输入行右端按这个位置只够把它挤到窗口右缘，和圆环错开一截。现在弹层的右缘与计量环的右缘齐平，窗口宽度变化、页面滚动与弹层自身高度变化时都重新量。
 - **用量面板的数字与模型列表写法统一**：概览页「Token 总量」一格与热力图提示原来写「1.0M」「2.00B」「963.6K」，现在与模型列表一样写「1M」「2B」「963.6k」——最多一位小数、整数不带 `.0`、`k` 小写，单位按四舍五入后的值取，刚过百万的读数不再出现「1000k」。轮次状态行的输出 tokens 也走这一套写法。
+- **首页工作区弹层改到控件正上方**：hero 行的工作区与预设两个弹层原来贴在控件右侧、底边与控件齐平；现在与输入框上的模型、推理档位弹层同一种摆法，与控件右缘对齐、在控件上方留 6px 展开，上方空间不够时翻到控件下方。快捷供应商弹层一直与触发控件右缘对齐，却从左下角放大展开，现在与模型弹层一样从右下角展开。
+- **「性能与用量」选简洁档时，上下文弹层里仍有四个数字**：以前简洁档下弹层里只有宿主自己的上下文明细，会话的用时与速度一概看不到。现在简洁档补上总用时（模型用时加工具调用用时）、首 token 平均、输出速度与缓存命中比例；详细档给出宿主那两组全部的行，与之前一致。
 
-<h3 id="cn-unreleased">其他变更</h3>
+### 问题修复
+
+- **推理档位触发控件收起后不再回来**：切到不带档位的模型再切回来，或离开再回到带输入框的页面，模型名右边只剩一块空位，档位名与可点的控件都看不见了。现在触发器重建后回到模型名旁边，档位照常可选。
+- **输入框下方那一行里上下文计量环偏高**：同一行里模型名、推理档位与权限控件的中心都在一条线上，只有计量环与它的读数高出 2 像素。现在计量环与这一行其余控件同线。
+
+### 其他变更
 
 - **两份 README 改成同一套骨架**：英文版删去功能清单与「停用与卸载」两节，小鲸鱼 Deepy 的八张动图移进预览一节，安装步骤两份都读作插件页、终端、插件市场三步。0.10.2 条目里提到的「特点」一节随这次改动不再存在。
+- **发行包不再包含 README 截图**：`package.json` 的 `files` 只带 `docs/STYLE.md` 与 `docs/architecture.md` 两篇文档，八张截图留在仓库里。npm 包解包体积由 3.24 MiB 降到 2.47 MiB，下载体积由 1.89 MB 降到 1.07 MB；GitHub 与 npm 页面上的 README 图片照常显示。
 
-<h3 id="en-unreleased">Improvements</h3>
+<h3 id="en-0.10.3">Improvements</h3>
 
+- **The context popover now lines its right edge up with the meter**: the host hangs the panel from the meter's LEFT edge, and at the end of the composer row that position only fits by parking the panel against the window's right margin, well clear of the ring. The panel's right edge now sits on the ring's, re-read on window resizes, page scrolls and changes to the panel's own height.
 - **The usage panel's numbers now read the way the model list writes them**: the Overview tab's Total tokens cell and the heat grid's tips used "1.0M", "2.00B" and "963.6K"; they now print "1M", "2B" and "963.6k" like the model list — one decimal at most, a whole number without its ".0", a lowercase k, and the unit picked on the rounded value, so a count just past a million never reads "1000k". The turn status line's output tokens print through the same formatter.
+- **The home page's workspace popover now opens over its control**: the hero row's workspace and preset cards used to sit beside their control, bottom-aligned with it; they now take the placement the composer's model and effort popovers use — right-aligned with the control and opening 6px above it, flipping below when the viewport leaves no room. The quick-provider popover, which has always been right-aligned with its trigger, scaled in from its bottom-left corner; it now grows from the bottom-right one, like the model picker.
+- **The context popover keeps four figures under the compact "performance & usage" row**: with the compact row the popover used to carry the host's context rows and nothing about the session. It now adds the total time (the model's time plus the tool calls'), the first-token average, the output speed and the cache-hit share; the detailed row keeps the host's whole set, exactly as before.
 
-<h3 id="en-unreleased">Chores</h3>
+### Bug Fixes
+
+- **The reasoning-effort control no longer stayed away once taken down**: switching to a model without levels and back, or leaving a page with the input area and returning, left an empty slot beside the model name — no level name, nothing to click. The trigger now returns beside the model name, and the levels are selectable again.
+- **The context meter rode high in the composer's control row**: the model name, the effort level and the permission control shared one centre line while the ring and its reading sat 2px above it. The meter now sits on the same line as the rest of the row.
+
+### Chores
 
 - **Both READMEs now share one skeleton**: the English one drops its feature list and its "Disabling and uninstalling" section, Deepy's eight GIFs move into the preview, and installation reads as three steps — plugin page, terminal, plugin market — in both languages. The "Features" section the 0.10.2 entry names no longer exists as of this change.
+- **The npm package no longer carries the README screenshots**: `package.json`'s `files` now ships only the two documents under `docs/` (`STYLE.md` and `architecture.md`), leaving the eight screenshots in the repository. The unpacked package drops from 3.24 MiB to 2.47 MiB and the tarball from 1.89 MB to 1.07 MB, while the README keeps showing its images on GitHub and npm.
+
+**Full Changelog**: [v0.10.2...v0.10.3](https://github.com/Nwflower/dsh-claude-style/compare/v0.10.2...v0.10.3)
 
 ## [0.10.2] - 2026-09-30
 
