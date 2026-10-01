@@ -2,6 +2,26 @@
 
 All notable changes to `dsh-claude-style` are documented here, newest first.
 
+## [Unreleased]
+
+[中文](#cn-unreleased) | [English](#en-unreleased)
+
+<h3 id="cn-unreleased">体验优化</h3>
+
+- **用量面板的数字与模型列表写法统一**：概览页「Token 总量」一格与热力图提示原来写「1.0M」「2.00B」「963.6K」，现在与模型列表一样写「1M」「2B」「963.6k」——最多一位小数、整数不带 `.0`、`k` 小写，单位按四舍五入后的值取，刚过百万的读数不再出现「1000k」。轮次状态行的输出 tokens 也走这一套写法。
+
+<h3 id="cn-unreleased">其他变更</h3>
+
+- **两份 README 改成同一套骨架**：英文版删去功能清单与「停用与卸载」两节，小鲸鱼 Deepy 的八张动图移进预览一节，安装步骤两份都读作插件页、终端、插件市场三步。0.10.2 条目里提到的「特点」一节随这次改动不再存在。
+
+<h3 id="en-unreleased">Improvements</h3>
+
+- **The usage panel's numbers now read the way the model list writes them**: the Overview tab's Total tokens cell and the heat grid's tips used "1.0M", "2.00B" and "963.6K"; they now print "1M", "2B" and "963.6k" like the model list — one decimal at most, a whole number without its ".0", a lowercase k, and the unit picked on the rounded value, so a count just past a million never reads "1000k". The turn status line's output tokens print through the same formatter.
+
+<h3 id="en-unreleased">Chores</h3>
+
+- **Both READMEs now share one skeleton**: the English one drops its feature list and its "Disabling and uninstalling" section, Deepy's eight GIFs move into the preview, and installation reads as three steps — plugin page, terminal, plugin market — in both languages. The "Features" section the 0.10.2 entry names no longer exists as of this change.
+
 ## [0.10.2] - 2026-09-30
 
 [中文](#cn-0.10.2) | [English](#en-0.10.2)
