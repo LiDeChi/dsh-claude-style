@@ -176,12 +176,14 @@ body[data-dsh-claude-style] .dsh-claude-settings-picker[aria-expanded="true"] {
 }
 
 /* The quick-provider picker's card (src/features/settings/quick-providers.js):
-   the shared popover card, placed like the permission popover it mirrors. */
+   the shared popover card, anchored above the trigger and right-aligned with it
+   (positionAnchoredPopover), so it grows from the corner nearest the trigger —
+   the bottom right, as the model picker's card does. */
 body[data-dsh-claude-style] .dsh-claude-quick-popover {
   position: fixed !important;
   min-width: 248px !important;
   display: flex !important;
   flex-direction: column !important;
   gap: 6px !important;
-  transform-origin: bottom left !important;
+  transform-origin: bottom right !important;
 }

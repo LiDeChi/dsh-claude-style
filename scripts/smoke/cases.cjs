@@ -436,6 +436,14 @@ const CASES = {
       r.workspaceCard !== null && r.workspaceCard.kind === 'workspace' && r.workspaceCard.iconsShown === 0 &&
         r.workspaceCard.rowHeight === 26,
       JSON.stringify(r.workspaceCard))
+    check('the hero card opens above its trigger, right-aligned with it, by the skin\'s 6px air',
+      r.workspacePlacement !== null && r.workspacePlacement.side === 'above' &&
+        r.workspacePlacement.airAbove === 6 && Math.abs(r.workspacePlacement.rightDelta) <= 1,
+      JSON.stringify(r.workspacePlacement))
+    check('with no room above, the hero card flips below its trigger',
+      r.workspacePlacementTight !== null && r.workspacePlacementTight.side === 'below' &&
+        r.workspacePlacementTight.airBelow === 6,
+      JSON.stringify(r.workspacePlacementTight))
     check('leaving the row leaves no hero picker up',
       r.heroMenusLeft === 0, `${r.heroMenusLeft} open`)
     check('leaving every trigger leaves no card up',

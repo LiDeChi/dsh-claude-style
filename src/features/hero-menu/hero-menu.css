@@ -36,8 +36,9 @@ body[data-dsh-claude-style] [%%HERO_MENU_ATTR%%] {
   font-family: var(--dsw-font-family) !important;
   /* The host mounts the card instead of toggling a `data-open` attribute, so
      the skin's open transition becomes a one-shot animation with the same
-     values. Its origin is the edge nearest the trigger: the card sits beside it. */
-  transform-origin: bottom left !important;
+     values. Its origin is the corner nearest the trigger: the card opens above
+     the trigger's right edge, as the skin's composer pickers do. */
+  transform-origin: bottom right !important;
   animation: dsh-claude-hero-menu-in 0.15s ease !important;
 }
 @keyframes dsh-claude-hero-menu-in {

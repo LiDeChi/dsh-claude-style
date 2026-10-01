@@ -107,6 +107,20 @@
           rowHeight: row === null ? null : Math.round(row.getBoundingClientRect().height),
         }
       }
+      /** Where the stamped card sits against its trigger, in the skin's own terms. */
+      function heroCardPlacement() {
+        var card = document.querySelector('[data-dsh-claude-hero-menu]')
+        var row = document.getElementById('hero-workspace')
+        if (card === null) return null
+        var c = card.getBoundingClientRect()
+        var t = row.getBoundingClientRect()
+        return {
+          side: c.bottom <= t.top + 1 ? 'above' : (c.top >= t.bottom - 1 ? 'below' : 'overlapping'),
+          airAbove: Math.round(t.top - c.bottom),
+          airBelow: Math.round(c.top - t.bottom),
+          rightDelta: Math.round(t.right - c.right),
+        }
+      }
       r.presetCard = heroCardShape()
       heroTrigger.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }))
       await sleep(250)
@@ -114,10 +128,24 @@
       r.presetFoldedBySibling = window.__heroMenuOpen('hero-preset')
       r.heroCardsUp = hostCards()
       r.workspaceCard = heroCardShape()
+      r.workspacePlacement = heroCardPlacement()
       // Leaving the row folds the menu the hover opened, and only that one.
       heroTrigger.dispatchEvent(new MouseEvent('mouseout', { bubbles: true, relatedTarget: document.body }))
       await sleep(300)
       r.heroMenusLeft = window.__heroMenusOpen()
+      // The row against the viewport's top edge leaves no room above: the card
+      // flips below its trigger rather than leaving the screen.
+      var heroRow = document.querySelector('[class*="heroWorkspaceRow"]')
+      heroRow.style.bottom = 'auto'
+      heroRow.style.top = '0px'
+      heroTrigger.click()
+      await sleep(250)
+      r.workspacePlacementTight = heroCardPlacement()
+      heroTrigger.click()
+      await sleep(200)
+      r.heroMenusLeftAfterFlip = window.__heroMenusOpen()
+      heroRow.style.bottom = ''
+      heroRow.style.top = ''
       permTrigger.dispatchEvent(new MouseEvent('mouseleave'))
       drawerTrigger.dispatchEvent(new MouseEvent('mouseleave'))
       await sleep(250)
@@ -416,7 +444,7 @@
         }
       }
     }
-    if (window.SMOKE_CASE === 'context-stats') {
+    if (window.SMOKE_CASE === 'context-stats' || window.SMOKE_CASE === 'stats-compact') {
       // The shown conversation, marked the way the host marks it: the skin reads
       // the session id off the conversation column, so the card and its dock are
       // wrapped in the case's own phase/column pair (the dock stays the card's
@@ -455,6 +483,18 @@
       r.context.opened = statsPanel !== null
       r.context.expanded = statsMeter === null ? null : statsMeter.querySelector('button').getAttribute('aria-expanded')
       r.context.hostRows = statsPanel === null ? 0 : statsPanel.querySelectorAll('dl dt').length
+      // The panel is the host's and it places from the anchor's left edge; the
+      // skin hands over the left value that puts the panel's right edge on the
+      // meter's — or on the viewport margin when the panel is wider than the
+      // room left of the window's edge.
+      var statsWidth = statsPanel === null ? 0 : statsPanel.offsetWidth
+      var statsMeterRight = statsMeter === null ? 0 : Math.round(statsMeter.getBoundingClientRect().right)
+      var statsLeft = statsPanel === null ? NaN : parseInt(statsPanel.style.getPropertyValue('--dsh-claude-context-panel-left'), 10)
+      r.context.aligned = statsPanel !== null && statsPanel.hasAttribute('data-dsh-claude-context-aligned')
+      r.context.edgeAligned = statsPanel !== null && statsWidth > 0 && !isNaN(statsLeft) &&
+        (statsLeft + statsWidth === statsMeterRight ||
+          statsLeft === 12 ||
+          statsLeft === window.innerWidth - statsWidth - 12)
       r.context.skeletonGone = statsBlock !== null && !statsBlock.hasAttribute('data-dsh-claude-context-skeleton')
       r.context.sections = statsBlock === null ? null : Array.prototype.map.call(statsBlock.querySelectorAll('.dsh-claude-context-stats-section'), function (s) {
         return (s.textContent || '').trim()

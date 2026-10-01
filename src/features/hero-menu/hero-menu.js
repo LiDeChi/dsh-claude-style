@@ -20,12 +20,14 @@
      *
      * The host drops that card below its trigger, which is exactly where the
      * composer sits: it would land on the input area and on the controls in it.
-     * This row is *above* the composer, so the card belongs beside the trigger
-     * instead — bottom-aligned with it and growing upward into the empty hero
-     * space. The host re-places the card from its own geometry on every frame
-     * while the card is open, and an inline `left` / `top` written here would
-     * live only until the host's next frame. The position therefore travels in
-     * two custom properties, which the host's style writes never touch, and
+     * This row sits above the composer, so the card is placed the way the skin's
+     * own composer pickers sit on their triggers — right-aligned with the
+     * trigger and opening upward, flipped below it only when the viewport leaves
+     * no room above. The host re-places the card from its own geometry on every
+     * frame while the card is open, and an inline `left` / `top` written here
+     * would live only until the host's next frame. The position therefore
+     * travels in two custom properties, which the host's style writes never
+     * touch, and
      * features/hero-menu/hero-menu.css reads them with `!important`: an author
      * `!important` declaration outranks the host's plain inline value, so the
      * card holds this position from the pass that stamps it onward. The
@@ -38,9 +40,8 @@
      * trigger and the card so crossing it does not shut the menu.
      */
     function installHeroMenu(ctx, ui) {
-      /** Air between the trigger and the card, and the viewport's own margin. */
+      /** Air between the trigger and its card, as the skin's other pickers take. */
       const GAP = 6
-      const MARGIN = 12
       /** Long enough to cross the gap above, short enough to still read as hover. */
       const CLOSE_DELAY = POPOVER_CLOSE_DELAY
       /** The two triggers, and the card once it is stamped. */
@@ -225,21 +226,22 @@
       }
 
       /**
-       * Park the card beside its trigger: to its right, bottom-aligned so it
-       * grows upward, flipped to the left when the viewport is tight, and clamped
-       * to the viewport either way. A card that has not been laid out yet is left
-       * for the next pass rather than pinned to a zero-sized guess.
+       * Park the card on its trigger: right-aligned with it and opening above it
+       * by the same air the skin's own pickers take, flipped below when the
+       * viewport leaves no room above, and clamped to the viewport either way.
+       * A card that has not been laid out yet is left for the next pass rather
+       * than pinned to a zero-sized guess.
        */
       function placeCard(trigger, card) {
         const rect = trigger.getBoundingClientRect()
         const width = card.offsetWidth
         const height = card.offsetHeight
         if (width === 0 || height === 0) return
-        let left = rect.right + GAP
-        if (left + width > window.innerWidth - MARGIN) left = rect.left - GAP - width
-        left = Math.max(MARGIN, Math.min(left, window.innerWidth - width - MARGIN))
-        let top = rect.bottom - height
-        top = Math.max(MARGIN, Math.min(top, window.innerHeight - height - MARGIN))
+        const left = Math.max(POPOVER_MARGIN, Math.min(rect.right - width, window.innerWidth - width - POPOVER_MARGIN))
+        let top = rect.top - GAP - height
+        if (top < POPOVER_MARGIN) {
+          top = Math.min(rect.bottom + GAP, Math.max(POPOVER_MARGIN, window.innerHeight - height - POPOVER_MARGIN))
+        }
         card.style.setProperty('--dsh-claude-hero-menu-x', `${Math.round(left)}px`)
         card.style.setProperty('--dsh-claude-hero-menu-y', `${Math.round(top)}px`)
       }

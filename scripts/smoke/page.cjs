@@ -69,6 +69,16 @@ function page(name) {
   // filled anchor button (AccountSection's "充值", `_linkButton _primary`). The
   // skin supplies the tokens both read; the host supplies the foreground token
   // for a filled control, which the skin leaves alone.
+  // The popovers case drives the hero row's own host menus. In the real page the
+  // host portals them to <body> as fixed-position cards and places them from the
+  // trigger's geometry, and the row itself sits above the composer with the
+  // hero's empty space over it. Both are what the skin's placement pass reads.
+  var heroLayout = name === 'popovers'
+    ? '<style>' +
+        '._x_heroWorkspaceRow_1 { position: fixed; left: 45%; bottom: 120px; display: flex; gap: 8px; }' +
+        'body > [role="menu"] { position: fixed; }' +
+      '</style>'
+    : ''
   var hostControls = '<style>' +
       'body { --dsw-alias-label-primary-foreground: #ffffff; }' +
       'body[data-ds-dark-theme] { --dsw-alias-label-primary-foreground: #0f1115; }' +
@@ -100,6 +110,7 @@ ${heroRow}
   </div>
 </div>
 ${dock}
+${heroLayout}
 ${hostControls}
 <script>window.SMOKE_CASE = ${JSON.stringify(name)}; window.SMOKE_MARKUP = ${JSON.stringify(MARKUP)}; window.SMOKE_PNG = ${JSON.stringify(PNG_1PX)}</script>
 <script>${STAND_IN}</script>
