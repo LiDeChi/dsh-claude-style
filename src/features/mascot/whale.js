@@ -28,12 +28,11 @@
      * are custom properties on the whale's own node, and a frame change is a
      * translation of the strip inside the sprite's overflow-hidden window,
      * played by the browser's animation engine (WAAPI steps keyframes) — no
-     * timer, no DOM mutation, so playing never wakes a pass. A
-     * sheet loads the first time its animation is wanted — its pixels are
-     * rebuilt as SVG, so the bitmap kept in memory is the size the whale is
-     * drawn at and every display density gets a sharp one — and the animation
-     * on screen keeps playing until the new sheet is ready, so a switch never
-     * blinks. A reader who asks for reduced motion gets each state's still
+     * timer, no DOM mutation, so playing never wakes a pass. A sheet loads
+     * the first time its animation is wanted — the loading, conversion and
+     * caching live in whale-sheets.js — and the animation on screen keeps
+     * playing until the new sheet is ready, so a switch never blinks. A reader
+     * who asks for reduced motion gets each state's still
      * frame, and the reactions only when they click.
      *
      * @param ctx - client context.
@@ -69,7 +68,6 @@
       let strip = null
       let anchor = null
       let signals = null
-      let alive = true
       /** The followed session id, or null on the home page. */
       let sessionId = null
       let level = null
@@ -88,170 +86,14 @@
       /** The WAAPI animation playing on the strip; null while a still frame is pinned. */
       let animation = null
       let timer = null
-      /** Sheet key → 'loading' | 'ready' | 'failed'. */
-      const sheets = new Map()
+      /** The sheet pipeline (whale-sheets.js): loads, converts and caches each sheet. */
+      const sheets = createMascotWhaleSheets(onSheetReady)
       let clicks = []
       let press = null
 
-      function sheetUrl(key) {
-        return `${DEEPY_ROUTE}${key}.png?v=${BUILD_ID}`
-      }
-
-      /**
-       * The address the sprite paints a sheet from. Sheets ship as PNG (the
-       * format compresses this art best), but a vector is rasterized at the
-       * size it is drawn and only that small bitmap is kept — so the first
-       * time an animation is wanted, its sheet's pixels are rebuilt here as
-       * SVG (one path per color, a row's runs of one color merged) and the
-       * SVG is what plays. The text is cached under the sheet's own
-       * content stamp (DEEPY_STAMPS, built from the sheet's bytes), so a
-       * sheet is re-converted only when its own pixels change; a sheet that
-       * decodes yet does not convert plays as the PNG it came from.
-       */
-
-      /** Cache API store for the generated SVG texts; entries key on the sheet's content stamp. */
-      const SHEET_CACHE = 'dsh-claude-style-deepy'
-      /** Bumped when the conversion below changes: cached vectors key on it too. */
-      const CONVERTER_VERSION = 1
-      /** The address each loaded sheet plays from. */
-      const sheetUrls = new Map()
-      /** Blob addresses handed out, revoked on dispose. */
-      const objectUrls = []
-      let cacheUsable = typeof caches !== 'undefined'
-
-      /** The cache address of a sheet's vector: its own stamp plus the converter's version. */
-      function sheetCacheKey(key) {
-        return `${location.origin}${DEEPY_ROUTE}${key}.svg?v=${DEEPY_STAMPS[key]}-${CONVERTER_VERSION}`
-      }
-
-      /** The cached SVG text for a sheet, or null on a miss. */
-      async function sheetCacheRead(key) {
-        if (!cacheUsable) return null
-        try {
-          const store = await caches.open(SHEET_CACHE)
-          const hit = await store.match(sheetCacheKey(key))
-          return hit === undefined ? null : hit.text()
-        } catch (error) {
-          // A cache that refuses is a cache that always misses: convert per load.
-          cacheUsable = false
-          console.warn("[dsh-claude-style] Deepy's sheet cache is unavailable; sheets convert once per page load instead.", error)
-          return null
-        }
-      }
-
-      function sheetCacheWrite(key, svg) {
-        if (!cacheUsable) return
-        caches.open(SHEET_CACHE).then(store => {
-          // Stale stamps of this same sheet are dead weight: drop them on a write.
-          store.keys().then(requests => {
-            for (const request of requests) {
-              if (request.url.includes(`${DEEPY_ROUTE}${key}.svg`) && request.url !== sheetCacheKey(key)) store.delete(request)
-            }
-          })
-          store.put(sheetCacheKey(key), new Response(svg, { headers: { 'content-type': 'image/svg+xml' } }))
-        }).catch(error => {
-          // Same standing as a read refusal: the cache is a miss from here on.
-          cacheUsable = false
-          console.warn("[dsh-claude-style] Deepy's sheet cache refused a write; sheets convert once per page load instead.", error)
-        })
-      }
-
-      /**
-       * Rebuild a decoded sheet as SVG text: one path per color, each made of
-       * a row's runs of that color. Transparent pixels are simply absent.
-       */
-      function vectorizeSheet(image) {
-        const width = image.naturalWidth
-        const height = image.naturalHeight
-        const canvas = document.createElement('canvas')
-        canvas.width = width
-        canvas.height = height
-        const pen = canvas.getContext('2d')
-        pen.drawImage(image, 0, 0)
-        const data = pen.getImageData(0, 0, width, height).data
-        /** Color string → the path chunks of its runs so far. */
-        const paths = new Map()
-        for (let y = 0; y < height; y++) {
-          let x = 0
-          while (x < width) {
-            const at = (y * width + x) * 4
-            const r = data[at]
-            const g = data[at + 1]
-            const b = data[at + 2]
-            const a = data[at + 3]
-            let end = x + 1
-            while (end < width) {
-              const next = (y * width + end) * 4
-              if (data[next] !== r || data[next + 1] !== g || data[next + 2] !== b || data[next + 3] !== a) break
-              end++
-            }
-            if (a !== 0) {
-              const color = a === 255
-                ? `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`
-                : `rgba(${r},${g},${b},${(a / 255).toFixed(3)})`
-              const chunk = `M${x} ${y}h${end - x}v1h${x - end}z`
-              const known = paths.get(color)
-              if (known === undefined) paths.set(color, [chunk])
-              else known.push(chunk)
-            }
-            x = end
-          }
-        }
-        const parts = [`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">`]
-        for (const [color, chunks] of paths) parts.push(`<path fill="${color}" d="${chunks.join('')}"/>`)
-        parts.push('</svg>')
-        return parts.join('')
-      }
-
-      function sheetObjectUrl(text) {
-        const url = URL.createObjectURL(new Blob([text], { type: 'image/svg+xml' }))
-        objectUrls.push(url)
-        return url
-      }
-
-      /**
-       * Resolve the address one sheet plays from: the cached vector text, a
-       * fresh conversion of its pixels, or — when the sheet decodes but does
-       * not convert — the PNG itself. Rejects only when the sheet does not
-       * load at all.
-       */
-      async function prepareSheet(key) {
-        const url = sheetUrl(key)
-        const cached = await sheetCacheRead(key)
-        if (cached !== null) return sheetObjectUrl(cached)
-        const image = new Image()
-        image.src = url
-        await image.decode()
-        try {
-          const svg = vectorizeSheet(image)
-          sheetCacheWrite(key, svg)
-          return sheetObjectUrl(svg)
-        } catch (error) {
-          // The PNG fallback the reader asked for: the sheet plays as-is.
-          console.warn(`[dsh-claude-style] Deepy's "${key}" sheet could not be vectorized; playing the PNG as-is.`, error)
-          return url
-        }
-      }
-
-      /**
-       * Whether a sheet is ready to paint, starting its load the first time.
-       * A sheet that does not load leaves its animation out and says so once:
-       * the host half serves the sheets, and one that predates them answers 404.
-       */
-      function sheetReady(key) {
-        const known = sheets.get(key)
-        if (known !== undefined) return known === 'ready'
-        sheets.set(key, 'loading')
-        prepareSheet(key).then(url => {
-          sheetUrls.set(key, url)
-          sheets.set(key, 'ready')
-          if (alive && root !== null) step()
-        }, () => {
-          // The host half did not serve the sheet: the animation stays out.
-          sheets.set(key, 'failed')
-          console.warn(`[dsh-claude-style] Deepy's "${key}" sheet did not load from ${sheetUrl(key)}; the host half serves it, so restart the host after an update.`)
-        })
-        return false
+      /** A sheet became playable: read the state again and play what it asks for. */
+      function onSheetReady() {
+        if (root !== null) step()
       }
 
       function build() {
@@ -469,10 +311,10 @@
         const settled = current === null || current.mode !== 'loop' || current.priority === REACTION_PRIORITY ||
           next.priority > current.priority || now - current.start >= MIN_SHOW_MS
         if (switching && settled) {
-          if (sheetReady(next.key)) show(next, now)
+          if (sheets.ready(next.key)) show(next, now)
           // A once animation whose sheet never came counts as played, so the
           // whale does not wait on it for good.
-          else if (next.mode === 'once' && sheets.get(next.key) === 'failed') {
+          else if (next.mode === 'once' && sheets.failed(next.key)) {
             if (reaction !== null) reaction.fresh = false
             finish(next.key, now)
           }
@@ -498,7 +340,7 @@
         current = { key: next.key, mode: next.mode, priority: next.priority, start: now }
         if (reaction !== null && reaction.key === next.key) reaction.fresh = false
         const style = root.style
-        style.setProperty('--dsh-claude-deepy-sheet', `url("${sheetUrls.get(next.key)}")`)
+        style.setProperty('--dsh-claude-deepy-sheet', `url("${sheets.url(next.key)}")`)
         style.setProperty('--dsh-claude-deepy-x', String(sheet.box[0]))
         style.setProperty('--dsh-claude-deepy-y', String(sheet.box[1]))
         style.setProperty('--dsh-claude-deepy-w', String(sheet.box[2]))
@@ -631,11 +473,8 @@
       }
 
       function dispose() {
-        alive = false
         release()
-        for (const url of objectUrls) URL.revokeObjectURL(url)
-        objectUrls.length = 0
-        sheetUrls.clear()
+        sheets.dispose()
         root = null
         sprite = null
         strip = null
