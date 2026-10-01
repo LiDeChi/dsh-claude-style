@@ -5,7 +5,7 @@
      * `ctx.configForms`: it serves every registered namespace to the browser,
      * and its per-entry controller carries the values, the write queue and the
      * revision fence. The namespace is this plugin's profile entry id and its
-     * schema is the Config `host/index.js` exports.
+     * schema is the Config `host/settings.js` exports.
      *
      * Every value is mirrored onto the document as an attribute, so the
      * stylesheet — not this module — decides what a preference means visually.

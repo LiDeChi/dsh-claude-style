@@ -177,7 +177,7 @@
 
     /**
      * Preferences, persisted in the profile entry's settings namespace (the
-     * exported Config in host/index.js declares the fields; src/core/prefs.js
+     * exported Config in host/settings.js declares the fields; src/core/prefs.js
      * reads and writes them). Each value is mirrored onto the document as an
      * attribute so the stylesheet decides what a preference means, and the
      * defaults here are the shipped behaviour.
@@ -337,7 +337,7 @@
      */
     const HOME_HERO_ATTR = 'data-dsh-claude-home-hero'
     /**
-     * The host half's session-deletion route (host/index.js, SESSION_DELETE_PATH).
+     * The host half's session-deletion route (host/routes.js, SESSION_DELETE_PATH).
      * The harness gives the browser half no deletion API of its own, so the
      * archived row's delete button posts the session id here and the host half
      * removes the stored session directory and the id's entry in the workspace
@@ -345,7 +345,7 @@
      */
     const SESSION_DELETE_ROUTE = '/dsh-claude-style/session-delete'
     /**
-     * The host half's cross-session usage roll-up (host/index.js, USAGE_PATH).
+     * The host half's cross-session usage roll-up (host/routes.js, USAGE_PATH).
      * The browser half cannot read the session logs or the cost-meter ledger, so
      * the day buckets behind the home dashboard's panel arrive from here.
      */
@@ -389,9 +389,9 @@
      * (src/features/account/rows.js).
      */
     const HDSL_SKIN_ROUTE = '/dsh-claude-style/hdsl-skin.png'
-    /** Longest accepted custom username; mirrored by host/index.js. */
+    /** Longest accepted custom username; mirrored by host/settings.js. */
     const USERNAME_MAX = 64
-    /** Most quick-provider ids kept, and the longest id accepted; mirrored by host/index.js. */
+    /** Most quick-provider ids kept, and the longest id accepted; mirrored by host/settings.js. */
     const QUICK_PROVIDERS_MAX = 64
     const PROVIDER_ID_MAX = 128
 
