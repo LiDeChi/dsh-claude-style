@@ -67,10 +67,10 @@ body[data-dsh-claude-style] [class*="_trailing"] .dsh-claude-model-btn-label {
    end. The dock is the card's next sibling; the queue, todo and goal overlays
    above the card name their roots `dock` too and keep the host's own
    placement. */
-body[data-dsh-claude-style] [class*="composerStack"]:not([data-composer-variant="hero"]) {
+body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) {
   position: relative !important;
 }
-body[data-dsh-claude-style] [class*="composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] + [class*="_dock"] {
+body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] + [class*="_dock"] {
   position: absolute !important;
   bottom: 6px !important;
   left: var(--dsh-composer-side-clearance, 0px) !important;
@@ -87,7 +87,7 @@ body[data-dsh-claude-style] [class*="composerStack"]:not([data-composer-variant=
   max-width: var(--dsh-composer-card-max-width, 100%) !important;
   box-sizing: border-box !important;
 }
-body[data-dsh-claude-style] [class*="composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] + [class*="_dock"] > * {
+body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] + [class*="_dock"] > * {
   pointer-events: auto !important;
 }
 /* The meter holds the row's right end, inside the row's own 4px inset, after
@@ -95,14 +95,14 @@ body[data-dsh-claude-style] [class*="composerStack"]:not([data-composer-variant=
    (--dsh-claude-meter-room, measured by the permissions pass). Centred by
    stretching over the dock's height, never by a transform — the meter's panel
    is position: fixed, and a transform here would anchor it to the meter. */
-body[data-dsh-claude-style] [class*="composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] + [class*="_dock"] > [data-dsh-claude-context-meter] {
+body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] + [class*="_dock"] > [data-dsh-claude-context-meter] {
   position: absolute !important;
   top: 0 !important;
   bottom: 0 !important;
   right: 4px !important;
   align-items: center !important;
 }
-body[data-dsh-claude-style] [class*="composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] [class*="_row"] > [class*="_trailing"] {
+body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] [class*="_row"] > [class*="_trailing"] {
   margin-right: var(--dsh-claude-meter-room, 0px) !important;
 }
 
@@ -127,7 +127,7 @@ body[data-dsh-claude-style] [data-composer-stats] {
    because the host sets its own colour and size on that button. */
 body[data-dsh-claude-style] [data-dsh-claude-context-meter],
 body[data-dsh-claude-style] [data-dsh-claude-context-meter] button,
-body[data-dsh-claude-style] [class*="composerStack"] [data-composer-stats],
+body[data-dsh-claude-style] [class*="_composerStack"] [data-composer-stats],
 body[data-dsh-claude-style] [data-composer-card] [class*="_row"] .dsh-claude-model-btn {
   font-family: var(--dsw-font-family) !important;
   font-size: 13px !important;

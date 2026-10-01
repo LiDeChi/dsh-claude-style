@@ -106,11 +106,11 @@ body[data-dsh-claude-style][data-ds-dark-theme] [data-composer-card]:focus-withi
    comes before the card in the stack, so no sibling selector reaches it from
    the card; focus inside the stack but not inside the row itself is the card's
    (`:has(card:focus-within)` made every DOM change re-match the document). */
-body[data-dsh-claude-style]:not([data-ds-dark-theme]) [class*="composerStack"]:focus-within > [class*="heroWorkspaceRow"]:not(:focus-within) {
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) [class*="_composerStack"]:focus-within > [class*="heroWorkspaceRow"]:not(:focus-within) {
   border-color: rgba(20, 20, 19, 0.18);
 }
 
-body[data-dsh-claude-style][data-ds-dark-theme] [class*="composerStack"]:focus-within > [class*="heroWorkspaceRow"]:not(:focus-within) {
+body[data-dsh-claude-style][data-ds-dark-theme] [class*="_composerStack"]:focus-within > [class*="heroWorkspaceRow"]:not(:focus-within) {
   border-color: rgba(250, 249, 245, 0.22);
 }
 
@@ -170,23 +170,23 @@ body[data-dsh-claude-style] [data-composer-card] [class*="_chevron"] {
    (features/home/home-panel.css) places the workspace row as a plain context row
    above the card and the usage panel between them, so every rule below is
    scoped away from it. */
-body[data-dsh-claude-style]:not([data-dsh-claude-home-layout="studio"]) [class*="composerStack"][data-composer-variant="hero"] {
+body[data-dsh-claude-style]:not([data-dsh-claude-home-layout="studio"]) [class*="_composerStack"][data-composer-variant="hero"] {
   --dsh-claude-bar-h: 96px;
 }
 
-body[data-dsh-claude-style]:not([data-dsh-claude-home-layout="studio"]) [class*="composerStack"][data-composer-variant="hero"] *:has([data-composer-card]) {
+body[data-dsh-claude-style]:not([data-dsh-claude-home-layout="studio"]) [class*="_composerStack"][data-composer-variant="hero"] *:has([data-composer-card]) {
   order: 1;
   padding-bottom: 0 !important;
 }
 
-body[data-dsh-claude-style]:not([data-dsh-claude-home-layout="studio"]) [class*="composerStack"][data-composer-variant="hero"] [data-composer-card] {
+body[data-dsh-claude-style]:not([data-dsh-claude-home-layout="studio"]) [class*="_composerStack"][data-composer-variant="hero"] [data-composer-card] {
   gap: 8px !important;
   padding-bottom: 2px !important;
   min-height: 0 !important;
   height: auto !important;
 }
 
-body[data-dsh-claude-style]:not([data-dsh-claude-home-layout="studio"]) [class*="composerStack"][data-composer-variant="hero"] > [class*="heroWorkspaceRow"] {
+body[data-dsh-claude-style]:not([data-dsh-claude-home-layout="studio"]) [class*="_composerStack"][data-composer-variant="hero"] > [class*="heroWorkspaceRow"] {
   order: 2;
   position: relative;
   z-index: 1;
