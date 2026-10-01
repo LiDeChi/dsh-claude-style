@@ -151,6 +151,9 @@ const CASES = {
       JSON.stringify(r.context.values))
     check('a projection frame rewrites the block while the popover is open',
       r.context.pushed === '1m1s', JSON.stringify(r.context.pushed))
+    check('the skin hands the stylesheet the left edge that lines the panel up with the meter',
+      r.context.aligned === true && r.context.edgeAligned === true,
+      JSON.stringify({ aligned: r.context.aligned, edgeAligned: r.context.edgeAligned }))
     check('leaving the meter closes the popover and takes the block with it',
       r.context.closedAfterLeave === true, JSON.stringify(r.context.closedAfterLeave))
     commonChecks(r)
@@ -261,8 +264,24 @@ const CASES = {
     check('the compact row is hidden too, and no card of the skin\'s own is left',
       r.statsHidden === true && r.statsStrayCards === 0,
       JSON.stringify({ hidden: r.statsHidden, cards: r.statsStrayCards }))
-    check('the compact row carries no trigger, so no popover opens for it',
-      r.context === undefined, JSON.stringify(r.context))
+    check('the compact row carries no trigger of its own; the meter still opens the panel',
+      r.context.panelStamped === true && r.context.opened === true && r.context.expanded === 'true',
+      JSON.stringify({ stamped: r.context.panelStamped, opened: r.context.opened, expanded: r.context.expanded }))
+    check('with no projection frame yet the place is the compact one: three time rows, one usage row',
+      same(r.context.skeletonSections, ['Session statistics', 'Token usage']) &&
+        r.context.skeletonRows === 4 && r.context.skeletonItemHeight === 37,
+      JSON.stringify({ sections: r.context.skeletonSections, rows: r.context.skeletonRows, itemHeight: r.context.skeletonItemHeight }))
+    check('the compact block keeps four figures: the total time, the first-token average, the output speed and the cache-hit share',
+      r.context.skeletonGone === true &&
+        same(r.context.sections, ['Session statistics', 'Token usage']) &&
+        same(r.context.labels, ['Total time', 'Avg time to first token (TTFT)', 'Tokens per second (TPS)', 'Cache hit']) &&
+        same(r.context.values, ['1.6s', '0.8s', '105 tok/s', '90%']),
+      JSON.stringify({ labels: r.context.labels, values: r.context.values }))
+    check('the total is the model time plus the tool calls\'',
+      r.context.pushed === '1m1s', JSON.stringify(r.context.pushed))
+    check('the skin hands the stylesheet the left edge that lines the panel up with the meter',
+      r.context.aligned === true && r.context.edgeAligned === true,
+      JSON.stringify({ aligned: r.context.aligned, edgeAligned: r.context.edgeAligned }))
     commonChecks(r)
   },
   markup(r) {

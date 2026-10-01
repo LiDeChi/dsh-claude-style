@@ -135,7 +135,8 @@
     "homeSessions": { "zh": "会话数", "en": "Sessions" },
     "homeActiveDays": { "zh": "活跃天数", "en": "Active days" },
     "homeTopModel": { "zh": "最常用模型", "en": "Favorite model" },
-    "homeHeatTipTokens": { "zh": "{date} — {tokens} Token", "en": "{date} — {tokens} tokens" }
+    "homeHeatTipTokens": { "zh": "{date} — {tokens} Token", "en": "{date} — {tokens} tokens" },
+    "contextTotalTime": { "zh": "总用时", "en": "Total time" }
   },
   "settings": {
     "title": { "zh": "Claude Style", "en": "Claude Style" },

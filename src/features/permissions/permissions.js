@@ -613,6 +613,14 @@
           syncSegments()
         },
         /**
+         * A viewport move under the context panel: the panel is the host's, and
+         * the stats card only re-takes its own reading of where the panel's
+         * right edge belongs (session-stats.js).
+         */
+        reposition(reason) {
+          stats.reposition(reason)
+        },
+        /**
          * Esc closes the menu; composer focus additionally closes the stats
          * card. There is deliberately no 'outside' route — the menu runs its
          * own document pointerdown listener (see buildPermTriggerAndPopover).

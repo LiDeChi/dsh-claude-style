@@ -157,6 +157,16 @@ body[data-dsh-claude-style][%%PERMISSIONS_ATTR%%] [role="dialog"]:has([data-sess
 body[data-dsh-claude-style] [data-dsh-claude-context-panel] {
   animation: dsh-claude-popover-in 0.15s ease !important;
 }
+/* The host places the panel from the anchor's LEFT edge and only then clamps it
+   into the viewport, which at the end of the composer row parks it against the
+   window's right margin, past the ring. session-stats.js reads the two boxes and
+   writes the left value that lines the panel's right edge up with the meter's —
+   the hand-over the hero menu makes for the menu the host places below its own
+   trigger. The mark is written together with the value, so this declaration
+   never runs on a reading that has gone. */
+body[data-dsh-claude-style] [data-dsh-claude-context-panel][data-dsh-claude-context-aligned] {
+  left: var(--dsh-claude-context-panel-left) !important;
+}
 body[data-dsh-claude-style] .dsh-claude-context-stats {
   display: flex !important;
   flex-direction: column !important;

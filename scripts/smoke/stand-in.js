@@ -434,7 +434,9 @@
     'stats.dialog.ttft': 'Avg time to first token (TTFT)',
     'stats.dialog.speed': 'Tokens per second (TPS)',
   }
-  var localeFixture = CASE === 'turn-status' || CASE === 'context-stats' ? {
+  /** The two cases that drive the skin's session-statistics block (detailed and compact rows). */
+  var statsFixtureCase = CASE === 'context-stats' || CASE === 'stats-compact'
+  var localeFixture = CASE === 'turn-status' || statsFixtureCase ? {
     getSnapshot: function () { return { active: 'en' } },
     subscribe: function () { return function () {} },
     bind: function () {
@@ -545,7 +547,7 @@
   // key-addressed read faces on the session binding — the seat the host's own
   // useProjection resolves (window.__pushStats writes a new whole value and
   // notifies the subscribed face, the way a projection frame lands).
-  var statsCase = CASE === 'context-stats' ? (function () {
+  var statsCase = statsFixtureCase ? (function () {
     // Both projections start absent, the way a session whose baseline has not
     // landed yet answers: the skin's block holds the numbers' place until
     // __pushStats delivers the first frame.
@@ -585,7 +587,7 @@
       },
     }
   })() : undefined
-  var sessions = CASE === 'deepy' ? deepy.sessions : CASE === 'context-stats' ? statsCase.sessions : CASE === 'turn-status' ? {
+  var sessions = CASE === 'deepy' ? deepy.sessions : statsFixtureCase ? statsCase.sessions : CASE === 'turn-status' ? {
     list: { getSnapshot: function () { return { current: undefined } } },
     binding: function (id) { return id === 'smoke-session' ? {} : undefined },
   } : CASE === 'sync-fault'

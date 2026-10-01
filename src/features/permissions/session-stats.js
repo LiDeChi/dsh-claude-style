@@ -53,6 +53,16 @@
         const STATS_SKELETON_MS = 2000
         /** Rows of each section the placeholder reserves (a session's usual count). */
         const STATS_SKELETON_ROWS = 4
+        /** The same, for the compact block: three time rows, one usage row. */
+        const COMPACT_SKELETON_ROWS = 3
+        const COMPACT_SKELETON_USAGE_ROWS = 1
+
+        /** The custom property the stylesheet reads to line the panel up with the meter. */
+        const CONTEXT_PANEL_LEFT = '--dsh-claude-context-panel-left'
+        /** The mark that turns that reading on; written with the property, never without it. */
+        const CONTEXT_PANEL_ALIGNED_ATTR = 'data-dsh-claude-context-aligned'
+        /** The viewport margin the host keeps for this panel (ui-chat's stat-dialog). */
+        const CONTEXT_PANEL_MARGIN = 12
 
         /** The projection keys this page is following, and how to stop. */
         let watch = null
@@ -63,6 +73,8 @@
         let skeletonSince = 0
         /** The timer that gives the place up at the deadline, while one runs. */
         let skeletonTimer = null
+        /** The open panel's size watcher, or null before a panel has been seen. */
+        let panelObserver = null
 
         /**
          * The shown conversation's host session id.
@@ -235,25 +247,49 @@
         }
 
         /**
+         * The time and throughput rows, in both widths: the host's own 模型用时
+         * and 工具调用用时 while the row is detailed, their sum under the skin's
+         * 总用时 while it is compact (the host has no single figure for the time
+         * a session has taken). The first-token average and the output speed are
+         * the same two rows either way.
+         */
+        function statsTimeRows(stats, chat, compact) {
+          const rows = []
+          if (compact) {
+            const totalMs = (stats.llmMs > 0 ? stats.llmMs : 0) + (stats.toolMs > 0 ? stats.toolMs : 0)
+            if (totalMs > 0) {
+              rows.push({ label: copyLabel('contextTotalTime', 'Total time'), value: sessionStatsDuration(totalMs, chat) })
+            }
+          } else {
+            if (stats.llmMs > 0) rows.push({ label: chat('stats.dialog.llmTime'), value: sessionStatsDuration(stats.llmMs, chat) })
+            if (stats.toolMs > 0) rows.push({ label: chat('stats.dialog.toolTime'), value: sessionStatsDuration(stats.toolMs, chat) })
+          }
+          if (stats.ttftSteps > 0) rows.push({ label: chat('stats.dialog.ttft'), value: sessionStatsDuration(stats.ttftMs / stats.ttftSteps, chat) })
+          if (stats.decodeMs > 0) {
+            rows.push({
+              label: chat('stats.dialog.speed'),
+              value: chat('message.tokensPerSecond', { tps: sessionStatsSpeed(stats.decodeTokens / (stats.decodeMs / 1_000)) }),
+            })
+          }
+          return rows
+        }
+
+        /**
          * The block's sections, with the host's own row rules: a row appears
          * only when its input exists, so a session without tool time or without
          * a recorded first token shows fewer rows rather than zeros, and a
          * session that never billed shows no usage section.
+         *
+         * `compact` follows the host's statistics row: its compact form carries
+         * the output speed and the cache-hit share on the composer line and
+         * nothing else, so the usage section keeps only the cache-hit row — the
+         * four figures a reader who chose that row still wants.
          */
-        function sessionStatsSections(chat) {
+        function sessionStatsSections(chat, compact) {
           const sections = []
           const stats = statsValue('sessionStats')
           if (stats !== undefined && stats !== null) {
-            const rows = []
-            if (stats.llmMs > 0) rows.push({ label: chat('stats.dialog.llmTime'), value: sessionStatsDuration(stats.llmMs, chat) })
-            if (stats.toolMs > 0) rows.push({ label: chat('stats.dialog.toolTime'), value: sessionStatsDuration(stats.toolMs, chat) })
-            if (stats.ttftSteps > 0) rows.push({ label: chat('stats.dialog.ttft'), value: sessionStatsDuration(stats.ttftMs / stats.ttftSteps, chat) })
-            if (stats.decodeMs > 0) {
-              rows.push({
-                label: chat('stats.dialog.speed'),
-                value: chat('message.tokensPerSecond', { tps: sessionStatsSpeed(stats.decodeTokens / (stats.decodeMs / 1_000)) }),
-              })
-            }
+            const rows = statsTimeRows(stats, chat, compact)
             if (rows.length > 0) sections.push({ title: chat('stats.dialog.title'), rows })
           }
           const usage = statsValue('tokenUsage')
@@ -263,13 +299,15 @@
               const rows = []
               const hit = sessionStatsCacheHit(usage.cacheReadTokens, billed)
               if (hit !== null) rows.push({ label: chat('message.turnUsage.cacheHit'), value: `${hit}%` })
-              rows.push({ label: chat('message.turnUsage.input'), value: sessionStatsTokens(usage.uncachedInputTokens, chat) })
-              rows.push({ label: chat('message.turnUsage.cacheRead'), value: sessionStatsTokens(usage.cacheReadTokens, chat) })
-              if (usage.cacheWriteTokens !== 0) {
-                rows.push({ label: chat('message.turnUsage.cacheWrite'), value: sessionStatsTokens(usage.cacheWriteTokens, chat) })
+              if (!compact) {
+                rows.push({ label: chat('message.turnUsage.input'), value: sessionStatsTokens(usage.uncachedInputTokens, chat) })
+                rows.push({ label: chat('message.turnUsage.cacheRead'), value: sessionStatsTokens(usage.cacheReadTokens, chat) })
+                if (usage.cacheWriteTokens !== 0) {
+                  rows.push({ label: chat('message.turnUsage.cacheWrite'), value: sessionStatsTokens(usage.cacheWriteTokens, chat) })
+                }
+                rows.push({ label: chat('message.turnUsage.output'), value: sessionStatsTokens(usage.outputTokens, chat) })
               }
-              rows.push({ label: chat('message.turnUsage.output'), value: sessionStatsTokens(usage.outputTokens, chat) })
-              sections.push({ title: chat('stats.dialog.usageTitle'), rows })
+              if (rows.length > 0) sections.push({ title: chat('stats.dialog.usageTitle'), rows })
             }
           }
           return sections
@@ -306,7 +344,8 @@
 
         /**
          * Whether the host rendered its DETAILED statistics row, which is the
-         * host's own answer to whether it wants these numbers shown at all.
+         * host's own answer to how much of these numbers it shows: detailed gets
+         * the whole set, compact the four figures the compact row leaves out.
          *
          * The host keeps the performanceUsage mode in React state and puts no
          * marker on the DOM, so the two structures have to be told apart by
@@ -353,7 +392,7 @@
          * answers, and the block then leaves rather than standing there as
          * placeholder bars.
          */
-        function renderContextSkeleton(panel, chat) {
+        function renderContextSkeleton(panel, chat, compact) {
           if (!skeleton) {
             skeleton = true
             skeletonSince = Date.now()
@@ -372,12 +411,13 @@
             }, STATS_SKELETON_MS - held)
           }
           const titles = [chat('stats.dialog.title'), chat('stats.dialog.usageTitle')]
-          let signature = 'skeleton'
+          const counts = compact ? [COMPACT_SKELETON_ROWS, COMPACT_SKELETON_USAGE_ROWS] : [STATS_SKELETON_ROWS, STATS_SKELETON_ROWS]
+          let signature = compact ? 'skeleton-compact' : 'skeleton'
           let html = ''
           for (let i = 0; i < titles.length; i++) {
             signature += `\u0001${titles[i]}`
             html += `<div class="dsh-claude-context-stats-section">${statsEscape(titles[i])}</div><div class="dsh-claude-context-stats-grid">`
-            for (let r = 0; r < STATS_SKELETON_ROWS; r++) {
+            for (let r = 0; r < counts[i]; r++) {
               html += '<div class="dsh-claude-context-stats-item"><span class="dsh-claude-context-stats-skeleton-label"></span><span class="dsh-claude-context-stats-skeleton-value"></span></div>'
             }
             html += '</div>'
@@ -399,13 +439,14 @@
           const panel = contextPanel()
           if (panel === null) return
           const root = document.querySelector('[data-composer-stats]')
-          if (root === null || !hostStatsDetailed(root)) return
+          if (root === null) return
           const chat = chatText()
           if (chat === null) return
+          const compact = !hostStatsDetailed(root)
           const waiting = statsValue('sessionStats') === undefined && statsValue('tokenUsage') === undefined
-          const sections = waiting ? [] : sessionStatsSections(chat)
+          const sections = waiting ? [] : sessionStatsSections(chat, compact)
           if (sections.length === 0) {
-            if (waiting) renderContextSkeleton(panel, chat)
+            if (waiting) renderContextSkeleton(panel, chat, compact)
             else removeContextBlock(panel)
             return
           }
@@ -488,6 +529,34 @@
           })
         }
 
+        /**
+         * Line the panel's right edge up with the meter's.
+         *
+         * The panel is the host's and its coordinates are inline: ui-chat places
+         * it from the anchor's LEFT edge and only then clamps it into the
+         * viewport, which for a trigger at the composer's right end parks the
+         * panel against the window's right margin, past the ring. The skin reads
+         * the two boxes and hands the stylesheet one left value
+         * (features/composer/inline-bar.css), the hand-over the hero menu makes
+         * for the menu the host places below its own trigger. The property and
+         * the mark are written together, so the rule never runs on a reading
+         * that has gone.
+         */
+        function alignContextPanel(panel) {
+          const meter = document.querySelector('[data-dsh-claude-context-meter]')
+          if (meter === null) return
+          const anchor = meter.getBoundingClientRect()
+          // The panel's own entrance scales it (the cards' 0.98), and a TRANSFORMED
+          // rect is two percent narrower than the box that settles: read the
+          // layout width, which is the one the panel ends up with.
+          const width = panel.offsetWidth
+          if (width === 0) return
+          const widest = window.innerWidth - width - CONTEXT_PANEL_MARGIN
+          const left = Math.round(Math.min(Math.max(anchor.right - width, CONTEXT_PANEL_MARGIN), widest))
+          panel.style.setProperty(CONTEXT_PANEL_LEFT, `${left}px`)
+          panel.setAttribute(CONTEXT_PANEL_ALIGNED_ATTR, '')
+        }
+
         function bindContextPanel(panel) {
           if (!panel.hasAttribute(CONTEXT_PANEL_ATTR)) panel.setAttribute(CONTEXT_PANEL_ATTR, '')
           if (panel.__dshContextPanelToken === statsBindingToken) return
@@ -498,6 +567,20 @@
           panel.addEventListener('mouseleave', () => {
             if (hoverEnabled()) hoverIntent.scheduleClose()
           })
+          // The panel's own box is what the reading is taken from, so the reading
+          // is re-taken whenever that box changes: the host's rows growing, or
+          // the block below them arriving.
+          if (panelObserver === null && typeof ResizeObserver === 'function') {
+            panelObserver = new ResizeObserver(() => {
+              const open = contextPanel()
+              if (open !== null) alignContextPanel(open)
+            })
+          }
+          if (panelObserver !== null) {
+            panelObserver.disconnect()
+            panelObserver.observe(panel)
+          }
+          alignContextPanel(panel)
         }
 
         /**
@@ -526,10 +609,24 @@
                 if (trigger === null || trigger.getAttribute('aria-expanded') !== 'true') return
                 trigger.click()
             },
+            /**
+             * The viewport moved under the panel: the host re-places it from its
+             * anchor, so the skin's own reading of where its right edge belongs
+             * is taken again in the same frame.
+             */
+            reposition(reason) {
+                if (reason !== 'viewport') return
+                const panel = contextPanel()
+                if (panel !== null) alignContextPanel(panel)
+            },
             /** Drop the appends, the projection subscriptions and the hover timers. */
             teardown() {
                 hoverIntent.cancel()
                 releaseWatch()
+                if (panelObserver !== null) {
+                    panelObserver.disconnect()
+                    panelObserver = null
+                }
                 const blocks = document.querySelectorAll(`[${CONTEXT_STATS_ATTR}]`)
                 for (let i = 0; i < blocks.length; i++) {
                     if (blocks[i].parentElement !== null) blocks[i].parentElement.removeChild(blocks[i])
