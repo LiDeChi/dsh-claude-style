@@ -17,13 +17,9 @@ body[data-dsh-claude-style] [class*="composerStack"]:not([data-composer-variant=
 body[data-dsh-claude-style] [class*="composerStack"]:not([data-composer-variant="hero"]) [data-composer-card]:focus-within {
   background: transparent !important;
   border: none !important;
-  /* No canvas wash here any more: the seat behind the composer paints the
-     opaque bar and its fade band (see the seat rules below), so the card needs
-     no background-coloured shadow to hide the transcript scrolling past. It
-     used to carry three such layers; before that the rail did, and being
-     z-index 4 over the field's 2 it painted the canvas colour across the TOP of
-     the field — over the field's own background, which made the two boxes read
-     as different colours, and over the draft's first line. */
+  /* No canvas wash here: the seat behind the composer paints the opaque bar and
+     its fade band (see the seat rules below), so the card needs no
+     background-coloured shadow to hide the transcript scrolling past. */
   box-shadow: none !important;
   outline: none !important;
   padding: 0 !important;
@@ -57,13 +53,9 @@ body[data-dsh-claude-style] [class*="composerStack"]:not([data-composer-variant=
    composer's height (card, toolbar row, stats, dock), nothing to keep in sync —
    and one GRADIENT band sits directly above it, running from the bar's colour
    up to transparent.
-   This replaces the background-coloured (--dsw-alias-bg-base) halo the skin
-   used to smear around the card: that was three shadow layers repeated in every
-   light / dark / focus / attachment rule, and every rule that reset the card's
-   box-shadow had to re-state it (hence the shadowless rail). One paint, one
-   token, and it is the host's own idiom — its seat already carries a 36px
-   version of this gradient in the active phase; the bar simply covers the rest
-   of the seat, which the host leaves transparent.
+   One paint, one token, and it is the host's own idiom — its seat already
+   carries a 36px version of this gradient in the active phase; the bar simply
+   covers the rest of the seat, which the host leaves transparent.
    `--dsh-composer-fade-h` is the single knob: it is the band's height AND the
    transcript's bottom clearance below, so the last turn always comes to rest
    exactly at the band's top edge. */

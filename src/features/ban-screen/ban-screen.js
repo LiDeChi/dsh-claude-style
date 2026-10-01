@@ -15,8 +15,7 @@
      * Losing focus does NOT close it, on purpose. The page is something to
      * READ: the reader has to switch windows to look something up, and an
      * overlay that vanishes the moment they do is worse than one that waits.
-     * Leaving is always an explicit act — a control on the page or Esc — so the
-     * blur listener this used to carry is gone.
+     * Leaving is always an explicit act — a control on the page or Esc.
      *
      * Layout note: the overlay is `position: fixed` at the top of the stacking
      * order rather than a real page, so it covers the whole window (sidebar,

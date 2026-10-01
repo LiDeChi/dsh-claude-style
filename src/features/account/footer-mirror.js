@@ -347,10 +347,9 @@
         for (let f = 0; f < footerEntries.length; f++) {
           try {
             ((entry, idx) => {
-            // The host's account area also lives in the footer, and its logout
-            // button used to be mirrored into the drawer's header (the stray [→]
-            // icon above the account name). Skip anything that is a menu anchor or
-            // contains one, and anything that reads as sign-out.
+            // The host's account area also lives in the footer: skip anything
+            // that is a menu anchor or contains one, and anything that reads as
+            // sign-out, so its logout button stays out of the drawer's header.
             if (entry.getAttribute('aria-haspopup') === 'menu') return
             if (entry.querySelector('[aria-haspopup="menu"]') !== null) return
             if (/退出|登出|注销|sign ?out|log ?out/i.test(entry.textContent || '')) return
