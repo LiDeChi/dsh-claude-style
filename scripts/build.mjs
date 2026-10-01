@@ -118,6 +118,7 @@ const FRAGMENTS = [
   'features/home/models.js',
   'features/home/home-layout.js',
   'features/mascot/whale-signals.js',
+  'features/mascot/whale-sheets.js',
   'features/mascot/whale.js',
   'features/mascot/mascot.js',
   'core/scheduler.js',
@@ -363,7 +364,7 @@ function loadPngAssets() {
 
 /**
  * The file name a Deepy sheet may have: the host half serves exactly the names
- * this shape allows (host/index.js, DEEPY_FILE), so a name outside it would be
+ * this shape allows (host/routes.js, DEEPY_FILE), so a name outside it would be
  * copied and never served.
  */
 const DEEPY_FILE = /^[a-z]+(?:-[a-z]+)*\.png$/
@@ -565,8 +566,71 @@ function checkListed() {
   if (unlisted.length > 0) throw new Error(`build: src/${unlisted[0]} is in no list; add it to FRAGMENTS or STYLE_FILES`)
 }
 
+/**
+ * Which fragment installs each feature of src/entry.js's FEATURES table.
+ *
+ * That table is runtime data inside a fragment the browser half evaluates, so
+ * the build cannot read it by importing it; this table is the build's own copy
+ * of the id → main fragment pairing, and checkFeatureRegistry holds the three
+ * sources together. Without it, renaming a feature directory or its install id
+ * would surface only at runtime, as a skin that silently never installs that
+ * piece.
+ */
+const FEATURE_MAINS = {
+  selection: 'features/selection/selection.js',
+  composer: 'features/composer/composer.js',
+  homeLayout: 'features/home/home-layout.js',
+  mascot: 'features/mascot/mascot.js',
+  copy: 'features/copy/copy.js',
+  permissions: 'features/permissions/permissions.js',
+  model: 'features/model/model-picker.js',
+  effort: 'features/effort/effort-picker.js',
+  heroMenu: 'features/hero-menu/hero-menu.js',
+  quickProviders: 'features/settings/quick-providers.js',
+  footer: 'features/account/account-footer.js',
+  ban: 'features/ban-screen/ban-screen.js',
+  themeFlip: 'features/theme-flip/theme-flip.js',
+  workspace: 'features/workspace/workspace-view.js',
+  search: 'features/search/search.js',
+  turnStatus: 'features/turn-status/turn-status.js',
+  viewTabs: 'features/view-tabs/view-tabs.js',
+  settings: 'features/settings/settings.js',
+}
+
+/** Installs in entry.js's table that are not features with a source directory. */
+const NON_FEATURE_INSTALLS = ['scheduler']
+
+/**
+ * Hold src/entry.js's FEATURES table and the src/features/ directories to the
+ * pairing above: an install this table does not name, a table entry naming a
+ * fragment FRAGMENTS does not list, and a feature directory no id covers all
+ * fail the build.
+ */
+function checkFeatureRegistry() {
+  for (const [id, file] of Object.entries(FEATURE_MAINS)) {
+    if (!FRAGMENTS.includes(file)) throw new Error(`build: feature "${id}" names ${file}, which FRAGMENTS does not list`)
+  }
+  const entry = fs.readFileSync(path.join(SRC, 'entry.js'), 'utf8')
+  const declared = new Set([...entry.matchAll(/\bname: '([A-Za-z][A-Za-z0-9]*)'/g)].map((match) => match[1]))
+  for (const id of NON_FEATURE_INSTALLS) declared.delete(id)
+  for (const id of declared) {
+    if (!(id in FEATURE_MAINS)) throw new Error(`build: src/entry.js installs feature "${id}", which FEATURE_MAINS does not name`)
+  }
+  for (const id of Object.keys(FEATURE_MAINS)) {
+    if (!declared.has(id)) throw new Error(`build: FEATURE_MAINS names "${id}", which src/entry.js does not install`)
+  }
+  const covered = new Set(Object.values(FEATURE_MAINS).map((file) => file.split('/')[1]))
+  const dirs = fs.readdirSync(path.join(SRC, 'features'), { withFileTypes: true })
+    .filter((item) => item.isDirectory())
+    .map((item) => item.name)
+  for (const dir of dirs) {
+    if (!covered.has(dir)) throw new Error(`build: src/features/${dir} has no install in src/entry.js`)
+  }
+}
+
 function main() {
   checkListed()
+  checkFeatureRegistry()
   const tokens = { ...loadTokens(), ...loadSvgAssets(), ...loadPngAssets() }
   const combines = loadCombines()
 
