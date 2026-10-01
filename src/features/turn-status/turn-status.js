@@ -172,8 +172,7 @@
        * control keep order 0.
        */
       function syncColumn(column, nextAttrs, nextOrders, live, t) {
-        const sessionHost = column.closest('[data-conversation-session]')
-        const sessionId = sessionHost === null ? '' : sessionHost.getAttribute('data-conversation-session')
+        const sessionId = conversationSessionId(closestConversationSession(column))
         if (!sessionId) return
         const rows = column.children
         let snapshot

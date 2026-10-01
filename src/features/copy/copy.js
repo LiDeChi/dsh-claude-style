@@ -38,7 +38,7 @@
       function rewriteHint() {
         if (!ui.composer.isActive()) return
         const targetHint = ui.composer.isHero() ? COMPOSER_HINT : 'Type / for commands'
-        const hints = document.querySelectorAll('[data-composer-placeholder]')
+        const hints = findComposerPlaceholders()
         for (let i = 0; i < hints.length; i++) {
           const node = hints[i]
           const text = node.textContent || ''
@@ -59,14 +59,14 @@
           return
         }
         const targetHint = ui.composer.isHero() ? COMPOSER_HINT : 'Type / for commands'
-        const cards = document.querySelectorAll('[data-composer-card]')
+        const cards = findComposerCards()
         for (let ci = 0; ci < cards.length; ci++) {
           const card = cards[ci]
           const input = card.querySelector('[data-composer-input]')
           if (!input) continue
           const text = (input.textContent || '').replace(/[\u200B-\u200D\uFEFF]/g, '').trim()
           const isEmpty = text.length === 0
-          let placeholder = card.querySelector('[data-composer-placeholder]')
+          let placeholder = findComposerPlaceholder(card)
           const grow = input.closest ? input.closest('[class*="_grow"]') : input.parentElement
 
           if (isEmpty) {

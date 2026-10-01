@@ -16,6 +16,63 @@
     }
 
     /**
+     * The host's composer card — the element the skin's composer rules hang on
+     * — and the placeholder its editor draws while the draft is empty. The
+     * card's variant is the skin's own marking (D9); the rest is the host's
+     * markup. Every reader goes through these, so the selectors live once.
+     */
+    const COMPOSER_CARD = '[data-composer-card]'
+    const COMPOSER_PLACEHOLDER = '[data-composer-placeholder]'
+
+    function findComposerCards() {
+      return document.querySelectorAll(COMPOSER_CARD)
+    }
+
+    function findComposerCard() {
+      return document.querySelector(COMPOSER_CARD)
+    }
+
+    /** The composer card `node` sits in, or null; `variant` narrows it to one variant. */
+    function closestComposerCard(node, variant) {
+      if (node === null || node === void 0 || typeof node.closest !== 'function') return null
+      if (variant === void 0) return node.closest(COMPOSER_CARD)
+      return node.closest(`${COMPOSER_CARD}[data-composer-variant="${variant}"]`)
+    }
+
+    function findComposerPlaceholders() {
+      return document.querySelectorAll(COMPOSER_PLACEHOLDER)
+    }
+
+    function findComposerPlaceholder(card) {
+      return card.querySelector(COMPOSER_PLACEHOLDER)
+    }
+
+    /**
+     * The shown conversation: the element carrying its session id (the active
+     * conversation area's own wrapper) and the id itself. The whale's stand,
+     * the turn status line and the context meter's stats all name the
+     * conversation on screen through these.
+     */
+    const CONVERSATION_SESSION_ATTR = 'data-conversation-session'
+    const CONVERSATION_SESSION = `[${CONVERSATION_SESSION_ATTR}]`
+
+    function findConversationSession() {
+      return document.querySelector(`[data-phase="active"] ${CONVERSATION_SESSION}`)
+    }
+
+    function closestConversationSession(node) {
+      if (node === null || node === void 0 || typeof node.closest !== 'function') return null
+      return node.closest(CONVERSATION_SESSION)
+    }
+
+    /** The session id `host` carries, or null when it carries none. */
+    function conversationSessionId(host) {
+      if (host === null || host === void 0) return null
+      const id = host.getAttribute(CONVERSATION_SESSION_ATTR)
+      return typeof id === 'string' ? id : null
+    }
+
+    /**
      * The host's composer stack (ui-conversation's `.composerStack`): the
      * composer card with the cards stacked above it, and on the new-session
      * page the hero around them (`_composerHero` beside it there).

@@ -281,10 +281,10 @@
         const heroCard = ui.composer ? ui.composer.heroCard() : null
         if (heroCard !== null) return { element: heroCard, session: null, place: 'card' }
         if (document.body.hasAttribute('data-dsh-claude-composer-hidden')) return null
-        const content = document.querySelector('[data-phase="active"] [data-conversation-session]')
+        const content = findConversationSession()
         const seat = content === null ? null : content.querySelector('[data-composer-seat]')
         if (seat === null) return null
-        const session = content.getAttribute('data-conversation-session')
+        const session = conversationSessionId(content)
         // The composer chain's own wrapper (ui-renderer): the host hides it
         // inline when a panel is elected, and mounts that panel right after it.
         const fallback = seat.querySelector('[data-chain-overlay-fallback="conversation.composer"]')

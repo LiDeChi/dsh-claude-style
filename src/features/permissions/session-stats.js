@@ -72,10 +72,8 @@
          * composer whose meter opened the popover.
          */
         function shownSessionId() {
-          const host = document.querySelector('[data-phase="active"] [data-conversation-session]')
-          if (host === null) return ''
-          const id = host.getAttribute('data-conversation-session')
-          return typeof id === 'string' ? id : ''
+          const id = conversationSessionId(findConversationSession())
+          return id === null ? '' : id
         }
 
         /**

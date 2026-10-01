@@ -137,7 +137,7 @@
        */
       function syncDraftState(cards) {
         for (let i = 0; i < cards.length; i++) {
-          const empty = cards[i].querySelector('[data-composer-placeholder]') !== null
+          const empty = findComposerPlaceholder(cards[i]) !== null
           if (empty === cards[i].hasAttribute(DRAFT_EMPTY_ATTR)) continue
           if (empty) cards[i].setAttribute(DRAFT_EMPTY_ATTR, '')
           else cards[i].removeAttribute(DRAFT_EMPTY_ATTR)
@@ -254,7 +254,7 @@
 
       function syncComposer() {
         readState()
-        const cards = document.querySelectorAll('[data-composer-card]')
+        const cards = findComposerCards()
         heroCard = hero && cards.length > 0 ? cards[0] : null
         syncVariant(cards)
         if (active !== document.body.hasAttribute(COMPOSER_ATTR)) {
@@ -274,7 +274,7 @@
        * not one of its controls means the field.
        */
       function focusEditorOnPress(target) {
-        const card = target && target.closest && target.closest('[data-composer-card][data-composer-variant="inline"]')
+        const card = closestComposerCard(target, 'inline')
         if (!card) return
         if (target.closest('button, [role="button"], [role="menu"], [role="radiogroup"], input, select')) return
         const input = card.querySelector('[data-composer-input]')

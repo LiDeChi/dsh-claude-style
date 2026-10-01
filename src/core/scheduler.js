@@ -152,7 +152,7 @@
       function onGlobalFocusIn(e) {
         const target = e.target
         if (!target || typeof target.closest !== 'function') return
-        if (target.closest('[data-composer-card]') !== null) {
+        if (closestComposerCard(target) !== null) {
           for (let i = 0; i < HOOK_FEATURES.length; i++) {
             const handle = ui[HOOK_FEATURES[i]]
             if (handle && typeof handle.close === 'function') handle.close('composer')
@@ -293,7 +293,7 @@
           scheduled = false
           if (stopped) return
           for (let i = 0; i < PASS_FEATURES.length; i++) runSync(PASS_FEATURES[i])
-          const currentCard = document.querySelector('[data-composer-card]')
+          const currentCard = findComposerCard()
           if (currentCard !== observedCard) {
             if (observedCard) composerCardObserver.unobserve(observedCard)
             observedCard = currentCard
