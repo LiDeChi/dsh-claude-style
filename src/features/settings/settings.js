@@ -1,13 +1,14 @@
     /**
-     * The skin's settings page, mounted by whichever seat this host has.
+     * The skin's settings page, mounted by every seat this host declares.
      *
-     * 0.1.7 moved a bundle's own configuration onto its plugin page, so there
-     * the rows register as a `plugins.bundle.config` entry keyed by the package
-     * name. Older hosts have no such slot and keep the full-page
-     * `settings.section` entry. Both render the same component, and neither
-     * seat hands it a store: it reads and writes the skin preferences through
-     * src/core/prefs.js, which owns the host round trip, and follows changes
-     * the same way the rest of the skin does.
+     * Two seats render it: the `plugins.bundle.config` entry on the plugin
+     * page (0.1.7+, keyed by the package name) and the full-page
+     * `settings.section` tab in the settings dialog. An older host declares
+     * only the latter; a newer one gets both, and since both render the same
+     * component against the same prefs store, two live instances stay in
+     * step. Neither seat hands the component a store: it reads and writes the
+     * skin preferences through src/core/prefs.js, which owns the host round
+     * trip, and follows changes the same way the rest of the skin does.
      *
      * Copy comes from the model copy document's `settings` block, so the page
      * follows the shell language like every other string the skin paints. The
@@ -421,26 +422,22 @@
           },
           ClaudeStyleBundleConfig,
         )), 'dsh-claude-style: plugin page')
-        // The full-page section is the older host's seat. 0.1.7 still declares
-        // the slot, but there the skin's settings live on its plugin page — and
-        // a host that serves `configForms` is by definition the newer one, so
-        // that check tells the two apart without a version probe. (The settings
-        // shell cannot have declared this slot before `configForms` mounted: it
-        // injects the service itself.)
-        scope.effect(() => slots.inject(SETTINGS_SECTION_SLOT, () => {
-          if (hostConfigForms(ctx) !== null) return () => {}
-          return slots.register(
-            {
-              name: SETTINGS_SECTION_SLOT,
-              id: 'claude-style',
-              order: 22,
-              // A function, so the navigation entry localizes once the copy
-              // document has arrived; the literal is the pre-fetch fallback.
-              label() { return settingsCopy('title', 'Claude Style') },
-            },
-            ClaudeStyleSettingsSection,
-          )
-        }), 'dsh-claude-style: settings section')
+        // The full-page section registers on every host that declares the
+        // slot. On an older host it is the only seat; on 0.1.7+ the same page
+        // also renders on the plugin page, and this tab keeps a route to it
+        // inside the settings dialog. Two live instances share the prefs
+        // store, so a change in one shows in the other.
+        scope.effect(() => slots.inject(SETTINGS_SECTION_SLOT, () => slots.register(
+          {
+            name: SETTINGS_SECTION_SLOT,
+            id: 'claude-style',
+            order: 22,
+            // A function, so the navigation entry localizes once the copy
+            // document has arrived; the literal is the pre-fetch fallback.
+            label() { return settingsCopy('title', 'Claude Style') },
+          },
+          ClaudeStyleSettingsSection,
+        )), 'dsh-claude-style: settings section')
       })
       return () => {
         if (ui && ui.settingsNav) {

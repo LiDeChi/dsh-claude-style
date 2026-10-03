@@ -28,10 +28,11 @@ body[data-dsh-claude-style]:not([data-ds-dark-theme]) button[data-dsh-section="c
 }
 
 /* ---------- Claude Code layout: settings page ---------- */
-/* The skin's own page in the settings dialog. Its segmented controls reuse the
-   composer permission picker's classes (`.dsh-claude-segments` /
-   `.dsh-claude-segment`), so the two are literally one control rather than two
-   lookalikes; the row shell, the switch and the brand cards are new here. */
+/* The skin's own page in the settings dialog and on the plugin page. Its
+   segmented controls reuse the composer permission picker's classes
+   (`.dsh-claude-segments` / `.dsh-claude-segment`), so the two are literally one
+   control rather than two lookalikes; the row shell, the switch and the brand
+   cards are new here. */
 body[data-dsh-claude-style] .dsh-claude-settings {
   display: flex;
   flex-direction: column;
