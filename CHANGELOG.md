@@ -2,11 +2,11 @@
 
 All notable changes to `dsh-claude-style` are documented here, newest first.
 
-## [Unreleased]
+## [0.10.4] - 2026-10-03
 
-[中文](#cn-unreleased) | [English](#en-unreleased)
+[中文](#cn-0.10.4) | [English](#en-0.10.4)
 
-<h3 id="cn-unreleased">体验优化</h3>
+<h3 id="cn-0.10.4">体验优化</h3>
 
 - **没有 Anthropic 字体时，界面与正文换成外观相近的字体**：没有把 Anthropic Sans / Serif 装进系统或放进插件 `fonts/` 目录时，界面以前落到 Segoe UI、苹方这类系统字体，对话正文落到 Georgia，字形和排版都和原样差得远。现在插件自带 Inter 与 Noto Serif（SIL OFL 1.1）代替两款 Anthropic 字体，它们的字高、字宽与原字体相差不到百分之二，换字体时文字不会重新换行，粗体用的是字体本身的字重。两款字体只含 Anthropic 字体覆盖的拉丁字符，中文照旧使用系统中文字体；npm 包因此大约增加 214 KB。已经启用 Anthropic 字体的环境不受影响。
 - **品牌标识改为大卡片选择**：设置页的品牌选项由分段小按钮改为一排大卡片，每张卡片放对应的品牌标识（Claude 的陶土星芒、DeepSeek 的蓝鲸），当前品牌的卡片带品牌色描边；后续新增品牌只需添一张卡片。
@@ -19,7 +19,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - **macOS 桌面端的封号彩蛋页不再重复出现窗口按钮**：macOS 桌面壳的窗口左上角是系统画的三个红黄绿按钮，彩蛋页以前又画了一套最小化 / 还原 / 关闭，页面上于是出现两排按钮。现在这页不画自己那套，星芒标与字标、「退出登录」直接排进系统标题栏那一行，并让开左侧的三个按钮；按住这一行的空白处仍然可以拖动窗口。
 - **其他插件的弹层与标签保持原有的形状**：其他插件的元素只要类名里带 `badge` 或 `tag`，以前都会被改成胶囊圆角。额度插件的弹层因此变成四角极圆的方圆形，标题和底部按钮被切掉一角，弹层里各段的分隔线也弯成弧形。现在胶囊圆角只用在宿主自己的徽标与标签上（轨迹标签、自定义模型行的标签、提问里的「推荐」、快捷键按键等），而且两端是正圆弧，不再略方。
 
-<h3 id="en-unreleased">Improvements</h3>
+<h3 id="en-0.10.4">Improvements</h3>
 
 - **Without the Anthropic fonts, the interface and conversation text use close look-alikes**: when Anthropic Sans and Serif were neither installed on the system nor dropped into the plugin's `fonts/` directory, the interface used to fall back to system fonts such as Segoe UI or PingFang and the conversation body to Georgia, far from the intended letterforms and layout. The plugin now ships Inter and Noto Serif (SIL OFL 1.1) in their place; their letter heights and widths are within two percent of the Anthropic fonts, so text does not rewrap when one replaces the other, and bold text uses the fonts' own weights. Both carry only the Latin characters the Anthropic fonts cover, so Chinese text keeps using the system's Chinese fonts; the npm package grows by about 214 KB. Setups that already have the Anthropic fonts are unaffected.
 - **The brand choice is now a row of large cards**: the settings page's brand option changes from small segments to large cards, each carrying the brand's own mark (Claude's clay starburst, DeepSeek's blue whale) with the active card outlined in the brand accent; a new brand is one more card.
@@ -31,6 +31,8 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - **A model menu another plugin puts in the composer stacks its groups again**: with a plugin that brings its own model menu, such as `dsh-thinking-effort`, the menu's provider groups used to be squeezed into one horizontal row. They stack top to bottom as the plugin draws them now.
 - **The account-hold page on the macOS Desktop no longer draws a second set of window buttons**: the top-left of a macOS Desktop window belongs to the system, which paints the three red-yellow-green buttons; the page used to draw its own minimize, maximize and close as well, so the window showed two rows of buttons. It draws none of its own now — the starburst and wordmark and the Sign out button take their place in the titlebar row, clear of the three buttons on the left, and the window is still dragged by the empty part of that row.
 - **Other plugins' popovers and tags keep their own shape**: any element of another plugin whose class name contained `badge` or `tag` used to be turned into a pill. A quota plugin's popover became a squarish blob with very round corners, its title and bottom buttons clipped at the corners and the dividers between its sections bent into arcs. The pill radius now applies only to the host's own badges and tags (trajectory tags, the custom model row tag, the Recommended mark in a question, shortcut key caps and the like), and their ends are true round arcs instead of slightly squared ones.
+
+**Full Changelog**: [v0.10.3...v0.10.4](https://github.com/Nwflower/dsh-claude-style/compare/v0.10.3...v0.10.4)
 
 ## [0.10.3] - 2026-10-01
 
