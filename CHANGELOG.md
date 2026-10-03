@@ -10,11 +10,13 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 - **其他插件放进输入框的模型菜单恢复上下排列**：同时启用 `dsh-thinking-effort` 这类自带模型菜单的插件时，菜单里的各个供应商分组以前被挤成一行横排。现在分组按原样上下排列。
 - **macOS 桌面端的封号彩蛋页不再重复出现窗口按钮**：macOS 桌面壳的窗口左上角是系统画的三个红黄绿按钮，彩蛋页以前又画了一套最小化 / 还原 / 关闭，页面上于是出现两排按钮。现在这页不画自己那套，星芒标与字标、「退出登录」直接排进系统标题栏那一行，并让开左侧的三个按钮；按住这一行的空白处仍然可以拖动窗口。
+- **其他插件的弹层与标签保持原有的形状**：其他插件的元素只要类名里带 `badge` 或 `tag`，以前都会被改成胶囊圆角。额度插件的弹层因此变成四角极圆的方圆形，标题和底部按钮被切掉一角，弹层里各段的分隔线也弯成弧形。现在胶囊圆角只用在宿主自己的徽标与标签上（轨迹标签、自定义模型行的标签、提问里的「推荐」、快捷键按键等），而且两端是正圆弧，不再略方。
 
 <h3 id="en-unreleased">Bug Fixes</h3>
 
 - **A model menu another plugin puts in the composer stacks its groups again**: with a plugin that brings its own model menu, such as `dsh-thinking-effort`, the menu's provider groups used to be squeezed into one horizontal row. They stack top to bottom as the plugin draws them now.
 - **The account-hold page on the macOS Desktop no longer draws a second set of window buttons**: the top-left of a macOS Desktop window belongs to the system, which paints the three red-yellow-green buttons; the page used to draw its own minimize, maximize and close as well, so the window showed two rows of buttons. It draws none of its own now — the starburst and wordmark and the Sign out button take their place in the titlebar row, clear of the three buttons on the left, and the window is still dragged by the empty part of that row.
+- **Other plugins' popovers and tags keep their own shape**: any element of another plugin whose class name contained `badge` or `tag` used to be turned into a pill. A quota plugin's popover became a squarish blob with very round corners, its title and bottom buttons clipped at the corners and the dividers between its sections bent into arcs. The pill radius now applies only to the host's own badges and tags (trajectory tags, the custom model row tag, the Recommended mark in a question, shortcut key caps and the like), and their ends are true round arcs instead of slightly squared ones.
 
 ## [0.10.3] - 2026-10-01
 

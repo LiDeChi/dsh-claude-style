@@ -71,9 +71,29 @@ body[data-dsh-claude-style][data-ds-dark-theme] button[class*="brand"] {
   color: var(--dsh-claude-logo-ink) !important;
 }
 
-/* badges: full pill */
-body[data-dsh-claude-style] :is([class*="badge"], [class*="Badge"], [class*="_tag"], [class*="Tag"]) {
+/* Host badges and tags: full pill. Each is named by its own CSS-module class
+   (docs/architecture.md D3) — trajectory step tags, the trajectory table's kind
+   tag, the custom-model row tag, the recommended-option badge in a question,
+   the plugin install attempt badge, the shortcut key caps — so a plugin's own
+   badge or tag keeps the shape it draws. The host's Tag primitive is a round
+   pill already. corner-shape: round goes with the pill radius: the host's
+   corner-shape sheet gives every element a superellipse, which squares off a
+   pill's ends. */
+body[data-dsh-claude-style] :is(
+  [class*="_tagSystem"],
+  [class*="_tagUser"],
+  [class*="_tagContext"],
+  [class*="_tagMessage"],
+  [class*="_tagTool"],
+  [class*="_tagSubtool"],
+  [class*="_kindTag"]:not([class*="_kindTagIcon"], [class*="_kindTagLabel"]),
+  [class*="_rowTag"],
+  [class*="_optionLine"] > [class*="_badge"],
+  [class*="_attemptBadge"],
+  [class*="_keyBadge"]
+) {
   border-radius: 9999px;
+  corner-shape: round;
 }
 
 /* ---------- chrome details ---------- */
