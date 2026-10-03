@@ -53,9 +53,8 @@
         const STATS_SKELETON_MS = 2000
         /** Rows of each section the placeholder reserves (a session's usual count). */
         const STATS_SKELETON_ROWS = 4
-        /** The same, for the compact block: three time rows, one usage row. */
-        const COMPACT_SKELETON_ROWS = 3
-        const COMPACT_SKELETON_USAGE_ROWS = 1
+        /** The same, for the compact block: four items in a single 2x2 grid. */
+        const COMPACT_SKELETON_ITEMS = 4
 
         /** The custom property the stylesheet reads to line the panel up with the meter. */
         const CONTEXT_PANEL_LEFT = '--dsh-claude-context-panel-left'
@@ -288,8 +287,25 @@
         function sessionStatsSections(chat, compact) {
           const sections = []
           const stats = statsValue('sessionStats')
+          if (compact) {
+            const rows = []
+            if (stats !== undefined && stats !== null) {
+              const timeRows = statsTimeRows(stats, chat, true)
+              for (let i = 0; i < timeRows.length; i++) rows.push(timeRows[i])
+            }
+            const usage = statsValue('tokenUsage')
+            if (usage !== undefined && usage !== null) {
+              const billed = usage.uncachedInputTokens + usage.cacheReadTokens + usage.cacheWriteTokens
+              if (billed > 0 || usage.outputTokens > 0) {
+                const hit = sessionStatsCacheHit(usage.cacheReadTokens, billed)
+                if (hit !== null) rows.push({ label: chat('message.turnUsage.cacheHit'), value: `${hit}%` })
+              }
+            }
+            if (rows.length > 0) sections.push({ title: '', rows })
+            return sections
+          }
           if (stats !== undefined && stats !== null) {
-            const rows = statsTimeRows(stats, chat, compact)
+            const rows = statsTimeRows(stats, chat, false)
             if (rows.length > 0) sections.push({ title: chat('stats.dialog.title'), rows })
           }
           const usage = statsValue('tokenUsage')
@@ -299,14 +315,12 @@
               const rows = []
               const hit = sessionStatsCacheHit(usage.cacheReadTokens, billed)
               if (hit !== null) rows.push({ label: chat('message.turnUsage.cacheHit'), value: `${hit}%` })
-              if (!compact) {
-                rows.push({ label: chat('message.turnUsage.input'), value: sessionStatsTokens(usage.uncachedInputTokens, chat) })
-                rows.push({ label: chat('message.turnUsage.cacheRead'), value: sessionStatsTokens(usage.cacheReadTokens, chat) })
-                if (usage.cacheWriteTokens !== 0) {
-                  rows.push({ label: chat('message.turnUsage.cacheWrite'), value: sessionStatsTokens(usage.cacheWriteTokens, chat) })
-                }
-                rows.push({ label: chat('message.turnUsage.output'), value: sessionStatsTokens(usage.outputTokens, chat) })
+              rows.push({ label: chat('message.turnUsage.input'), value: sessionStatsTokens(usage.uncachedInputTokens, chat) })
+              rows.push({ label: chat('message.turnUsage.cacheRead'), value: sessionStatsTokens(usage.cacheReadTokens, chat) })
+              if (usage.cacheWriteTokens !== 0) {
+                rows.push({ label: chat('message.turnUsage.cacheWrite'), value: sessionStatsTokens(usage.cacheWriteTokens, chat) })
               }
+              rows.push({ label: chat('message.turnUsage.output'), value: sessionStatsTokens(usage.outputTokens, chat) })
               if (rows.length > 0) sections.push({ title: chat('stats.dialog.usageTitle'), rows })
             }
           }
@@ -410,17 +424,25 @@
               renderContextStats()
             }, STATS_SKELETON_MS - held)
           }
-          const titles = [chat('stats.dialog.title'), chat('stats.dialog.usageTitle')]
-          const counts = compact ? [COMPACT_SKELETON_ROWS, COMPACT_SKELETON_USAGE_ROWS] : [STATS_SKELETON_ROWS, STATS_SKELETON_ROWS]
           let signature = compact ? 'skeleton-compact' : 'skeleton'
           let html = ''
-          for (let i = 0; i < titles.length; i++) {
-            signature += `\u0001${titles[i]}`
-            html += `<div class="dsh-claude-context-stats-section">${statsEscape(titles[i])}</div><div class="dsh-claude-context-stats-grid">`
-            for (let r = 0; r < counts[i]; r++) {
+          if (compact) {
+            html += '<div class="dsh-claude-context-stats-grid">'
+            for (let r = 0; r < COMPACT_SKELETON_ITEMS; r++) {
               html += '<div class="dsh-claude-context-stats-item"><span class="dsh-claude-context-stats-skeleton-label"></span><span class="dsh-claude-context-stats-skeleton-value"></span></div>'
             }
             html += '</div>'
+          } else {
+            const titles = [chat('stats.dialog.title'), chat('stats.dialog.usageTitle')]
+            const counts = [STATS_SKELETON_ROWS, STATS_SKELETON_ROWS]
+            for (let i = 0; i < titles.length; i++) {
+              signature += `\u0001${titles[i]}`
+              html += `<div class="dsh-claude-context-stats-section">${statsEscape(titles[i])}</div><div class="dsh-claude-context-stats-grid">`
+              for (let r = 0; r < counts[i]; r++) {
+                html += '<div class="dsh-claude-context-stats-item"><span class="dsh-claude-context-stats-skeleton-label"></span><span class="dsh-claude-context-stats-skeleton-value"></span></div>'
+              }
+              html += '</div>'
+            }
           }
           const block = ensureContextBlock(panel)
           if (signature === blockSignature && block.childElementCount > 0) return
@@ -452,11 +474,14 @@
           }
           stopSkeleton()
           let html = ''
-          let signature = ''
+          let signature = compact ? 'compact' : ''
           for (let sIndex = 0; sIndex < sections.length; sIndex++) {
             const section = sections[sIndex]
-            signature += `\u0001${section.title}`
-            html += `<div class="dsh-claude-context-stats-section">${statsEscape(section.title)}</div><div class="dsh-claude-context-stats-grid">`
+            if (section.title) {
+              signature += `\u0001${section.title}`
+              html += `<div class="dsh-claude-context-stats-section">${statsEscape(section.title)}</div>`
+            }
+            html += '<div class="dsh-claude-context-stats-grid">'
             for (let r = 0; r < section.rows.length; r++) {
               const row = section.rows[r]
               signature += `\u0001${row.label}\u0002${row.value}`

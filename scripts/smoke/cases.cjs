@@ -270,13 +270,13 @@ const CASES = {
     check('the compact row carries no trigger of its own; the meter still opens the panel',
       r.context.panelStamped === true && r.context.opened === true && r.context.expanded === 'true',
       JSON.stringify({ stamped: r.context.panelStamped, opened: r.context.opened, expanded: r.context.expanded }))
-    check('with no projection frame yet the place is the compact one: three time rows, one usage row',
-      same(r.context.skeletonSections, ['Session statistics', 'Token usage']) &&
+    check('with no projection frame yet the place is the compact one: four items in a 2x2 grid, no section headings',
+      same(r.context.skeletonSections, []) &&
         r.context.skeletonRows === 4 && r.context.skeletonItemHeight === 37,
       JSON.stringify({ sections: r.context.skeletonSections, rows: r.context.skeletonRows, itemHeight: r.context.skeletonItemHeight }))
-    check('the compact block keeps four figures: the total time, the first-token average, the output speed and the cache-hit share',
+    check('the compact block keeps four figures: the total time, the first-token average, the output speed and the cache-hit share in one 2x2 grid with no section headings',
       r.context.skeletonGone === true &&
-        same(r.context.sections, ['Session statistics', 'Token usage']) &&
+        same(r.context.sections, []) &&
         same(r.context.labels, ['Total time', 'Avg time to first token (TTFT)', 'Tokens per second (TPS)', 'Cache hit']) &&
         same(r.context.values, ['1.6s', '0.8s', '105 tok/s', '90%']),
       JSON.stringify({ labels: r.context.labels, values: r.context.values }))
