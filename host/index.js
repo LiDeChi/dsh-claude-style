@@ -17,7 +17,8 @@
  *      are NOT in the npm package (they remain Anthropic's property), but a
  *      user who drops them into this package's `fonts/` directory gets the
  *      same zero-install treatment; a missing file simply 404s and the stack
- *      falls back to a system-installed copy.
+ *      falls back to a system-installed copy, then to the look-alike faces
+ *      this package does ship (Inter, Noto Serif — SIL OFL).
  *   3. Resolve the OS user once for the browser half. The username route answers
  *      a single GET and the browser caches it; it runs the host's own request
  *      fence first — see refusalOf() in routes.js.

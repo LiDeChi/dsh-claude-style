@@ -389,6 +389,17 @@ async function hostHalf() {
     const answer = await requestAsset(assets, url)
     check(`nothing but a sheet answers under the sheets' path: ${url}`, answer.status === 404, `HTTP ${answer.status}`)
   }
+
+  // The faces the package ships: each is in package.json's files and the route
+  // answers it byte for byte under its own content type.
+  const packaged = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).files
+  for (const [name, type] of [['JetBrainsMonoVariable.ttf', 'font/ttf'], ['InterVariable.woff2', 'font/woff2'], ['NotoSerifVariable.woff2', 'font/woff2']]) {
+    const face = await requestAsset(assets, `/dsh-claude-style/fonts/${name}`)
+    check(`the packaged face ${name} ships in the package and is served as ${type}`,
+      packaged.includes(`fonts/${name}`) && face.status === 200 && face.headers['content-type'] === type &&
+        face.raw !== null && Buffer.compare(face.raw, fs.readFileSync(path.join(ROOT, 'fonts', name))) === 0,
+      `HTTP ${face.status} ${JSON.stringify(face.headers)}`)
+  }
 }
 
 /**

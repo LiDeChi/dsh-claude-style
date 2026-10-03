@@ -45,6 +45,33 @@
   font-display: swap;
 }
 
+/* The look-alikes the stacks name right after the Anthropic faces, for an
+   install that has neither the files nor a system copy. Both ship in the
+   package (SIL OFL 1.1), cut to exactly the characters the Anthropic faces
+   cover, so text the Anthropic faces would not draw falls through to the same
+   CJK and system fonts as before. Inter matches Anthropic Sans in x-height,
+   cap height and lowercase width to within 0.01 em; Noto Serif does the same
+   for Anthropic Serif, so switching between a face and its look-alike does
+   not rewrap text. Both carry real weights, roman only — the Anthropic faces
+   have no italic either, so emphasis is slanted the same way in both. The
+   family names are the skin's own: a plugin that asks for 'Inter' or
+   'Noto Serif' still gets its own copy, not these cut-down files. */
+@font-face {
+  font-family: 'Claude Style Inter';
+  src: url('/dsh-claude-style/fonts/InterVariable.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Claude Style Noto Serif';
+  src: url('/dsh-claude-style/fonts/NotoSerifVariable.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* ---------- typography: serif display + sans UI + mono code ---------- */
 body[data-dsh-claude-style] {
   font-family: var(--dsw-font-family);

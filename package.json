@@ -44,7 +44,11 @@
     "fonts/JetBrainsMonoVariable.ttf",
     "fonts/JetBrainsMonoItalicVariable.ttf",
     "fonts/OFL.txt",
-    "fonts/AUTHORS.txt"
+    "fonts/AUTHORS.txt",
+    "fonts/InterVariable.woff2",
+    "fonts/OFL-Inter.txt",
+    "fonts/NotoSerifVariable.woff2",
+    "fonts/OFL-NotoSerif.txt"
   ],
   "keywords": [
     "dsh",

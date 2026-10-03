@@ -24,7 +24,8 @@ const COPY_FILE = 'model-descriptions.json'
  * Webfonts this plugin serves under `${ROUTE_PREFIX}/fonts/`, mapped to their
  * content type. The table is a whitelist: the filename is the whole request
  * contract, so nothing below the package's `fonts/` directory is reachable
- * and no path traversal is possible. The JetBrains Mono files ship in the
+ * and no path traversal is possible. The JetBrains Mono files and the two
+ * look-alike faces behind the Anthropic ones (Inter, Noto Serif) ship in the
  * npm package; the Anthropic faces do not (copyright) — their entries exist so
  * a user-supplied copy in `fonts/` is served, and readFileSync's ENOENT turns
  * into a 404 the browser half's font stacks fall back from.
@@ -34,6 +35,8 @@ const FONT_FILES = {
   'JetBrainsMonoItalicVariable.ttf': 'font/ttf',
   'AnthropicSansWebText.ttf': 'font/ttf',
   'AnthropicSerifWebText.ttf': 'font/ttf',
+  'InterVariable.woff2': 'font/woff2',
+  'NotoSerifVariable.woff2': 'font/woff2',
 }
 /**
  * Deepy's animation sheets, served under `${ROUTE_PREFIX}/deepy/` from the
