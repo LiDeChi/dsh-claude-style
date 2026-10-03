@@ -23,15 +23,15 @@ body[data-dsh-claude-style] a:not([class*="_linkButton"]):hover {
   color: var(--dsh-claude-link-hover);
 }
 
-body[data-dsh-claude-style] button[class*="brand"] {
+body[data-dsh-claude-style] button[class*="brand"]:not([class*="dsh-claude"]) {
   color: var(--dsw-alias-brand-primary);
 }
 
 /* The baked-in wordmark "HARNESS" badge (a pill rect + its letter paths)
    looks crowded next to the whale + wordmark. Hide the badge entirely so
    the brand reads as a clean whale + wordmark on the clay pill. */
-body[data-dsh-claude-style] button[class*="brand"] rect[fill="currentColor"],
-body[data-dsh-claude-style] button[class*="brand"] path[fill*="label-primary-inverted"] {
+body[data-dsh-claude-style] button[class*="brand"]:not([class*="dsh-claude"]) rect[fill="currentColor"],
+body[data-dsh-claude-style] button[class*="brand"]:not([class*="dsh-claude"]) path[fill*="label-primary-inverted"] {
   display: none;
 }
 
@@ -55,19 +55,22 @@ body[data-dsh-claude-style] [data-slot="sidebar.settings"] > :is(button, [role="
    the canvas. That pill also carried a 9999px radius, and together with the
    button overflow:hidden its arc clipped the leading edge of the mark — so
    the radius goes as well. Adaptive logo color: espresso on light, ivory
-   on dark (--dsh-claude-logo-ink; the DeepSeek brand's own blue under it). */
-body[data-dsh-claude-style]:not([data-ds-dark-theme]) button[class*="brand"],
-body[data-dsh-claude-style][data-ds-dark-theme] button[class*="brand"] {
+   on dark (--dsh-claude-logo-ink; the DeepSeek brand's own blue under it).
+   Every "brand" rule in this file excludes the skin's own controls
+   (:not([class*="dsh-claude"])): the settings page's brand cards carry the
+   same substring and draw their own border and background. */
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) button[class*="brand"]:not([class*="dsh-claude"]),
+body[data-dsh-claude-style][data-ds-dark-theme] button[class*="brand"]:not([class*="dsh-claude"]) {
   background: transparent !important;
   border: none;
   border-radius: 0;
 }
 
-body[data-dsh-claude-style]:not([data-ds-dark-theme]) button[class*="brand"] {
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) button[class*="brand"]:not([class*="dsh-claude"]) {
   color: var(--dsh-claude-logo-ink) !important;
 }
 
-body[data-dsh-claude-style][data-ds-dark-theme] button[class*="brand"] {
+body[data-dsh-claude-style][data-ds-dark-theme] button[class*="brand"]:not([class*="dsh-claude"]) {
   color: var(--dsh-claude-logo-ink) !important;
 }
 

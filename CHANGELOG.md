@@ -9,6 +9,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 <h3 id="cn-unreleased">体验优化</h3>
 
 - **没有 Anthropic 字体时，界面与正文换成外观相近的字体**：没有把 Anthropic Sans / Serif 装进系统或放进插件 `fonts/` 目录时，界面以前落到 Segoe UI、苹方这类系统字体，对话正文落到 Georgia，字形和排版都和原样差得远。现在插件自带 Inter 与 Noto Serif（SIL OFL 1.1）代替两款 Anthropic 字体，它们的字高、字宽与原字体相差不到百分之二，换字体时文字不会重新换行，粗体用的是字体本身的字重。两款字体只含 Anthropic 字体覆盖的拉丁字符，中文照旧使用系统中文字体；npm 包因此大约增加 214 KB。已经启用 Anthropic 字体的环境不受影响。
+- **品牌标识改为大卡片选择**：设置页的品牌选项由分段小按钮改为一排大卡片，每张卡片放对应的品牌标识（Claude 的陶土星芒、DeepSeek 的蓝鲸），当前品牌的卡片带品牌色描边；后续新增品牌只需添一张卡片。
 
 ### 问题修复
 
@@ -19,6 +20,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 <h3 id="en-unreleased">Improvements</h3>
 
 - **Without the Anthropic fonts, the interface and conversation text use close look-alikes**: when Anthropic Sans and Serif were neither installed on the system nor dropped into the plugin's `fonts/` directory, the interface used to fall back to system fonts such as Segoe UI or PingFang and the conversation body to Georgia, far from the intended letterforms and layout. The plugin now ships Inter and Noto Serif (SIL OFL 1.1) in their place; their letter heights and widths are within two percent of the Anthropic fonts, so text does not rewrap when one replaces the other, and bold text uses the fonts' own weights. Both carry only the Latin characters the Anthropic fonts cover, so Chinese text keeps using the system's Chinese fonts; the npm package grows by about 214 KB. Setups that already have the Anthropic fonts are unaffected.
+- **The brand choice is now a row of large cards**: the settings page's brand option changes from small segments to large cards, each carrying the brand's own mark (Claude's clay starburst, DeepSeek's blue whale) with the active card outlined in the brand accent; a new brand is one more card.
 
 ### Bug Fixes
 

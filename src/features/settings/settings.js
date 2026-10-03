@@ -13,10 +13,12 @@
      * follows the shell language like every other string the skin paints. The
      * English literals here are the fallback for a failed fetch.
      *
-     * Its segmented controls reuse the shared `.dsh-claude-segments` /
+     * The segmented controls reuse the shared `.dsh-claude-segments` /
      * `.dsh-claude-segment` classes and sliding highlight — the same control the
      * composer's permission picker uses — so the two read as one design instead
-     * of two lookalikes.
+     * of two lookalikes. The brand choice is the exception: brands are
+     * presets, not sibling tiers of one setting, so they render as a grid of
+     * large cards, each carrying the brand's own mark.
      */
     /**
      * The quick-provider popover (src/features/settings/quick-providers.js). The settings
@@ -154,9 +156,11 @@
         React.createElement('span', { className: 'dsh-claude-settings-switch-knob' }),
       )
 
-      const row = (key, title, description, control) => React.createElement(
+      // A block row stacks its control under the text across the row's full
+      // width; the inline form keeps text left and control right.
+      const row = (key, title, description, control, block) => React.createElement(
         'div',
-        { className: 'dsh-claude-settings-row', key },
+        { className: block ? 'dsh-claude-settings-row dsh-claude-settings-row-block' : 'dsh-claude-settings-row', key },
         React.createElement(
           'div',
           { className: 'dsh-claude-settings-row-text' },
@@ -235,7 +239,28 @@
           'brand',
           settingsCopy('brandTitle', 'Brand mark'),
           settingsCopy('brandDesc', 'The brand mark in the sidebar and on the home page. DeepSeek keeps the host\'s own DeepSeek mark in DeepSeek blue, turns the whole palette blue (a sky-tinted white in light, a blue-black in dark) and puts Deepy the pixel whale on the composer in place of the crab.'),
-          segment(brandOptions, prefs.brand, value => { write({ brand: value }) }),
+          // One card per brand: the brand's own mark above its name, the
+          // active card outlined in the brand accent. The stylesheet picks the
+          // mark off the logo's data-brand, so a new brand is one option here
+          // plus one rule in settings.css.
+          React.createElement(
+            'div',
+            { className: 'dsh-claude-brand-picker', role: 'group' },
+            brandOptions.map(option => React.createElement(
+              'button',
+              {
+                key: option.value,
+                type: 'button',
+                className: 'dsh-claude-brand-card',
+                'data-active': option.value === prefs.brand ? '' : undefined,
+                'aria-pressed': option.value === prefs.brand ? 'true' : 'false',
+                onClick: () => { if (option.value !== prefs.brand) write({ brand: option.value }) },
+              },
+              React.createElement('span', { className: 'dsh-claude-brand-card-logo', 'data-brand': option.value }),
+              React.createElement('span', { className: 'dsh-claude-brand-card-name' }, option.label),
+            )),
+          ),
+          true,
         ),
         row(
           'motion',

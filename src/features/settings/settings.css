@@ -31,7 +31,7 @@ body[data-dsh-claude-style]:not([data-ds-dark-theme]) button[data-dsh-section="c
 /* The skin's own page in the settings dialog. Its segmented controls reuse the
    composer permission picker's classes (`.dsh-claude-segments` /
    `.dsh-claude-segment`), so the two are literally one control rather than two
-   lookalikes; only the row shell and the switch are new here. */
+   lookalikes; the row shell, the switch and the brand cards are new here. */
 body[data-dsh-claude-style] .dsh-claude-settings {
   display: flex;
   flex-direction: column;
@@ -60,6 +60,77 @@ body[data-dsh-claude-style] .dsh-claude-settings-row {
 body[data-dsh-claude-style] .dsh-claude-settings-row-text {
   flex: 1;
   min-width: 0;
+}
+
+/* A block row stacks its control under the text across the row's full width —
+   the brand picker's cards need more room than an inline control slot gives. */
+body[data-dsh-claude-style] .dsh-claude-settings-row-block {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/* The brand picker: one card per brand, the brand's mark above its name. The
+   marks are the same assets the sidebar and hero paint — Claude's clay
+   starburst, DeepSeek's whale in brand blue — inlined as CSS data URIs, so
+   they read in full colour on either theme. A new brand adds one option in
+   settings.js and one [data-brand] rule here. */
+body[data-dsh-claude-style] .dsh-claude-brand-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: 8px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-brand-card {
+  appearance: none;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 12px 10px;
+  box-sizing: border-box;
+  border: 1px solid var(--dsw-alias-border-l1);
+  border-radius: 12px;
+  background: var(--dsw-alias-bg-layer-1);
+  color: var(--dsw-alias-label-primary);
+  font: inherit;
+  cursor: pointer;
+  transition: border-color .12s ease;
+}
+
+body[data-dsh-claude-style] .dsh-claude-brand-card:hover {
+  border-color: var(--dsw-alias-border-l2);
+}
+
+body[data-dsh-claude-style] .dsh-claude-brand-card:focus-visible {
+  outline: 2px solid var(--dsw-alias-brand-primary, #d97757);
+  outline-offset: 1px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-brand-card[data-active] {
+  border-color: var(--dsw-alias-brand-primary, #d97757);
+}
+
+body[data-dsh-claude-style] .dsh-claude-brand-card-logo {
+  width: 32px;
+  height: 32px;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+body[data-dsh-claude-style] .dsh-claude-brand-card-logo[data-brand="claude"] {
+  background-image: %%CLAUDE_MARK_CLAY%%;
+}
+
+body[data-dsh-claude-style] .dsh-claude-brand-card-logo[data-brand="deepseek"] {
+  background-image: %%DEEPSEEK_MARK%%;
+}
+
+body[data-dsh-claude-style] .dsh-claude-brand-card-name {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
 }
 
 body[data-dsh-claude-style] .dsh-claude-settings-row-title {
