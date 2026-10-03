@@ -1,7 +1,11 @@
 /* @composer-gate */
-/* Model trigger in trailing */
-body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [class*="_trailing"] > :first-child,
-body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [class*="_trailing"] :is([class*="trigger" i], [class*="model" i], [class*="Model"]) {
+/* Model trigger in the host's contract slot: the skin's own button, and the
+   host's trigger when the picker preference hands the seat back. Both are
+   named by their exact place in the seat, so a menu another plugin nests
+   inside the seat keeps its own layout, and the seat root the picker hides is
+   never matched — a display here would outrank the hide rule below. */
+body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [data-slot="conversation.input.model"] > [class*="_root"] > [class*="_trigger"],
+body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [data-slot="conversation.input.model"] > .dsh-claude-model-btn {
   display: inline-flex !important;
   align-items: center !important;
   font-size: 13px !important;

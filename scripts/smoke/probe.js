@@ -579,6 +579,26 @@
     r.homeLayoutExpected = window.SMOKE_CASE === 'studio' ? 'studio' : null
     r.slotRegistrations = window.__slots || null
     r.composerRestyle = document.body.hasAttribute('data-dsh-claude-composer-active')
+    // The host's model seat inside an inline card, with a menu another plugin
+    // nests in it (its hashed class says "model"). Read and removed within one
+    // task, so no skin pass ever sees it: the trigger rule must reach the
+    // host's trigger, leave the nested menu its block layout, and leave the
+    // seat root hidden once the picker marks it.
+    var modelCard = document.createElement('div')
+    modelCard.setAttribute('data-composer-card', '')
+    modelCard.setAttribute('data-composer-variant', 'inline')
+    modelCard.innerHTML = '<div class="_x_trailing_2"><div data-slot="conversation.input.model" style="display:contents">' +
+      '<div class="_m_root_1"><button type="button" class="_m_trigger_1">model-a</button>' +
+      '<div class="_m_menu_1"><div class="_p_providerModelMenu_1"></div></div></div></div></div>'
+    document.body.appendChild(modelCard)
+    var modelSeatRoot = modelCard.querySelector('._m_root_1')
+    r.modelSeat = {
+      trigger: getComputedStyle(modelCard.querySelector('._m_trigger_1')).display,
+      nestedMenu: getComputedStyle(modelCard.querySelector('._p_providerModelMenu_1')).display,
+    }
+    modelSeatRoot.setAttribute('data-dsh-claude-model-host', '')
+    r.modelSeat.markedRoot = getComputedStyle(modelSeatRoot).display
+    modelCard.remove()
     if (window.SMOKE_CASE === 'studio') {
       // Render the registered panel on the hero page, once per tab, the way
       // the dock seat would: a throw here is the slot's error boundary on the
