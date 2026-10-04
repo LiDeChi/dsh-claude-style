@@ -26,6 +26,17 @@
      */
     let quickProviderApi = null
 
+    /**
+     * The host's slot registry, kept from the settings-section registration so
+     * the nav cell can be found later. The nav entry carries no key of its own
+     * on the host's markup; the registry's entry list is the only place the
+     * section's position is stated.
+     */
+    let slotsApi = null
+
+    /** The host's own id for the settings section this plugin registers. */
+    const SETTINGS_SECTION_ID = 'claude-style'
+
     /** The page's tabs, in strip order, and the controls their rows are built from. */
     const SETTINGS_TABS = [
       createSettingsGeneralTab(),
@@ -209,19 +220,27 @@
     function syncSettingsNav() {
       const navList = document.querySelector(':is([class*="settingsArea"], [class*="_overlay"], [class*="SettingsRoot"]) [class*="_navList"]')
       if (!navList) return
+      if (navList.querySelector(`[data-dsh-section="${SETTINGS_SECTION_ID}"]`) !== null) return
+      // The section's position among the slot's entries is the nav cell's
+      // position in the list: one cell per registered section, in the same
+      // order. No label text is read, so a host renaming the entry or a copy
+      // document that has not arrived leaves the mark where it belongs.
+      const index = settingsSectionIndex()
+      if (index < 0) return
       const buttons = navList.querySelectorAll('button')
-      const targetTitle = (typeof settingsCopy === 'function' ? settingsCopy('title', 'Claude Style') : 'Claude Style') || 'Claude Style'
-      for (let i = 0; i < buttons.length; i++) {
-        const btn = buttons[i]
-        const label = btn.querySelector('[class*="_navLabel"]') || btn
-        const text = (label.textContent || '').trim()
-        if (text === 'Claude Style' || text === targetTitle) {
-          if (btn.getAttribute('data-dsh-section') !== 'claude-style') {
-            btn.setAttribute('data-dsh-section', 'claude-style')
-          }
-          return
-        }
+      if (index >= buttons.length) return
+      buttons[index].setAttribute('data-dsh-section', SETTINGS_SECTION_ID)
+    }
+
+    /** This plugin's entry position in the settings slot, or -1 while unknown. */
+    function settingsSectionIndex() {
+      if (slotsApi === null || typeof slotsApi.entries !== 'function') return -1
+      const entries = slotsApi.entries(SETTINGS_SECTION_SLOT)
+      for (let i = 0; i < entries.length; i++) {
+        const options = entries[i] === null || entries[i] === undefined ? null : entries[i].options
+        if (options !== null && options !== undefined && options.id === SETTINGS_SECTION_ID) return i
       }
+      return -1
     }
 
     /**
@@ -255,6 +274,7 @@
       const fiber = ctx.inject(['slots'], scope => {
         const slots = scope.get('slots')
         if (slots === void 0 || slots === null || typeof slots.inject !== 'function') return
+        slotsApi = slots
         // 0.1.7 keeps a bundle's own configuration on the plugin's page: the
         // entry is keyed by the bundle's package name and rendered there —
         // `view: 'page'` for the form, `view: 'summary'` for the card's
@@ -276,7 +296,7 @@
         scope.effect(() => slots.inject(SETTINGS_SECTION_SLOT, () => slots.register(
           {
             name: SETTINGS_SECTION_SLOT,
-            id: 'claude-style',
+            id: SETTINGS_SECTION_ID,
             order: 22,
             // A function, so the navigation entry localizes once the copy
             // document has arrived; the literal is the pre-fetch fallback.
@@ -290,6 +310,7 @@
           delete ui.settingsNav
         }
         quickProviderApi = null
+        slotsApi = null
         if (fiber && typeof fiber.dispose === 'function') fiber.dispose()
       }
     }

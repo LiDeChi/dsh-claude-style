@@ -694,6 +694,17 @@
       window.__slotComponents[spec.id] = component
       return function () {}
     },
+    // The host lists a slot's entries in render order (ui-slots' registry),
+    // each with the options it was registered under.
+    entries: function (key) {
+      var out = []
+      var all = window.__slots || []
+      for (var i = 0; i < all.length; i++) {
+        if (all[i].key !== key) continue
+        out.push({ options: { id: all[i].id, order: all[i].order } })
+      }
+      return out
+    },
   } : undefined
   window.__permissionCommands = permissionCommands
   window.__ctx = {
