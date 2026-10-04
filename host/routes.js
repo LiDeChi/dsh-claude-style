@@ -175,12 +175,14 @@ function sessionsRoot(ctx) {
  * "live": an unreadable set cannot authorize the deletion.
  */
 function sessionIsLive(ctx, sessionId) {
-  let sessions = null
+  let sessions
   try {
     sessions = ctx.get('sessions')
   } catch {
-    sessions = null
+    // The live set cannot be read: an unreadable set cannot authorize the deletion.
+    return true
   }
+  // A host with no sessions service holds nothing open.
   if (sessions === null || sessions === undefined) return false
   try {
     if (typeof sessions.get === 'function') {
