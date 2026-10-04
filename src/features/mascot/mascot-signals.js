@@ -48,11 +48,23 @@
       /** Sessions finished out of view at the last status read; null before the first. */
       let unread = null
 
-      const statusSource = ctx.get('uiSession')?.sessionStatus
-      const stopStatus = typeof statusSource?.subscribe === 'function' ? statusSource.subscribe(onStatus) : null
+      /**
+       * The session status source, resolved per read: uiSession can mount after
+       * this feature, and a source captured once at creation would stay absent
+       * for the whole generation. A newly appeared source is subscribed there
+       * and then; a swapped one replaces its subscription.
+       */
+      let statusSource
+      let stopStatus = null
 
       function statusOf() {
-        return typeof statusSource?.getSnapshot === 'function' ? statusSource.getSnapshot() : null
+        const source = ctx.get('uiSession')?.sessionStatus
+        if (source !== statusSource) {
+          if (stopStatus !== null) stopStatus()
+          statusSource = source
+          stopStatus = typeof source?.subscribe === 'function' ? source.subscribe(onStatus) : null
+        }
+        return typeof source?.getSnapshot === 'function' ? source.getSnapshot() : null
       }
 
       function listOf() {
