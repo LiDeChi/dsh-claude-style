@@ -265,7 +265,7 @@
             if (currentDesc) currentCopy.appendChild(buildElement('span', 'dsh-claude-model-desc', currentDesc))
             currentRow.appendChild(currentCopy)
             const currentCheck = buildElement('span', 'dsh-claude-popover-check')
-            currentCheck.innerHTML = MODEL_CHECK_SVG
+            currentCheck.innerHTML = POPOVER_CHECK_SVG
             currentRow.appendChild(currentCheck)
             currentRow.addEventListener('click', e => {
               e.stopPropagation()
@@ -368,7 +368,6 @@
         // Rebuilding also re-points the body/footer children and resets the
         // render signatures so the next pass repaints into the fresh nodes.
         if (modelPop === null || modelPop.parentElement === null) {
-          if (modelPop !== null && modelPop.parentElement !== null) modelPop.parentElement.removeChild(modelPop)
           modelPop = document.createElement('div')
           modelPop.className = 'dsh-claude-popover-card dsh-claude-model-popover'
           setMenuPopoverOpen(modelPop, false)
@@ -406,7 +405,6 @@
           modelBodySig = ''
         }
         if (modelSubPop === null || modelSubPop.parentElement === null) {
-          if (modelSubPop !== null && modelSubPop.parentElement !== null) modelSubPop.parentElement.removeChild(modelSubPop)
           modelSubPop = document.createElement('div')
           modelSubPop.className = 'dsh-claude-popover-card dsh-claude-model-popover dsh-claude-model-popover-sub'
           setMenuPopoverOpen(modelSubPop, false)

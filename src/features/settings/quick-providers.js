@@ -14,7 +14,6 @@
      * card in there would be positioned against the dialog, not the viewport.
      */
     function installQuickProviders(ctx, ui) {
-      const CHECK_SVG = '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.2 3.2L13 5"/></svg>'
       let card = null
       let cardBody = null
       let anchor = null
@@ -47,16 +46,13 @@
 
       /** One provider: its name, how many models it offers, and a check when chosen. */
       function buildRow(provider, chosen, stale) {
-        const row = buildElement('button', 'dsh-claude-popover-item')
+        const built = buildPopoverItem({ role: 'menuitemcheckbox', badge: true, check: true })
+        const row = built.row
         if (stale) row.classList.add('dsh-claude-popover-item-stale')
-        row.type = 'button'
-        row.setAttribute('role', 'menuitemcheckbox')
         row.setAttribute('aria-checked', chosen ? 'true' : 'false')
-        row.appendChild(buildElement('span', 'dsh-claude-popover-item-text', provider.name))
-        row.appendChild(buildElement('span', 'dsh-claude-popover-item-badge', stale ? settingsCopy('quickRemoved', 'Removed') : String(provider.count)))
-        const check = buildElement('span', 'dsh-claude-popover-check')
-        check.innerHTML = chosen ? CHECK_SVG : ''
-        row.appendChild(check)
+        built.text.textContent = provider.name
+        built.badge.textContent = stale ? settingsCopy('quickRemoved', 'Removed') : String(provider.count)
+        built.check.innerHTML = chosen ? POPOVER_CHECK_SVG : ''
         row.addEventListener('click', e => {
           e.stopPropagation()
           const next = readPrefs().quickProviders.slice()
@@ -99,10 +95,9 @@
         anchor = trigger
         anchor.setAttribute('aria-expanded', 'true')
         onWrite = write
-        providers = ui.model && typeof ui.model.providers === 'function' ? ui.model.providers() : []
+        providers = typeof ui.model?.providers === 'function' ? ui.model.providers() : []
         card = buildElement('div', 'dsh-claude-popover-card dsh-claude-quick-popover')
-        card.setAttribute('role', 'menu')
-        card.setAttribute('data-open', 'true')
+        setMenuPopoverOpen(card, true)
         cardBody = buildElement('div', 'dsh-claude-popover-body')
         card.appendChild(cardBody)
         renderBody()
@@ -119,7 +114,7 @@
 
       // The catalog arrives after the settings page may already be open, so an
       // open card follows it rather than showing an empty list until reopened.
-      if (ui.model && typeof ui.model.onProviders === 'function') {
+      if (typeof ui.model?.onProviders === 'function') {
         unsubscribe = ui.model.onProviders(list => {
           providers = list
           if (card !== null) renderBody()

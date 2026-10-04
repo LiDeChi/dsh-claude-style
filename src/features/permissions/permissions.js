@@ -253,31 +253,13 @@
        * the rows stay consistent with each other.
        */
       function buildPermRow(preset) {
-        const item = document.createElement('button')
-        item.type = 'button'
-        item.className = 'dsh-claude-popover-item'
-        item.setAttribute('role', 'menuitem')
+        const built = buildPopoverItem({ role: 'menuitem', lines: 2, check: true })
+        const item = built.row
         item.setAttribute('data-preset', preset)
-
-        const col = document.createElement('div')
-        col.style.cssText = 'display:flex; flex-direction:column; gap:2px; flex:1; text-align:left; min-width:0;'
-
-        const itemTitle = document.createElement('span')
-        itemTitle.style.cssText = 'font-weight:500; font-size:13px; line-height:16px;'
-        itemTitle.textContent = presetLabel(preset)
-
-        const itemDesc = document.createElement('span')
-        itemDesc.style.cssText = 'font-size:11px; line-height:14px; color:var(--dsw-alias-label-tertiary);'
-        itemDesc.textContent = presetDesc(preset)
-
-        col.appendChild(itemTitle)
-        col.appendChild(itemDesc)
-        item.appendChild(col)
-
-        const check = buildElement('span', 'dsh-claude-perm-check')
-        check.style.cssText = 'font-size:12px; color:var(--dsw-alias-brand-primary, #d97757); margin-left:8px; display:none;'
-        check.textContent = '✓'
-        item.appendChild(check)
+        built.text.textContent = presetLabel(preset)
+        built.desc.textContent = presetDesc(preset)
+        built.check.textContent = '✓'
+        built.check.hidden = true
 
         item.addEventListener('click', e => {
           e.stopPropagation()
@@ -337,9 +319,7 @@
         function openPerm() {
           if (permHoverIntent) permHoverIntent.cancel()
           closeOtherPopovers('permission')
-          const rect = btn.getBoundingClientRect()
-          popover.style.left = `${Math.max(8, rect.left)}px`
-          popover.style.bottom = `${Math.max(8, window.innerHeight - rect.top + 6)}px`
+          positionAnchoredPopover(btn, popover, { side: 'above-left', gap: 6, important: true })
           btn.setAttribute('data-open', 'true')
           btn.setAttribute('aria-expanded', 'true')
           setMenuPopoverOpen(popover, true)
@@ -420,10 +400,8 @@
         for (let j = 0; j < items.length; j++) {
           const it = items[j]
           const isCurrent = it.getAttribute('data-preset') === preset
-          const check = it.querySelector('.dsh-claude-perm-check')
-          if (check) {
-            check.style.display = isCurrent ? 'inline' : 'none'
-          }
+          const check = it.querySelector('.dsh-claude-popover-check')
+          if (check) check.hidden = !isCurrent
           if (isCurrent) {
             it.setAttribute('data-active', '')
           } else {

@@ -348,16 +348,17 @@
           try {
             ((entry, idx) => {
             // The host's account area also lives in the footer: skip anything
-            // that is a menu anchor or contains one, and anything that reads as
-            // sign-out, so its logout button stays out of the drawer's header.
+            // that is a menu anchor or contains one, and anything carrying the
+            // host's sign-out glyph, so its logout button stays out of the
+            // drawer's header. The glyph is identified by its geometry
+            // (ui-primitives LogoutIcon: a 13.664×13.571 svg), never by text —
+            // the row is icon-only and its label follows the interface
+            // language.
             if (entry.getAttribute('aria-haspopup') === 'menu') return
             if (entry.querySelector('[aria-haspopup="menu"]') !== null) return
-            if (/退出|登出|注销|sign ?out|log ?out/i.test(entry.textContent || '')) return
-            // The host's sign-out row is ICON-ONLY, so its text says nothing. Read
-            // the label/title/class, and skip anything living in the host's account
-            // area — that is where the stray [→] in the drawer header came from.
-            const entryLabel = `${entry.getAttribute('aria-label') || ''} ${entry.getAttribute('title') || ''} ${String(entry.className || '')}`
-            if (/退出|登出|注销|sign ?out|log ?out|logout/i.test(entryLabel)) return
+            if (entry.querySelector('svg[viewBox="0 0 13.664 13.571"]') !== null) return
+            // Skip anything living in the host's account area — that is where
+            // the stray [→] in the drawer header came from.
             if (typeof entry.closest === 'function' && entry.closest('[class*="account"]') !== null) return
             const trigger = findFooterTrigger(entry)
             const hasContent = (entry.textContent || '').trim() !== '' ||
@@ -387,13 +388,10 @@
             const badge = activator.getAttribute('data-cordis-badge') || entry.getAttribute('data-cordis-badge') || ''
 
             if (!item) {
-              item = document.createElement('button')
-              item.type = 'button'
-              item.className = 'dsh-claude-popover-item'
+              // The shared row skeleton: icon, text, and the badge slot the
+              // sync below fills or drops.
+              item = buildPopoverItem({ icon: true }).row
               item.setAttribute('data-action-index', idx)
-              item.innerHTML =
-                '<span class="dsh-claude-popover-item-icon"></span>' +
-                '<span class="dsh-claude-popover-item-text"></span>'
 
               item.addEventListener('click', e => {
                 e.stopPropagation()

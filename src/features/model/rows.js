@@ -10,7 +10,6 @@
      * second level's state). The two SVG strings and byModelId are pure and
      * stay at the fragment's top level.
      */
-    const MODEL_CHECK_SVG = '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.2 3.2L13 5"/></svg>'
     const MODEL_CHEVRON_SVG = '<svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l4 4-4 4"/></svg>'
 
     /** Catalog order is whatever the provider happened to send; id order is scannable. */
@@ -42,9 +41,10 @@
 
         /** One selectable model row: brand mark, name, optional description line and a check when current. */
         function buildModelOption(group, model, selected, withDescription) {
-            const item = buildElement('button', 'dsh-claude-model-option')
-            item.type = 'button'
-            item.setAttribute('role', 'menuitemradio')
+            // The shared row skeleton; the copy block keeps its own class, and
+            // the vendor typography rides on the label inside it.
+            const built = buildPopoverItem({ className: 'dsh-claude-model-option', role: 'menuitemradio', textClass: 'dsh-claude-model-copy', check: true })
+            const item = built.row
             item.setAttribute('aria-checked', selected ? 'true' : 'false')
             const brand = modelBrand(model.id)
             // The brand id is the row's styling hook — it is what gives a vendor's rows
@@ -53,7 +53,7 @@
             // here: it rides inside the label's lockup. The scheduler's attributeFilter
             // does not watch data-*, so this write cannot re-trigger a pass.
             if (brand) item.setAttribute('data-brand', brand)
-            const copy = buildElement('span', 'dsh-claude-model-copy')
+            const copy = built.text
             copy.appendChild(buildModelLabel(model.name, brand))
             // The description belongs to level 1 only: that list is the official
             // catalog, short enough that the line is what tells the models apart,
@@ -62,10 +62,7 @@
             // localized rather than stacked, so a row never carries two languages.
             const desc = withDescription ? modelDescription(ctx, group.id, model) : ''
             if (desc) copy.appendChild(buildElement('span', 'dsh-claude-model-desc', desc))
-            item.appendChild(copy)
-            const check = buildElement('span', 'dsh-claude-popover-check')
-            check.innerHTML = selected ? MODEL_CHECK_SVG : ''
-            item.appendChild(check)
+            built.check.innerHTML = selected ? POPOVER_CHECK_SVG : ''
             item.addEventListener('click', ((g, m) => e => {
                 e.stopPropagation()
                 pickModel(g, m)

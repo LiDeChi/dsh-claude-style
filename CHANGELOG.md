@@ -6,9 +6,17 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 [中文](#cn-unreleased) | [English](#en-unreleased)
 
+<h3 id="cn-unreleased">体验优化</h3>
+
+- **权限菜单在窗口上方放不下时改为在控件下方展开**：权限分段控件的卡片固定朝上展开，窗口很矮时它的上缘顶出屏幕外，最上面几项点不到。现在上方容不下整张卡片时，它在控件下方展开。
+
 <h3 id="cn-unreleased">问题修复</h3>
 
 - **拖入附件后，输入区工具栏打开的面板不再被附件区域遮住**：附件存在时，从输入区工具栏按钮打开的面板（模型选择、思考强度等）中间被上方那块附件区域盖住一大截，只在卡片上方和输入框下方各露出一条边，面板里的行点不到。现在这类面板完整显示。
+
+<h3 id="en-unreleased">Improvements</h3>
+
+- **The permission menu opens below the control when it does not fit above**: the permission control's card always unfolded upward, so in a short window its top edge ran off-screen and the first rows could not be clicked. It now opens below the control when the card does not fit above.
 
 <h3 id="en-unreleased">Bug Fixes</h3>
 
