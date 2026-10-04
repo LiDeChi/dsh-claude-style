@@ -39,7 +39,6 @@
         { id: 'active', key: 'archiveActive', fallback: 'Active' },
         { id: 'archived', key: 'archiveArchived', fallback: 'Archived' }
       ]
-      const LABEL_TEXTS = ['工作区', 'Workspace']
       let view = 'active'
       let control = null
       /** The control's sliding highlight (src/shared/sliding-pill.js). */
@@ -65,17 +64,24 @@
         return ctx.get(name)
       }
 
+      /**
+       * The workspace section's label, identified by structure, never by its
+       * text: the label's own CSS-module prefix is the section root's, and that
+       * root holds the session list area. A host that renames the label keeps
+       * matching; a host that restructures the sidebar stops matching, and the
+       * section keeps its plain label — the feature stays off rather than
+       * mounting on a section that happens to be first.
+       */
       function findSection() {
         const labels = document.querySelectorAll('[class*="sectionLabel"]')
-        let first = null
         for (let i = 0; i < labels.length; i++) {
-          const text = (labels[i].textContent || '').trim()
-          if (first === null) first = labels[i]
-          for (let t = 0; t < LABEL_TEXTS.length; t++) {
-            if (text === LABEL_TEXTS[t]) return labels[i]
-          }
+          const label = labels[i]
+          const match = /([^\s]+)_sectionLabel(?:\s|$)/.exec(label.className || '')
+          if (match === null) continue
+          const root = label.closest(`[class*="${match[1]}_root"]`)
+          if (root !== null && root.querySelector(`[class*="${match[1]}_listArea"]`) !== null) return label
         }
-        return first
+        return null
       }
 
       /**
