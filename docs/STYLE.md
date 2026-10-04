@@ -110,6 +110,18 @@ screen. Translucent neutral hover tints and the usage panel's data colours stay
 literal; they read on any canvas. Every other colour that paints a surface, a
 text, a border or an accent reads a token.
 
+## Windows titlebar · 桌面顶栏
+
+On the Windows desktop the 40px caption row has no colour of its own: the
+sidebar and the conversation run to the window's top edge, each in its own
+fill (`--dsh-claude-sidebar-canvas`, `--dsh-claude-canvas`), and the sidebar's
+1px `--dsw-alias-border-l1` hairline runs with them from the top edge to the
+bottom. The conversation column and the fullscreen file panel lose the host's
+16px top-left corner, so the hairline meets them straight. The three window
+buttons sit on the page itself: no block of their own behind them, and they dim
+with a modal's mask like everything else. Their hover plate is the system's, a
+tint of the button glyph's colour.
+
 ## Typography
 
 - **Serif display** — headings / editorial statements (`--dsh-claude-font-serif`).

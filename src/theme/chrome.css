@@ -15,6 +15,58 @@ body[data-dsh-claude-style]%%PALETTE_CLAUDE%% :is([data-pane="conversation"], [c
   background: var(--dsh-claude-canvas);
 }
 
+/* ---------- Windows titlebar: the columns run to the window's top ---------- */
+/* The Windows desktop shell keeps a caption row above every column — the
+   frame's padding-top, painted in the sidebar fill by the frame and by its
+   ::before drag band — and draws the three window buttons natively over it on
+   a block of that same fill: the desktop preload reads the fill off a hidden
+   probe <span> it appends to <body> and hands it to setTitleBarOverlay, again
+   whenever <head> changes. The skin clears the row. The band, the frame and
+   the probe go transparent, so the native buttons show the page under them
+   (and darken with a modal's mask like the rest of the page); each column
+   paints its own fill up through the row with an outer box-shadow, which
+   draws only outside the column's box and so leaves its content alone and
+   follows its track through drags and the collapse animation; the sidebar's
+   hairline continues up from its resize handle, which straddles the column
+   edge and moves on the same curve. The centre's rounded top-left corner
+   (the host's --dsh-windows-content-radius, which the fullscreen file panel
+   reads too) goes to zero, so the hairline meets the centre straight. The
+   fills read the private canvases, which under the host's colours are the
+   host's own column tokens. */
+html[data-windows-titlebar] body[data-dsh-claude-style] [class*="_frame"]:has(> [class*="_sidebarCol"]) {
+  --dsh-windows-content-radius: 0px;
+  background: var(--dsh-claude-canvas) !important;
+}
+
+html[data-windows-titlebar] body[data-dsh-claude-style] [class*="_frame"]:has(> [class*="_sidebarCol"])::before {
+  background: transparent !important;
+}
+
+html[data-windows-titlebar] body[data-dsh-claude-style] > span[style*="--dsw-specific-sidebar-fill"] {
+  background-color: transparent !important;
+}
+
+html[data-windows-titlebar] body[data-dsh-claude-style] [class*="_frame"] > [class*="_sidebarCol"] {
+  box-shadow: 0 calc(-1 * var(--dsh-windows-titlebar-height)) 0 0 var(--dsh-claude-sidebar-canvas);
+}
+
+html[data-windows-titlebar] body[data-dsh-claude-style] [class*="_frame"] > [class*="_centerCol"] {
+  box-shadow: 0 calc(-1 * var(--dsh-windows-titlebar-height)) 0 0 var(--dsh-claude-canvas);
+}
+
+/* The handle is 8px wide, centred on the column edge (margin-left: -4px), and
+   the sidebar's 1px hairline is the last pixel inside the column: 3px into the
+   handle. */
+html[data-windows-titlebar] body[data-dsh-claude-style] [class*="_frame"] > [data-side="sidebar"]::before {
+  content: "";
+  position: absolute;
+  left: 3px;
+  bottom: 100%;
+  height: var(--dsh-windows-titlebar-height);
+  border-left: 1px solid var(--dsw-alias-border-l1);
+  pointer-events: none;
+}
+
 /* ---------- clay accent: one emphasis color, disciplined ---------- */
 /* Text links take the clay ink. An anchor that carries a host button class
    (`AccountSection`'s "充值" is `_linkButton _primary`) is a filled or outlined

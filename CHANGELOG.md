@@ -16,6 +16,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 ### 体验优化
 
 - **设置项说明改为只说行为**：设置页十项的说明以前夹带设计缘由（进度圈为什么不停、彩蛋页为什么不跟随界面语言），动辄两三行。现在每条说明只说这一项改什么、各档分别是什么效果；「修改品牌标识」「重绘设置弹层」等动宾式或与其他条目不一致的标题一并统一为名词短语。
+- **Windows 桌面端的顶栏不再是一条单独的色带**：顶栏以前刷着侧栏的颜色，横贯整个窗口，右上角最小化、最大化、关闭三个按钮还托在一块同色的矩形上，打开设置时周围都被遮罩盖暗，只有这块矩形不变。现在顶栏透明，侧栏和主界面各自通到窗口顶端，两者之间的分隔线从顶到底连成一条，主界面左上角的圆角去掉；三个按钮直接落在页面上，打开设置时随页面一起变暗，悬停高亮照常。macOS 与 Web 端不变。
 
 ### 问题修复
 
@@ -36,6 +37,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 ### Improvements
 
 - **Settings descriptions now state behavior only**: the ten settings rows used to mix design rationale into their descriptions (why the progress ring never stops, why the easter egg ignores the interface language) and ran two to three lines each. Every description now says only what the setting changes and what each option does; verb-form or inconsistent titles such as the brand and sidebar-footer rows are unified to noun phrases.
+- **The Windows titlebar is no longer a band of its own**: the caption row was painted in the sidebar colour across the whole window, and the minimize, maximize and close buttons sat on a block of that colour, which stayed bright while the settings mask darkened everything around it. The row is transparent now: the sidebar and the main area each run to the top of the window, the divider between them runs top to bottom in one line, and the main area loses its rounded top-left corner; the three buttons sit on the page itself, dim with it under the settings mask, and keep their hover highlight. macOS and the web build are unchanged.
 
 ### Bug Fixes
 
