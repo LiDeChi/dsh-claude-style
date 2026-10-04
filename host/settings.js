@@ -9,39 +9,22 @@
  * package still loads the skin — it just loses the settings form.
  */
 
-/** The namespace an older host knows this plugin's preferences by. */
+/**
+ * The namespace an older host knows this plugin's preferences by. On 0.1.7+ a
+ * namespace IS this entry's loader id and its schema IS the exported Config —
+ * the entry id carries a kind prefix ("include:ui-skin-claude-style") while the
+ * settings service keys namespaces by the bare id, which the browser half
+ * strips when it picks its candidate list (src/core/prefs.js).
+ */
 const LEGACY_SETTINGS_NAMESPACE = 'claude-style'
-/** The id `cordis.patch.yml` inserts; the fallback when the loader entry cannot be read. */
-const ENTRY_ID_FALLBACK = 'ui-skin-claude-style'
 
 /**
- * The namespace the preferences are read and written under.
- *
- * A namespace IS a profile entry id and its schema IS that entry's Config, so
- * the id is read off this plugin's own loader entry; a host that still owns the
- * imperative registry gets `claude-style` instead. Resolved during apply.
+ * The preference list. This one table is every field declaration: the Config
+ * below and the legacy schema in buildPrefsSchema are both generated from it,
+ * and scripts/build.mjs parses it to check src/entry.js's feature switches
+ * against it — keep it a plain literal. Defaults are mirrored by the browser
+ * half's constants.
  */
-let settingsNamespace = LEGACY_SETTINGS_NAMESPACE
-
-/** This plugin's loader entry id, or the id the patch declares when it cannot be read. */
-function entryIdOf(ctx) {
-  try {
-    const id = ctx?.fiber?.entry?.id
-    if (typeof id === 'string' && id !== '') {
-      // 0.1.7 reports the entry as "<kind>:<id>" — the profile carries the skin as
-      // an `include` entry, so this reads "include:ui-skin-claude-style" — while
-      // the settings service keys its namespaces by the BARE id (it lists
-      // "ui-skin-claude-style"). Writing under the qualified name is what made
-      // every save come back 409 `No configurable plugin entry`. Send the id the
-      // service knows; on a host whose id has no kind prefix this is a no-op.
-      const colon = id.lastIndexOf(':')
-      return colon === -1 ? id : id.slice(colon + 1)
-    }
-  } catch { /* no loader entry: fall back to the id the patch declares */ }
-  return ENTRY_ID_FALLBACK
-}
-
-/** Defaults, mirrored by the browser half's constants. */
 const PREFS_DEFAULT = Object.freeze({
   brand: 'claude',
   motion: 'system',
@@ -93,6 +76,27 @@ async function resolveSchemaFactory() {
   }
 }
 
+// Resolved once at module scope; the legacy register path reuses it too.
+const SchemaFactory = await resolveSchemaFactory()
+
+/** Mark one field editable by the settings page, where the factory supports it. */
+function volatileField(field) {
+  return typeof field?.volatile === 'function' ? field.volatile() : field
+}
+
+/**
+ * One typed Config field for one preference. The default's own type picks the
+ * field type (an array is an array of strings), so PREFS_DEFAULT stays the
+ * only field list.
+ */
+function prefsField(Schema, key) {
+  const value = PREFS_DEFAULT[key]
+  const field = Array.isArray(value)
+    ? Schema.array(Schema.string())
+    : typeof value === 'boolean' ? Schema.boolean() : Schema.string()
+  return field.default(value)
+}
+
 /**
  * The declared Config.
  *
@@ -101,7 +105,7 @@ async function resolveSchemaFactory() {
  * declared here — there is no imperative namespace registration any more.
  * schemastery only grew `volatile()` in 3.18.3 and the desktop bundle still
  * ships 3.18.2, so the marker is applied only when the installed factory
- * provides it; on the older host this same schema is handed to
+ * provides it; on the older host the legacy schema is handed to
  * `settings.register()` instead.
  *
  * The import is guarded and top-level-awaited for the same reason the rest of
@@ -114,55 +118,19 @@ async function resolveSchemaFactory() {
  * are enforced where they are consumed — the write route drops unknown keys and
  * the browser half clamps everything it reads.
  */
-let SchemaFactory = await resolveSchemaFactory()
-
-/** Mark one field editable by the settings page, where the factory supports it. */
-function volatileField(field) {
-  return typeof field?.volatile === 'function' ? field.volatile() : field
-}
-
 export const Config = SchemaFactory === null
   ? undefined
-  : SchemaFactory.object({
-      brand: volatileField(SchemaFactory.string().default(PREFS_DEFAULT.brand)),
-      motion: volatileField(SchemaFactory.string().default(PREFS_DEFAULT.motion)),
-      collapseFooter: volatileField(SchemaFactory.boolean().default(PREFS_DEFAULT.collapseFooter)),
-      autoPopover: volatileField(SchemaFactory.string().default(PREFS_DEFAULT.autoPopover)),
-      composerScope: volatileField(SchemaFactory.string().default(PREFS_DEFAULT.composerScope)),
-      modelPicker: volatileField(SchemaFactory.boolean().default(PREFS_DEFAULT.modelPicker)),
-      quickProviders: volatileField(SchemaFactory.array(SchemaFactory.string()).default([])),
-      username: volatileField(SchemaFactory.string().default(PREFS_DEFAULT.username)),
-      banLocale: volatileField(SchemaFactory.string().default(PREFS_DEFAULT.banLocale)),
-      homeLayout: volatileField(SchemaFactory.string().default(PREFS_DEFAULT.homeLayout)),
-      palette: volatileField(SchemaFactory.string().default(PREFS_DEFAULT.palette)),
-      typeface: volatileField(SchemaFactory.string().default(PREFS_DEFAULT.typeface)),
-      mascot: volatileField(SchemaFactory.string().default(PREFS_DEFAULT.mascot)),
-      mascotScope: volatileField(SchemaFactory.string().default(PREFS_DEFAULT.mascotScope)),
-      permissionsControl: volatileField(SchemaFactory.boolean().default(PREFS_DEFAULT.permissionsControl)),
-      workspaceView: volatileField(SchemaFactory.boolean().default(PREFS_DEFAULT.workspaceView)),
-      sidebarSearch: volatileField(SchemaFactory.boolean().default(PREFS_DEFAULT.sidebarSearch)),
-      turnStatus: volatileField(SchemaFactory.boolean().default(PREFS_DEFAULT.turnStatus)),
-      viewTabs: volatileField(SchemaFactory.boolean().default(PREFS_DEFAULT.viewTabs)),
-    })
+  : SchemaFactory.object(Object.fromEntries(
+      Object.keys(PREFS_DEFAULT).map(key => [key, volatileField(prefsField(SchemaFactory, key))]),
+    ))
 
 /**
- * Resolve the schema package once, for the legacy register path.
+ * Build the legacy namespace schema from the one field list.
  *
  * A settings namespace needs a real schema: the settings service serialises it
  * (`schema.toJSON()`) for configuration surfaces and walks it to redact
  * secrets, so a hand-rolled stand-in would break `describe` for every
- * namespace, not just this one. Resolution goes through
- * {@link resolveSchemaFactory}, and it stays lazy so a host that cannot provide
- * the package loses the settings page rather than the whole skin.
- *
- * @returns the schema factory, or null when it cannot be resolved.
- */
-async function loadSchema() {
-  return await resolveSchemaFactory()
-}
-
-/**
- * Build the namespace schema.
+ * namespace, not just this one.
  *
  * Every field is `any` with a default rather than a union of the accepted
  * values. A union resolves by rejection: one hand-edited or stale value in the
@@ -175,27 +143,9 @@ async function loadSchema() {
  * @returns the namespace schema.
  */
 function buildPrefsSchema(Schema) {
-  return Schema.object({
-    brand: Schema.any().default(PREFS_DEFAULT.brand),
-    motion: Schema.any().default(PREFS_DEFAULT.motion),
-    collapseFooter: Schema.any().default(PREFS_DEFAULT.collapseFooter),
-    autoPopover: Schema.any().default(PREFS_DEFAULT.autoPopover),
-    composerScope: Schema.any().default(PREFS_DEFAULT.composerScope),
-    modelPicker: Schema.any().default(PREFS_DEFAULT.modelPicker),
-    quickProviders: Schema.any().default(PREFS_DEFAULT.quickProviders),
-    username: Schema.any().default(PREFS_DEFAULT.username),
-    banLocale: Schema.any().default(PREFS_DEFAULT.banLocale),
-    homeLayout: Schema.any().default(PREFS_DEFAULT.homeLayout),
-    palette: Schema.any().default(PREFS_DEFAULT.palette),
-    typeface: Schema.any().default(PREFS_DEFAULT.typeface),
-    mascot: Schema.any().default(PREFS_DEFAULT.mascot),
-    mascotScope: Schema.any().default(PREFS_DEFAULT.mascotScope),
-    permissionsControl: Schema.any().default(PREFS_DEFAULT.permissionsControl),
-    workspaceView: Schema.any().default(PREFS_DEFAULT.workspaceView),
-    sidebarSearch: Schema.any().default(PREFS_DEFAULT.sidebarSearch),
-    turnStatus: Schema.any().default(PREFS_DEFAULT.turnStatus),
-    viewTabs: Schema.any().default(PREFS_DEFAULT.viewTabs),
-  })
+  return Schema.object(Object.fromEntries(
+    Object.entries(PREFS_DEFAULT).map(([key, value]) => [key, Schema.any().default(value)]),
+  ))
 }
 
 /**
@@ -220,7 +170,6 @@ export function registerSettings(ctx) {
       const settings = scope.settings
       if (settings === undefined || settings === null) return
       if (typeof settings.register !== 'function') {
-        settingsNamespace = entryIdOf(ctx)
         if (typeof settings.configure !== 'function') return
         try {
           scope.effect(
@@ -232,20 +181,15 @@ export function registerSettings(ctx) {
         }
         return
       }
-      loadSchema().then((Schema) => {
-        if (Schema === null) {
-          ctx.logger?.warn?.('dsh-claude-style: @deepseek-ai/schemastery did not resolve; preferences fall back to defaults')
-          return
-        }
-        try {
-          settings.register(LEGACY_SETTINGS_NAMESPACE, buildPrefsSchema(Schema))
-          settingsNamespace = LEGACY_SETTINGS_NAMESPACE
-        } catch (error) {
-          ctx.logger?.warn?.(`dsh-claude-style: settings namespace unavailable: ${error?.message ?? error}`)
-        }
-      }).catch((error) => {
-        ctx.logger?.warn?.(`dsh-claude-style: settings schema import failed: ${error?.message ?? error}`)
-      })
+      if (SchemaFactory === null) {
+        ctx.logger?.warn?.('dsh-claude-style: @deepseek-ai/schemastery did not resolve; preferences fall back to defaults')
+        return
+      }
+      try {
+        settings.register(LEGACY_SETTINGS_NAMESPACE, buildPrefsSchema(SchemaFactory))
+      } catch (error) {
+        ctx.logger?.warn?.(`dsh-claude-style: settings namespace unavailable: ${error?.message ?? error}`)
+      }
     })
   }
 }
