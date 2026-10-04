@@ -38,8 +38,8 @@
  * the logs that changed.
  */
 import { mkdirSync, readFileSync, readdirSync, renameSync, statSync, writeFileSync } from 'node:fs'
-import { homedir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
+import { harnessPath } from './harness-home.js'
 
 /** The ledger's document version this reader understands; anything else is ignored. */
 const LEDGER_VERSION = 1
@@ -305,19 +305,8 @@ function listSessionLogs(root) {
  *   recomputes in the background.
  */
 export function createUsage(ctx) {
-  let homePath = null
-  try {
-    const resolved = ctx.get('dshHomePath')
-    if (typeof resolved === 'function') homePath = resolved
-  } catch { /* no home-path service: fall back to the environment */ }
-  const home = () => {
-    if (homePath !== null) {
-      try {
-        return homePath()
-      } catch { /* fall through to the environment */ }
-    }
-    return process.env.DSH_HOME ?? join(homedir(), '.dsh')
-  }
+  // The harness home, resolved per read through the one shared accessor.
+  const home = () => harnessPath(ctx)
 
   let state = null
   let pending = null
@@ -526,12 +515,7 @@ export function createUsage(ctx) {
 
   /** Read one session's events through the host's own reader. */
   async function readEvents(sessionId) {
-    let query = null
-    try {
-      query = ctx.get('sessionQuery')
-    } catch {
-      query = null
-    }
+    const query = ctx.get('sessionQuery')
     if (query === null || query === undefined || typeof query.readSession !== 'function') return null
     let snapshot
     try {
