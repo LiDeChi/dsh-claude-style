@@ -5,11 +5,19 @@
    collapse toggle keeps the second; the desktop's is fixed in the titlebar).
    At rest the brand shows; while the pointer is anywhere over the sidebar the
    two cross-fade, on the same 0.16s the workspace heading and its segmented
-   control trade places with. A box that holds the keyboard stays. */
+   control trade places with. A box that holds the keyboard stays.
+   The box is the first row of the sidebar's list: it takes the same 28px and
+   the same 6px step down to the row below, so the host's logo row carries it
+   at 28px with no padding of its own. The host gives that row no top margin
+   and a 4px bottom margin; the row's own 6px foot is what puts the box on the
+   rows' rhythm, and it replaces the host's 4px rather than adding to it. */
 body[data-dsh-claude-style] [data-dsh-claude-search-row] {
   display: grid !important;
   grid-template-columns: minmax(0, 1fr) auto !important;
   align-items: center !important;
+  height: 28px !important;
+  padding: 0 !important;
+  margin-bottom: 6px !important;
 }
 body[data-dsh-claude-style] [data-dsh-claude-search-row] > :is([class*="_brand"], .dsh-claude-search-trigger) {
   grid-area: 1 / 1 !important;
@@ -24,7 +32,7 @@ body[data-dsh-claude-style] .dsh-claude-search-trigger {
   pointer-events: none !important;
   transition: opacity 0.16s ease, visibility 0.16s ease !important;
   min-width: 0 !important;
-  height: 32px !important;
+  height: 28px !important;
   margin: 0 !important;
   padding: 0 10px !important;
   align-items: center !important;
@@ -59,14 +67,15 @@ body[data-dsh-claude-style] [data-dsh-claude-search-row] > [class*="_brand"]:has
 }
 /* The Windows desktop shell's sidebar column starts under its 40px titlebar,
    which left the brand a titlebar's height lower than on the web; the row rises
-   by 10px — as far as it goes with the 32px box still wholly below the titlebar,
-   where the column's top edge would cut it. macOS takes no offset: the host pads
-   nothing around the traffic lights, and its own `_topStrip + _logoRow` margin
-   (-12px) already seats the row's content at the 48px it declares for
-   --dsh-frame-top-clearance; -10px would override that margin and move the row
-   2px down. */
+   to that edge. It rises 6px and not the 10px this rule carried while the box
+   was 32px: the box is 28px now, and the 4px it gives back are what keep its
+   top clear of the host's clip at the column's edge. The row's own 6px foot is
+   untouched, so the box still steps down to New session by 6px. macOS takes no
+   offset: the host pads nothing around the traffic lights, and its own
+   `_topStrip + _logoRow` margin (-12px) already seats the row's content where
+   the 48px it declares for --dsh-frame-top-clearance wants it. */
 html[data-windows-titlebar] body[data-dsh-claude-style] [data-slot="sidebar"] [class*="_logoRow"] {
-  margin-top: -10px !important;
+  margin-top: -6px !important;
 }
 /* On both desktop shells the host's toggle takes no cell in the row: macOS
    renders it inside its own 52px `_topStrip`, Windows fixes it into the caption
