@@ -68,36 +68,55 @@
       const PREFIX = `dsh-claude-${character.name}`
       /** A marker on the host element the mascot stands on, which makes it the mascot's containing block. */
       const ANCHOR_ATTR = `data-${PREFIX}-anchor`
+      /** The stamp carrying the anchor mark across re-renders. */
+      const anchorStamp = createStamp(ANCHOR_ATTR)
       const SHEETS = character.sheets
       const FRAME_MS = character.frameMs
 
+      /** The nodes the mascot is drawn with, built once per generation. */
       let root = null
       let sprite = null
       let strip = null
-      let anchor = null
+      /** The signal reader, created when the mascot first stands somewhere. */
       let signals = null
-      /** The followed session id, or null on the home page. */
-      let sessionId = null
-      let level = null
-      /** The moment on screen, and the lesser one that waits for it to end. */
-      let moment = null
-      let queued = null
-      let reaction = null
-      let extra = null
-      let waking = false
-      let asleep = false
-      /** Where the quiet spell starts: the reader's last pointer move or key, or the mascot's last work. */
-      let quietSince = Date.now()
-      let nextExtraAt = 0
-      /** The animation on screen: `{ key, mode, priority, start, done? }`. */
-      let current = null
-      /** The WAAPI animation playing on the strip; null while a still frame is pinned. */
-      let animation = null
-      let timer = null
+
+      /**
+       * Everything the mascot is doing on the page it stands on: the session it
+       * follows, the moment on screen and the one waiting its turn, the
+       * reaction, the idle extra, the sleep and wake flags, the quiet spell,
+       * the animation playing and the reader's own press or click run.
+       *
+       * One object, replaced whole when the mascot leaves a page: the fields
+       * reset together, so none can be forgotten.
+       */
+      function freshStage() {
+        return {
+          /** The followed session id, or null on the home page. */
+          sessionId: null,
+          level: null,
+          /** The moment on screen, and the lesser one that waits for it to end. */
+          moment: null,
+          queued: null,
+          reaction: null,
+          extra: null,
+          waking: false,
+          asleep: false,
+          /** Where the quiet spell starts: the reader's last pointer move or key, or the mascot's last work. */
+          quietSince: Date.now(),
+          nextExtraAt: 0,
+          /** The animation on screen: `{ key, mode, priority, start, done? }`. */
+          current: null,
+          /** The WAAPI animation playing on the strip; null while a still frame is pinned. */
+          animation: null,
+          timer: null,
+          clicks: [],
+          press: null,
+        }
+      }
+      let stage = freshStage()
+
       /** The character's sheet pipeline. */
       const sheets = character.createSheets(onSheetReady)
-      let clicks = []
-      let press = null
 
       /** A sheet became playable: read the state again and play what it asks for. */
       function onSheetReady() {
@@ -148,12 +167,6 @@
         return stack === null ? null : { element: stack, session, place: 'stack' }
       }
 
-      function setAnchor(element, place) {
-        if (anchor !== null && anchor !== element) anchor.removeAttribute(ANCHOR_ATTR)
-        anchor = element
-        if (anchor !== null && anchor.getAttribute(ANCHOR_ATTR) !== place) anchor.setAttribute(ANCHOR_ATTR, place)
-      }
-
       /**
        * Each pass: stand where the page puts the mascot, follow that page's
        * session, read its state.
@@ -167,25 +180,25 @@
         }
         if (root === null) build()
         if (signals === null) {
-          quietSince = Date.now()
+          stage.quietSince = Date.now()
           signals = createMascotSignals(ctx, onMoment, refresh)
         }
         if (root.parentNode !== stand.element) stand.element.appendChild(root)
-        setAnchor(stand.element, stand.place)
-        if (stand.session !== sessionId) {
-          sessionId = stand.session
+        anchorStamp.mark(stand.element, stand.place)
+        if (stand.session !== stage.sessionId) {
+          stage.sessionId = stand.session
           // A moment belongs to the page it happened on.
-          moment = null
-          queued = null
+          stage.moment = null
+          stage.queued = null
         }
-        signals.follow(sessionId)
+        signals.follow(stage.sessionId)
         refresh()
       }
 
       /** Read the state again and play what it asks for. */
       function refresh() {
         if (signals === null) return
-        level = signals.read(sessionId)
+        stage.level = signals.read(stage.sessionId)
         step()
       }
 
@@ -196,8 +209,8 @@
        */
       function onMoment(name) {
         const now = Date.now()
-        if (moment !== null && now < moment.until && moment.priority > MOMENTS[name].priority) {
-          queued = name
+        if (stage.moment !== null && now < stage.moment.until && stage.moment.priority > MOMENTS[name].priority) {
+          stage.queued = name
           return
         }
         startMoment(name, now)
@@ -206,56 +219,56 @@
 
       function startMoment(name, now) {
         const next = MOMENTS[name]
-        moment = { state: next.state, animation: next.animation, priority: next.priority, until: now + next.holdMs }
+        stage.moment = { state: next.state, animation: next.animation, priority: next.priority, until: now + next.holdMs }
       }
 
       /** What should be on screen now: `{ key, mode, priority }`. */
       function decide(now) {
-        if (moment !== null && now >= moment.until) {
-          moment = null
-          if (queued !== null) startMoment(queued, now)
-          queued = null
+        if (stage.moment !== null && now >= stage.moment.until) {
+          stage.moment = null
+          if (stage.queued !== null) startMoment(stage.queued, now)
+          stage.queued = null
         }
-        if (reaction !== null) return { key: reaction.key, mode: reaction.mode, priority: REACTION_PRIORITY }
-        const held = moment
-        const pick = held !== null && held.priority >= level.priority ? held : level
+        if (stage.reaction !== null) return { key: stage.reaction.key, mode: stage.reaction.mode, priority: REACTION_PRIORITY }
+        const held = stage.moment
+        const pick = held !== null && held.priority >= stage.level.priority ? held : stage.level
         if (pick.state !== 'idle') {
-          asleep = false
-          waking = false
-          extra = null
-          nextExtraAt = 0
+          stage.asleep = false
+          stage.waking = false
+          stage.extra = null
+          stage.nextExtraAt = 0
           // Work on screen is no quiet spell: the minute to sleep starts when it ends.
-          quietSince = now
+          stage.quietSince = now
           return { key: pick.animation, mode: 'loop', priority: pick.priority }
         }
-        if (!asleep && now - quietSince >= SLEEP_AFTER_MS) {
-          asleep = true
-          extra = null
+        if (!stage.asleep && now - stage.quietSince >= SLEEP_AFTER_MS) {
+          stage.asleep = true
+          stage.extra = null
         }
-        if (asleep) return { key: 'sleeping', mode: 'loop', priority: 1 }
-        if (waking) return { key: 'waking', mode: 'once', priority: 1 }
-        if (extra === null && !motionReduced() && !document.hidden) {
-          if (nextExtraAt === 0) nextExtraAt = now + EXTRA_MIN_MS + Math.random() * EXTRA_SPAN_MS
-          else if (now >= nextExtraAt) extra = character.extras[Math.floor(Math.random() * character.extras.length)]
+        if (stage.asleep) return { key: 'sleeping', mode: 'loop', priority: 1 }
+        if (stage.waking) return { key: 'waking', mode: 'once', priority: 1 }
+        if (stage.extra === null && !motionReduced() && !document.hidden) {
+          if (stage.nextExtraAt === 0) stage.nextExtraAt = now + EXTRA_MIN_MS + Math.random() * EXTRA_SPAN_MS
+          else if (now >= stage.nextExtraAt) stage.extra = character.extras[Math.floor(Math.random() * character.extras.length)]
         }
-        if (extra !== null) return { key: extra, mode: 'once', priority: 1 }
+        if (stage.extra !== null) return { key: stage.extra, mode: 'once', priority: 1 }
         return { key: 'idle', mode: 'loop', priority: 1 }
       }
 
       /** A once animation reached its last frame: whoever asked for it lets go. */
       function finish(key, now) {
         // A fresh reaction has not played yet: the one ending is its predecessor.
-        if (reaction !== null && reaction.key === key && !reaction.fresh) reaction = null
-        if (extra === key) {
-          extra = null
-          nextExtraAt = now + EXTRA_MIN_MS + Math.random() * EXTRA_SPAN_MS
+        if (stage.reaction !== null && stage.reaction.key === key && !stage.reaction.fresh) stage.reaction = null
+        if (stage.extra === key) {
+          stage.extra = null
+          stage.nextExtraAt = now + EXTRA_MIN_MS + Math.random() * EXTRA_SPAN_MS
         }
-        if (key === 'waking') waking = false
+        if (key === 'waking') stage.waking = false
       }
 
       /** Whether the animation choice holds what is on screen now still. */
       function still() {
-        return motionReduced() && reaction === null
+        return motionReduced() && stage.reaction === null
       }
 
       /** The strip translation that puts one frame of a sheet in the window. */
@@ -273,9 +286,9 @@
        * throttled tab.
        */
       function play(key, mode, now) {
-        if (animation !== null) {
-          animation.cancel()
-          animation = null
+        if (stage.animation !== null) {
+          stage.animation.cancel()
+          stage.animation = null
         }
         const sheet = SHEETS[key]
         if (still()) {
@@ -293,11 +306,11 @@
           iterations: mode === 'loop' ? Infinity : 1,
           fill: 'forwards',
         })
-        animation = playing
+        stage.animation = playing
         if (mode !== 'once') return
         playing.finished.then(() => {
-          if (animation !== playing || current === null || current.key !== key || current.done === true) return
-          current.done = true
+          if (stage.animation !== playing || stage.current === null || stage.current.key !== key || stage.current.done === true) return
+          stage.current.done = true
           finish(key, Date.now())
           step()
         }, () => {
@@ -312,38 +325,38 @@
        * playing itself needs no tick (play()).
        */
       function step() {
-        if (root === null || level === null) return
+        if (root === null || stage.level === null) return
         const now = Date.now()
-        if (current !== null && current.mode === 'once' && current.done !== true && now - current.start >= SHEETS[current.key].frames * FRAME_MS) {
-          current.done = true
-          finish(current.key, now)
+        if (stage.current !== null && stage.current.mode === 'once' && stage.current.done !== true && now - stage.current.start >= SHEETS[stage.current.key].frames * FRAME_MS) {
+          stage.current.done = true
+          finish(stage.current.key, now)
         }
         const next = decide(now)
-        const switching = current === null || next.key !== current.key || (reaction !== null && reaction.fresh)
+        const switching = stage.current === null || next.key !== stage.current.key || (stage.reaction !== null && stage.reaction.fresh)
         // A state that just arrived is not pushed off by an equal or lower one
         // within MIN_SHOW_MS, so thinking and typing do not flicker. A reaction
         // gives way the moment it ends.
-        const settled = current === null || current.mode !== 'loop' || current.priority === REACTION_PRIORITY ||
-          next.priority > current.priority || now - current.start >= MIN_SHOW_MS
+        const settled = stage.current === null || stage.current.mode !== 'loop' || stage.current.priority === REACTION_PRIORITY ||
+          next.priority > stage.current.priority || now - stage.current.start >= MIN_SHOW_MS
         if (switching && settled) {
           if (sheets.ready(next.key)) show(next, now)
           // A once animation whose sheet never came counts as played, so the
           // mascot does not wait on it for good.
           else if (next.mode === 'once' && sheets.failed(next.key)) {
-            if (reaction !== null) reaction.fresh = false
+            if (stage.reaction !== null) stage.reaction.fresh = false
             finish(next.key, now)
           }
-        } else if (!switching && current !== null) {
+        } else if (!switching && stage.current !== null) {
           // The motion choice flipped under the animation on stage: pin its
           // still frame, or set it playing again from where it stands.
-          if (still() && animation !== null) {
-            animation.cancel()
-            animation = null
-            strip.style.transform = frameOffset(SHEETS[current.key], SHEETS[current.key].still)
-          } else if (!still() && animation === null) {
-            play(current.key, current.mode, now)
-            if (animation !== null && current.mode === 'loop') {
-              animation.currentTime = (now - current.start) % (SHEETS[current.key].frames * FRAME_MS)
+          if (still() && stage.animation !== null) {
+            stage.animation.cancel()
+            stage.animation = null
+            strip.style.transform = frameOffset(SHEETS[stage.current.key], SHEETS[stage.current.key].still)
+          } else if (!still() && stage.animation === null) {
+            play(stage.current.key, stage.current.mode, now)
+            if (stage.animation !== null && stage.current.mode === 'loop') {
+              stage.animation.currentTime = (now - stage.current.start) % (SHEETS[stage.current.key].frames * FRAME_MS)
             }
           }
         }
@@ -352,8 +365,8 @@
 
       function show(next, now) {
         const sheet = SHEETS[next.key]
-        current = { key: next.key, mode: next.mode, priority: next.priority, start: now }
-        if (reaction !== null && reaction.key === next.key) reaction.fresh = false
+        stage.current = { key: next.key, mode: next.mode, priority: next.priority, start: now }
+        if (stage.reaction !== null && stage.reaction.key === next.key) stage.reaction.fresh = false
         const style = root.style
         sheets.paint(style, next.key)
         style.setProperty(`--${PREFIX}-x`, String(sheet.box[0]))
@@ -373,19 +386,19 @@
        * the next idle extra. Everything else arrives as an event.
        */
       function schedule(now, waitSettle) {
-        if (timer !== null) clearTimeout(timer)
-        timer = null
+        if (stage.timer !== null) clearTimeout(stage.timer)
+        stage.timer = null
         let at = Infinity
-        if (moment !== null) at = Math.min(at, moment.until)
-        if (waitSettle && current !== null) at = Math.min(at, current.start + MIN_SHOW_MS)
-        if (current !== null && current.mode === 'once' && current.done !== true) {
-          at = Math.min(at, current.start + SHEETS[current.key].frames * FRAME_MS)
+        if (stage.moment !== null) at = Math.min(at, stage.moment.until)
+        if (waitSettle && stage.current !== null) at = Math.min(at, stage.current.start + MIN_SHOW_MS)
+        if (stage.current !== null && stage.current.mode === 'once' && stage.current.done !== true) {
+          at = Math.min(at, stage.current.start + SHEETS[stage.current.key].frames * FRAME_MS)
         }
-        if (!asleep && level !== null && level.state === 'idle') at = Math.min(at, quietSince + SLEEP_AFTER_MS)
-        if (extra === null && nextExtraAt > now) at = Math.min(at, nextExtraAt)
+        if (!stage.asleep && stage.level !== null && stage.level.state === 'idle') at = Math.min(at, stage.quietSince + SLEEP_AFTER_MS)
+        if (stage.extra === null && stage.nextExtraAt > now) at = Math.min(at, stage.nextExtraAt)
         if (at === Infinity) return
-        timer = setTimeout(() => {
-          timer = null
+        stage.timer = setTimeout(() => {
+          stage.timer = null
           step()
         }, Math.max(at - now, 0))
       }
@@ -397,39 +410,39 @@
        * playing.
        */
       function react(key, mode) {
-        reaction = { key, mode, fresh: true }
+        stage.reaction = { key, mode, fresh: true }
         step()
       }
 
       function onPressStart(event) {
         if (event.button !== 0) return
-        press = { id: event.pointerId, x: event.clientX, y: event.clientY, lifted: false }
+        stage.press = { id: event.pointerId, x: event.clientX, y: event.clientY, lifted: false }
         event.currentTarget.setPointerCapture(event.pointerId)
       }
 
       function onPressMove(event) {
-        if (press === null || press.lifted || event.pointerId !== press.id) return
-        if (Math.hypot(event.clientX - press.x, event.clientY - press.y) < LIFT_PX) return
-        press.lifted = true
-        clicks = []
+        if (stage.press === null || stage.press.lifted || event.pointerId !== stage.press.id) return
+        if (Math.hypot(event.clientX - stage.press.x, event.clientY - stage.press.y) < LIFT_PX) return
+        stage.press.lifted = true
+        stage.clicks = []
         react('drag', 'loop')
       }
 
       /** A press let go: a lift ends, a click pokes the side it landed on — or tickles, the fourth in a row. */
       function onPressEnd(event) {
-        if (press === null || event.pointerId !== press.id) return
-        const lifted = press.lifted
-        press = null
+        if (stage.press === null || event.pointerId !== stage.press.id) return
+        const lifted = stage.press.lifted
+        stage.press = null
         if (lifted) {
-          reaction = null
+          stage.reaction = null
           step()
           return
         }
         const now = Date.now()
-        if (clicks.length > 0 && now - clicks[clicks.length - 1] > TICKLE_GAP_MS) clicks = []
-        clicks.push(now)
-        if (clicks.length >= TICKLE_CLICKS) {
-          clicks = []
+        if (stage.clicks.length > 0 && now - stage.clicks[stage.clicks.length - 1] > TICKLE_GAP_MS) stage.clicks = []
+        stage.clicks.push(now)
+        if (stage.clicks.length >= TICKLE_CLICKS) {
+          stage.clicks = []
           react('tickle', 'once')
           return
         }
@@ -438,11 +451,11 @@
       }
 
       function onPressCancel(event) {
-        if (press === null || event.pointerId !== press.id) return
-        const lifted = press.lifted
-        press = null
+        if (stage.press === null || event.pointerId !== stage.press.id) return
+        const lifted = stage.press.lifted
+        stage.press = null
         if (lifted) {
-          reaction = null
+          stage.reaction = null
           step()
         }
       }
@@ -454,37 +467,23 @@
        * pointer and key paths stay cheap.
        */
       function onActivity() {
-        quietSince = Date.now()
-        if (!asleep) return
-        asleep = false
-        waking = !motionReduced()
+        stage.quietSince = Date.now()
+        if (!stage.asleep) return
+        stage.asleep = false
+        stage.waking = !motionReduced()
         step()
       }
 
       /** The page shows no stand: the mascot leaves it, and its reading stops. */
       function release() {
-        if (timer !== null) clearTimeout(timer)
-        timer = null
-        if (animation !== null) {
-          animation.cancel()
-          animation = null
-        }
+        if (stage.timer !== null) clearTimeout(stage.timer)
+        if (stage.animation !== null) stage.animation.cancel()
         if (root !== null && root.parentNode !== null) root.parentNode.removeChild(root)
-        setAnchor(null, null)
+        anchorStamp.release()
         if (signals !== null) signals.dispose()
         signals = null
-        sessionId = null
-        level = null
-        moment = null
-        queued = null
-        reaction = null
-        extra = null
-        waking = false
-        asleep = false
-        nextExtraAt = 0
-        current = null
-        press = null
-        clicks = []
+        // One replacement for every field the page owned.
+        stage = freshStage()
       }
 
       function dispose() {
