@@ -181,12 +181,10 @@
       } else if (!followAccount()) {
         loadAccount()
       }
+      // The profile's only outward job is its own lifetime: the identity it
+      // reads lands in the shared store (setAccountIdentity), which every
+      // reader — the greeting, the rows, the hold screen — already follows.
       return {
-        name() { return accountName },
-        avatar() { return accountAvatar },
-        state() { return accountState },
-        service: accountService,
-        apply: onAccountState,
         stop() {
           if (accountFiber !== null && typeof accountFiber.dispose === 'function') {
             accountFiber.dispose()

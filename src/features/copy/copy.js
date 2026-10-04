@@ -9,6 +9,14 @@
         'Type / for commands',
       ]
 
+      /** Whether a placeholder's text is one of the hints this skin replaces. */
+      function isShippedHint(text) {
+        for (let j = 0; j < HINT_SOURCES.length; j++) {
+          if (text.indexOf(HINT_SOURCES[j]) === 0) return true
+        }
+        return false
+      }
+
       /** The classic welcome's draw, renewed each time the page comes back to the hero. */
       let greetingDraw = Math.random()
       let wasHero = false
@@ -42,14 +50,7 @@
         for (let i = 0; i < hints.length; i++) {
           const node = hints[i]
           const text = node.textContent || ''
-          let idle = false
-          for (let j = 0; j < HINT_SOURCES.length; j++) {
-            if (text.indexOf(HINT_SOURCES[j]) === 0) {
-              idle = true
-              break
-            }
-          }
-          if (idle && text !== targetHint) node.textContent = targetHint
+          if (isShippedHint(text) && text !== targetHint) node.textContent = targetHint
         }
       }
 
@@ -79,14 +80,7 @@
             } else if (placeholder) {
               if (placeholder.style.display === 'none') placeholder.style.display = ''
               const curText = placeholder.textContent || ''
-              let idle = false
-              for (let j = 0; j < HINT_SOURCES.length; j++) {
-                if (curText.indexOf(HINT_SOURCES[j]) === 0) {
-                  idle = true
-                  break
-                }
-              }
-              if (idle && curText !== targetHint) placeholder.textContent = targetHint
+              if (isShippedHint(curText) && curText !== targetHint) placeholder.textContent = targetHint
             }
           } else {
             if (placeholder && placeholder.hasAttribute('data-dsh-synthetic-placeholder')) {

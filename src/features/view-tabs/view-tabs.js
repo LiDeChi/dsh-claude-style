@@ -43,7 +43,6 @@
      */
     function installViewTabs(ctx, ui) {
       const HEADER = '[class*="_header"]:has([class*="_tabs"])'
-      const STRIP = `${HEADER} [class*="_tabs"]`
       /**
        * The title's TEXT, not its row or cluster: `.titleRow` is a flex row and the
        * cluster takes up the slack, so testing against them reported a clash on
