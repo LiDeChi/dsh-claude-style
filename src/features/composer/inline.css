@@ -125,7 +125,7 @@ body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant
 }
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) [data-composer-card][data-composer-variant="inline"][data-has-attachments="true"] [class*="_rail"],
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card][data-has-attachments="true"] [class*="_rail"] {
-  background: #ffffff !important;
+  background: var(--dsw-specific-input-major) !important;
   border-color: var(--dsw-alias-border-l1) !important;
 }
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) [data-composer-card][data-composer-variant="inline"]:focus-within [class*="_rail"],
@@ -225,7 +225,7 @@ body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant
 }
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) [data-composer-card][data-composer-variant="inline"] [data-input-scroll],
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] [data-input-scroll] {
-  background: #ffffff !important;
+  background: var(--dsw-specific-input-major) !important;
   border-color: var(--dsw-alias-border-l1) !important;
   box-shadow: 0 1px 3px rgba(20, 20, 19, 0.03) !important;
 }

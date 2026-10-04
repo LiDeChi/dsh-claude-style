@@ -39,4 +39,13 @@ owners.
   are JetBrains Mono, distributed under the SIL Open Font License
   (`fonts/OFL.txt`). They may be redistributed with this plugin.
 
+Crab artwork notice: the pixel crab (Clawd) is a character of Anthropic, and
+all rights in it remain with Anthropic. `src/assets/mascot/crab-laptop-body.png`
+and `src/assets/mascot/crab-laptop-ink.png` are frames of Claude Code's own
+animation; the sheets under `src/assets/mascot/crab/` are drawn by this project
+after that character (by `scripts/draw-crab.py`, which carries the drawings).
+These files, and their copies inlined into `lib/client.js`, are **not** covered
+by the MIT license above. This plugin is an unofficial fan work, not affiliated
+with or endorsed by Anthropic.
+
 

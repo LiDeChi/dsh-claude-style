@@ -3,6 +3,10 @@
       const ui = {}
       /** Installed features in install order, as `{ name, stop }`. */
       let installed = []
+      /** Features retired after failing: a preference flip never brings one back this generation. */
+      const failed = new Set()
+      /** Unsubscribes the feature switches from the preferences; set once the features install. */
+      let offSwitches = null
       let disposed = false
 
       /**
@@ -13,6 +17,11 @@
       function teardown() {
         if (disposed) return
         disposed = true
+        // First, so no preference flip installs a feature mid-teardown.
+        if (offSwitches !== null) {
+          offSwitches()
+          offSwitches = null
+        }
         for (let i = installed.length - 1; i >= 0; i--) {
           // One teardown must not block the rest (D12); a failing one is reported.
           try { installed[i].stop() } catch (error) { reportError(error) }
@@ -22,6 +31,9 @@
         disposePrefsBinding()
         body.removeAttribute('data-dsh-claude-style')
         body.removeAttribute(BRAND_ATTR)
+        body.removeAttribute(PALETTE_ATTR)
+        body.removeAttribute(TYPEFACE_ATTR)
+        body.removeAttribute(MASCOT_ATTR)
         body.removeAttribute(MOTION_ATTR)
         body.removeAttribute(FOOTER_ATTR)
         body.removeAttribute(COMPOSER_ATTR)
@@ -54,6 +66,7 @@
        * explicit branch here.
        */
       function retire(name) {
+        failed.add(name)
         for (let i = 0; i < installed.length; i++) {
           const entry = installed[i]
           if (entry.name !== name && entry.handle !== name) continue
@@ -86,6 +99,35 @@
           reportFeatureFailure(name, error)
           retire(name)
           return false
+        }
+      }
+
+      /**
+       * Bring a switched feature in line with its preference (a key of
+       * FEATURE_PREF_DEFAULTS): on installs it, off runs its teardown and drops
+       * its handle, which hands its surface back to the host. Runs at startup
+       * and on every preference adoption, so a flip needs no reload. A feature
+       * retired after failing stays retired.
+       */
+      function applySwitch(feature) {
+        const handle = feature.handle || feature.name
+        const wanted = readPrefs()[feature.pref] !== false
+        const index = installed.findIndex(entry => entry.name === feature.name)
+        if (wanted && index === -1 && !failed.has(feature.name)) {
+          install(feature)
+          return
+        }
+        if (wanted || index === -1) return
+        const stop = installed[index].stop
+        installed.splice(index, 1)
+        delete ui[handle]
+        // Isolation (D12): a teardown that throws is reported, and the feature
+        // stays off for the rest of the generation.
+        try {
+          stop()
+        } catch (error) {
+          reportFeatureFailure(feature.name, error)
+          failed.add(feature.name)
         }
       }
 
@@ -122,44 +164,54 @@
        * Every feature the skin installs, in install order. `name` is the label
        * the failure report and the teardown use; `handle` is the name it
        * registers on `ui` when the two differ (settings → settingsNav). The
-       * scheduler's pass order is this order filtered to handles that exist and
-       * have a `sync` — the list the shipped PASS_FEATURES spelled out by hand.
+       * scheduler's pass order is this order, skipping handles that do not exist
+       * or have no `sync` at the moment of the pass.
+       *
+       * Every entry declares exactly one of `pref` — the preference that decides
+       * whether the reader gets it — or `ungated` — why it has no switch
+       * (scripts/build.mjs refuses an entry with neither). A `pref` that is a key
+       * of FEATURE_PREF_DEFAULTS is applied here, live: off is the feature's own
+       * teardown, which hands its surface back to the host. Any other `pref` is
+       * read by the feature itself.
        */
       const FEATURES = [
-        { name: 'selection', install: installSelectionFocus },
-        { name: 'composer', install() { return installComposer(ctx, ui) } }, // 输入区的布局：每轮先读 hero / 重绘状态，写形态、闸门、附件与上下文圆环
-        { name: 'homeLayout', install() { return installHomeLayout(ctx, ui) } }, // 首页版面：打版面属性 + 注册用量面板（数据来自宿主半边的汇总路由）
-        { name: 'mascot', install() { return installMascot(ctx, ui) } }, // 工作台首页输入卡片上沿的像素螃蟹：点它、指针离开它时（也会偶尔自己）钓一次鱼；DeepSeek 品牌下换成小鲸鱼 Deepy，首页与对话页都在，随智能体的工作状态换动画
-        { name: 'copy', install() { return installCopy(ctx, ui) } },
-        { name: 'permissions', install() { return installPermissions(ctx, ui) } },
-        { name: 'model', install() { return installModelPicker(ctx, ui) } },
-        { name: 'effort', install() { return installEffortPicker(ctx, ui) } },
-        { name: 'heroMenu', install() { return installHeroMenu(ctx, ui) } }, // hero 行的目录/预设弹层：打标记给样式表用
-        { name: 'quickProviders', install() { return installQuickProviders(ctx, ui) } }, // 设置页的「快捷供应商」多选弹层
-        { name: 'footer', install() { return installAccountFooter(ctx, ui) } },
-        { name: 'ban', install() { return installBanScreen(ctx, ui) } }, // 账户横条的封号彩蛋（账户弹层把点击交给 ui.ban）
-        { name: 'themeFlip', install: installThemeFlip }, // 主题翻转瞬间抑制过渡，修掉「先色后样」
-        { name: 'workspace', install() { return installWorkspaceView(ctx, ui) } }, // 侧栏工作区：进行中 / 已归档 分段 + 归档行删除
-        { name: 'search', install() { return installSearch(ctx, ui) } }, // 侧栏品牌行的搜索框 + 搜索面板（会话、项目、插件、Skill、快捷键）
-        { name: 'turnStatus', install() { return installTurnStatus(ctx, ui) } }, // 进行中、已停止与失败轮次的状态行：移到这一轮工作的末尾，火花 + 用时 · 输出 tokens · 当前动作（或已停止 / 处理失败）
-        { name: 'viewTabs', install() { return installViewTabs(ctx, ui) } }, // 对话区视图标签条：按实测把标签条放到标题那一行（放得下才放）
-        { name: 'settings', handle: 'settingsNav', install() { return installSettingsSection(ctx, ui) } }
+        { name: 'selection', ungated: '修宿主失焦时的选区颜色，不改变功能', install: installSelectionFocus },
+        { name: 'composer', pref: 'composerScope', install() { return installComposer(ctx, ui) } }, // 输入区的布局：每轮先读 hero / 重绘状态，写形态、闸门、附件与上下文圆环
+        { name: 'homeLayout', pref: 'homeLayout', install() { return installHomeLayout(ctx, ui) } }, // 首页版面：打版面属性 + 注册用量面板（数据来自宿主半边的汇总路由）
+        { name: 'mascot', pref: 'mascot', install() { return installMascot(ctx, ui) } }, // 工作台首页输入卡片上沿的像素螃蟹：点它、指针离开它时（也会偶尔自己）钓一次鱼；DeepSeek 品牌下换成小鲸鱼 Deepy，首页与对话页都在，随智能体的工作状态换动画
+        { name: 'copy', ungated: '提示语跟随输入框改造的范围，问候语跟随首页版面', install() { return installCopy(ctx, ui) } },
+        { name: 'permissions', pref: 'permissionsControl', install() { return installPermissions(ctx, ui) } },
+        { name: 'model', pref: 'modelPicker', install() { return installModelPicker(ctx, ui) } },
+        { name: 'effort', pref: 'modelPicker', install() { return installEffortPicker(ctx, ui) } }, // 工作强度滑杆随模型选择器：宿主的工作强度在宿主自己的模型菜单里
+        { name: 'heroMenu', ungated: '跟随输入框改造的首页范围', install() { return installHeroMenu(ctx, ui) } }, // hero 行的目录/预设弹层：打标记给样式表用
+        { name: 'quickProviders', ungated: '模型选择器的设置项，不在界面上出现', install() { return installQuickProviders(ctx, ui) } }, // 设置页的「快捷供应商」多选弹层
+        { name: 'footer', pref: 'collapseFooter', install() { return installAccountFooter(ctx, ui) } },
+        { name: 'ban', ungated: '彩蛋页只在点击账号行时出现', install() { return installBanScreen(ctx, ui) } }, // 账户横条的封号彩蛋（账户弹层把点击交给 ui.ban）
+        { name: 'themeFlip', ungated: '修主题切换瞬间的颜色跳变，不改变功能', install: installThemeFlip }, // 主题翻转瞬间抑制过渡，修掉「先色后样」
+        { name: 'workspace', pref: 'workspaceView', install() { return installWorkspaceView(ctx, ui) } }, // 侧栏工作区：进行中 / 已归档 分段 + 归档行删除
+        { name: 'search', pref: 'sidebarSearch', install() { return installSearch(ctx, ui) } }, // 侧栏品牌行的搜索框 + 搜索面板（会话、项目、插件、Skill、快捷键）
+        { name: 'turnStatus', pref: 'turnStatus', install() { return installTurnStatus(ctx, ui) } }, // 进行中、已停止与失败轮次的状态行：移到这一轮工作的末尾，火花 + 用时 · 输出 tokens · 当前动作（或已停止 / 处理失败）
+        { name: 'viewTabs', pref: 'viewTabs', install() { return installViewTabs(ctx, ui) } }, // 对话区视图标签条：按实测把标签条放到标题那一行（放得下才放）
+        { name: 'settings', handle: 'settingsNav', ungated: '设置页本身', install() { return installSettingsSection(ctx, ui) } }
       ]
 
-      // The scheduler's two ordered lists: `passFeatures` are the handles a pass
-      // syncs (handle exists and has a `sync`), `hookFeatures` every installed
-      // handle, for the event hooks that are not per-pass.
-      const passFeatures = []
-      const hookFeatures = []
+      // The scheduler's two ordered lists name every feature's handle, in
+      // FEATURES order: a switched feature can come and go during the
+      // generation, so the scheduler checks at each use whether the handle
+      // exists (and, for a pass, has a `sync`).
+      const handleNames = FEATURES.map(feature => feature.handle || feature.name)
+      const passFeatures = handleNames.slice()
+      const hookFeatures = handleNames.slice()
+      const switched = FEATURES.filter(feature => Object.prototype.hasOwnProperty.call(FEATURE_PREF_DEFAULTS, feature.pref))
       for (let fi = 0; fi < FEATURES.length; fi++) {
         const feature = FEATURES[fi]
-        if (!install(feature)) continue
-        const handleName = feature.handle || feature.name
-        const handle = ui[handleName]
-        if (!handle) continue
-        hookFeatures.push(handleName)
-        if (typeof handle.sync === 'function') passFeatures.push(handleName)
+        if (switched.includes(feature)) applySwitch(feature)
+        else install(feature)
       }
+      offSwitches = subscribePrefs(() => {
+        for (let si = 0; si < switched.length; si++) applySwitch(switched[si])
+        if (typeof ui.schedule === 'function') ui.schedule()
+      })
 
       // Last: its passes read the `ui` handles lazily. Without it nothing syncs,
       // and a live stylesheet over overrides that never run is worse than no

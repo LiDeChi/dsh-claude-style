@@ -12,14 +12,12 @@
      *
      * Copy comes from the model copy document's `settings` block, so the page
      * follows the shell language like every other string the skin paints. The
-     * English literals here are the fallback for a failed fetch.
+     * English literals are the fallback for a failed fetch.
      *
-     * The segmented controls reuse the shared `.dsh-claude-segments` /
-     * `.dsh-claude-segment` classes and sliding highlight — the same control the
-     * composer's permission picker uses — so the two read as one design instead
-     * of two lookalikes. The brand choice is the exception: brands are
-     * presets, not sibling tiers of one setting, so they render as a grid of
-     * large cards, each carrying the brand's own mark.
+     * The rows are grouped into tabs (src/features/settings/settings-tab-*.js),
+     * picked from a strip at the top that reuses the segmented control and its
+     * sliding highlight. The open tab lives in the component: it survives a
+     * preference change, not a remount.
      */
     /**
      * The quick-provider popover (src/features/settings/quick-providers.js). The settings
@@ -28,26 +26,32 @@
      */
     let quickProviderApi = null
 
-    /**
-     * One segmented control on the page, carrying the shared sliding highlight
-     * (src/shared/sliding-pill.js). The group is React's, so the pill is
-     * placed from a layout effect after every render — before the frame is
-     * painted — and taken off when the group unmounts.
-     */
-    function ClaudeStyleSegmentGroup(props) {
-      const group = React.useRef(null)
-      const pill = React.useRef(null)
-      React.useLayoutEffect(() => {
-        pill.current = createSlidingPill('[data-active]')
-        return () => {
-          pill.current.release()
-          pill.current = null
-        }
-      }, [])
-      React.useLayoutEffect(() => {
-        pill.current.sync(group.current)
-      })
-      return React.createElement('div', { ref: group, className: SEGMENTS_CLASS, role: 'group' }, props.children)
+    /** The page's tabs, in strip order, and the controls their rows are built from. */
+    const SETTINGS_TABS = [
+      createSettingsGeneralTab(),
+      createSettingsAppearanceTab(),
+      createSettingsComposerTab(),
+      createSettingsSidebarTab(),
+      createSettingsConversationTab(),
+    ]
+    const SETTINGS_CONTROLS = createSettingsControls()
+
+    /** The strip that picks the open tab: a segmented control with tab semantics. */
+    function ClaudeStyleSettingsTabStrip(props) {
+      const buttons = SETTINGS_TABS.map(tab => React.createElement(
+        'button',
+        {
+          key: tab.id,
+          type: 'button',
+          role: 'tab',
+          className: SEGMENT_CLASS,
+          'data-active': tab.id === props.active ? '' : undefined,
+          'aria-selected': tab.id === props.active ? 'true' : 'false',
+          onClick() { if (tab.id !== props.active) props.onPick(tab.id) },
+        },
+        tab.label(),
+      ))
+      return React.createElement(ClaudeStyleSegmentGroup, { role: 'tablist', className: 'dsh-claude-settings-tabs' }, buttons)
     }
 
     function ClaudeStyleSettingsSection(props) {
@@ -60,8 +64,25 @@
       const usernameState = React.useState(prefs.username)
       const username = usernameState[0]
       const setUsername = usernameState[1]
+      const tabState = React.useState(SETTINGS_TABS[0].id)
+      const activeTab = tabState[0]
+      const setActiveTab = tabState[1]
       const usernameTimer = React.useRef(null)
       const quickTrigger = React.useRef(null)
+      const pageRef = React.useRef(null)
+
+      // The host scrolls the page in a container of its own (the settings
+      // dialog's options column, the plugin page). Mark the nearest scrolling
+      // ancestor while the page is mounted so the stylesheet keeps the
+      // scrollbar's room there: switching to a tab short enough to need no
+      // scrollbar then leaves the layout where it was.
+      React.useLayoutEffect(() => {
+        let scroller = pageRef.current === null ? null : pageRef.current.parentElement
+        while (scroller !== null && !/(auto|scroll)/.test(getComputedStyle(scroller).overflowY)) scroller = scroller.parentElement
+        if (scroller === null) return undefined
+        scroller.setAttribute(SETTINGS_SCROLLER_ATTR, '')
+        return () => { scroller.removeAttribute(SETTINGS_SCROLLER_ATTR) }
+      }, [])
 
       // The skin's own apply-side writes land here too (a reload, a conflict
       // re-read), so the page never drifts from what the document says.
@@ -123,209 +144,32 @@
         saveUsernameNow(username)
       }
 
-      const segment = (options, active, onPick) => {
-        const buttons = []
-        for (let i = 0; i < options.length; i++) {
-          buttons.push(React.createElement(
-            'button',
-            {
-              key: options[i].value,
-              type: 'button',
-              className: SEGMENT_CLASS,
-              'data-active': options[i].value === active ? '' : undefined,
-              'aria-pressed': options[i].value === active ? 'true' : 'false',
-              onClick: (value => () => {
-                if (value !== active) onPick(value)
-              })(options[i].value),
-            },
-            options[i].label,
-          ))
-        }
-        return React.createElement(ClaudeStyleSegmentGroup, null, buttons)
-      }
-
-      const toggle = (on, onPick) => React.createElement(
-        'button',
-        {
-          type: 'button',
-          className: 'dsh-claude-settings-switch',
-          role: 'switch',
-          'aria-checked': on ? 'true' : 'false',
-          'data-on': on ? '' : undefined,
-          onClick() { onPick(!on) },
+      const view = {
+        prefs,
+        write,
+        controls: SETTINGS_CONTROLS,
+        quickTrigger,
+        quickProviderApi: () => quickProviderApi,
+        username: {
+          value: username,
+          onChange(e) {
+            setUsername(e.target.value)
+            queueUsernameSave(e.target.value)
+          },
+          onBlur: commitUsername,
+          onKeyDown(e) {
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              commitUsername()
+              if (e.currentTarget && e.currentTarget.blur) e.currentTarget.blur()
+            } else if (e.key === 'Escape') {
+              setUsername(prefs.username)
+              if (e.currentTarget && e.currentTarget.blur) e.currentTarget.blur()
+            }
+          },
         },
-        React.createElement('span', { className: 'dsh-claude-settings-switch-knob' }),
-      )
-
-      // A block row stacks its control under the text across the row's full
-      // width; the inline form keeps text left and control right.
-      const row = (key, title, description, control, block) => React.createElement(
-        'div',
-        { className: block ? 'dsh-claude-settings-row dsh-claude-settings-row-block' : 'dsh-claude-settings-row', key },
-        React.createElement(
-          'div',
-          { className: 'dsh-claude-settings-row-text' },
-          React.createElement('div', { className: 'dsh-claude-settings-row-title' }, title),
-          React.createElement('div', { className: 'dsh-claude-settings-row-desc' }, description),
-        ),
-        control,
-      )
-
-      const brandOptions = [
-        { value: BRAND_DEEPSEEK, label: settingsCopy('brandDeepseek', 'DeepSeek') },
-        { value: BRAND_CLAUDE, label: settingsCopy('brandClaude', 'Claude') },
-      ]
-      const motionOptions = [
-        { value: MOTION_SYSTEM, label: settingsCopy('motionSystem', 'Follow the system') },
-        { value: MOTION_REDUCED, label: settingsCopy('motionReduced', 'Reduced') },
-        { value: MOTION_FULL, label: settingsCopy('motionFull', 'Always') },
-      ]
-      const scopeOptions = [
-        { value: 'off', label: settingsCopy('scopeOff', 'Off') },
-        { value: 'hero', label: settingsCopy('scopeHero', 'Home only') },
-        { value: 'conversation', label: settingsCopy('scopeConversation', 'Conversation only') },
-        { value: 'all', label: settingsCopy('scopeAll', 'All') },
-      ]
-      const banLocaleOptions = [
-        { value: BAN_LOCALE_ZH, label: settingsCopy('banLocaleZh', '中文') },
-        { value: BAN_LOCALE_EN, label: settingsCopy('banLocaleEn', 'English') },
-      ]
-      const autoPopoverOptions = [
-        { value: AUTO_POPOVER_OFF, label: settingsCopy('autoPopoverOff', 'Off') },
-        { value: AUTO_POPOVER_ACCOUNT, label: settingsCopy('autoPopoverAccount', 'Account only') },
-        { value: AUTO_POPOVER_ALL, label: settingsCopy('autoPopoverAll', 'All') },
-      ]
-      const homeLayoutOptions = [
-        { value: HOME_LAYOUT_CLASSIC, label: settingsCopy('homeClassic', 'Classic') },
-        { value: HOME_LAYOUT_STUDIO, label: settingsCopy('homeStudio', 'Studio') },
-      ]
-
-      /** What the quick-provider trigger reads: how many, or nothing chosen. */
-      const quickSummary = chosen => {
-        if (chosen.length === 0) return settingsCopy('quickNone', 'None')
-        return settingsCopy('quickCount', '{count} providers', { count: chosen.length })
       }
-
-      const rows = [
-        row(
-          'username',
-          settingsCopy('usernameTitle', 'Username'),
-          settingsCopy('usernameDesc', 'The name shown in the new-conversation greeting and the account row. Leave empty to use the signed-in account name, then the HDSL launcher name, then the local system user.'),
-          React.createElement('input', {
-            type: 'text',
-            className: 'dsh-claude-settings-input',
-            value: username,
-            maxLength: USERNAME_MAX,
-            placeholder: settingsCopy('usernamePlaceholder', 'Auto-detect account or host user'),
-            spellCheck: false,
-            autoComplete: 'off',
-            onChange(e) {
-              setUsername(e.target.value)
-              queueUsernameSave(e.target.value)
-            },
-            onBlur: commitUsername,
-            onKeyDown(e) {
-              if (e.key === 'Enter') {
-                e.preventDefault()
-                commitUsername()
-                if (e.currentTarget && e.currentTarget.blur) e.currentTarget.blur()
-              } else if (e.key === 'Escape') {
-                setUsername(prefs.username)
-                if (e.currentTarget && e.currentTarget.blur) e.currentTarget.blur()
-              }
-            },
-          }),
-        ),
-        row(
-          'brand',
-          settingsCopy('brandTitle', 'Brand mark'),
-          settingsCopy('brandDesc', 'The brand mark and palette. DeepSeek switches to a blue palette and swaps the pixel crab on the composer for Deepy the whale.'),
-          // One card per brand: the brand's own mark above its name, the
-          // active card outlined in the brand accent. The stylesheet picks the
-          // mark off the logo's data-brand, so a new brand is one option here
-          // plus one rule in settings.css.
-          React.createElement(
-            'div',
-            { className: 'dsh-claude-brand-picker', role: 'group' },
-            brandOptions.map(option => React.createElement(
-              'button',
-              {
-                key: option.value,
-                type: 'button',
-                className: 'dsh-claude-brand-card',
-                'data-active': option.value === prefs.brand ? '' : undefined,
-                'aria-pressed': option.value === prefs.brand ? 'true' : 'false',
-                onClick: () => { if (option.value !== prefs.brand) write({ brand: option.value }) },
-              },
-              React.createElement('span', { className: 'dsh-claude-brand-card-logo', 'data-brand': option.value }),
-              React.createElement('span', { className: 'dsh-claude-brand-card-name' }, option.label),
-            )),
-          ),
-          true,
-        ),
-        row(
-          'motion',
-          settingsCopy('motionTitle', 'Animation'),
-          settingsCopy('motionDesc', 'Follow the system keeps the system\'s animation setting in charge; Reduced holds animations on their still frame; Always plays them. The background-work ring turns in every setting.'),
-          segment(motionOptions, prefs.motion, value => { write({ motion: value }) }),
-        ),
-        row(
-          'collapseFooter',
-          settingsCopy('collapseTitle', 'Collapse the sidebar settings area'),
-          settingsCopy('collapseDesc', 'Fold the sidebar footer\'s settings entry into the account popover. Off restores the host\'s footer.'),
-          toggle(prefs.collapseFooter, value => { write({ collapseFooter: value }) }),
-        ),
-        row(
-          'autoPopover',
-          settingsCopy('autoPopoverTitle', 'Open popovers on hover'),
-          settingsCopy('autoPopoverDesc', 'Which popovers open on hover. "Account only" keeps it to the sidebar account popover; "All" adds the permission, model, session-stats and home-page pickers. Off leaves every popover click-to-open.'),
-          segment(autoPopoverOptions, prefs.autoPopover, value => { write({ autoPopover: value }) }),
-        ),
-        row(
-          'composerScope',
-          settingsCopy('composerTitle', 'Composer restyle'),
-          settingsCopy('composerDesc', 'Which input area the skin restyles: the new-conversation page, the conversation, or both. Off restores the host\'s composer.'),
-          segment(scopeOptions, prefs.composerScope, value => { write({ composerScope: value }) }),
-        ),
-        row(
-          'homeLayout',
-          settingsCopy('homeTitle', 'Home layout'),
-          settingsCopy('homeDesc', 'The new-conversation page layout. Classic is the centered hero with the input card; Studio moves the greeting to the top left, pins the composer to the bottom and shows usage in between.'),
-          segment(homeLayoutOptions, prefs.homeLayout, value => { write({ homeLayout: value }) }),
-        ),
-        row(
-          'modelPicker',
-          settingsCopy('pickerTitle', 'Redraw the model picker'),
-          settingsCopy('pickerDesc', 'Replace the composer\'s model menu with the two-level Claude-style menu. Off restores the host\'s model menu.'),
-          toggle(prefs.modelPicker, value => { write({ modelPicker: value }) }),
-        ),
-        row(
-          'quickProviders',
-          settingsCopy('quickTitle', 'Quick providers'),
-          settingsCopy('quickDesc', 'Picked providers follow the official service in the picker\'s first level, one rule between providers. A provider removed from the catalog stays in the list marked "Removed"; uncheck it to clear it.'),
-          React.createElement('button', {
-            type: 'button',
-            ref: quickTrigger,
-            className: 'dsh-claude-settings-picker',
-            'aria-haspopup': 'menu',
-            'aria-expanded': 'false',
-            onClick() {
-              if (quickProviderApi === null || quickTrigger.current === null) return
-              quickProviderApi.toggle(quickTrigger.current, next => { write({ quickProviders: next }) })
-            },
-          }, quickSummary(prefs.quickProviders)),
-        ),
-        row(
-          'banLocale',
-          settingsCopy('banLocaleTitle', 'Account-hold easter egg language'),
-          settingsCopy('banLocaleDesc', 'The language of the account-hold easter egg page (open it from the account row at the top of the sidebar footer popover). It does not follow the interface language.'),
-          segment(banLocaleOptions, prefs.banLocale, value => { write({ banLocale: value }) }),
-        ),
-      ]
-
-      if (error !== null) {
-        rows.push(React.createElement('div', { className: 'dsh-claude-settings-error', key: 'error' }, error))
-      }
+      const tab = SETTINGS_TABS.find(item => item.id === activeTab)
 
       // The plugin page already heads the form with the bundle's own title and
       // description, so the embedded rendering drops the skin's title rather
@@ -333,9 +177,11 @@
       const embedded = !!(props && props.embed)
       return React.createElement(
         'div',
-        { className: embedded ? 'dsh-claude-settings dsh-claude-settings-embedded' : 'dsh-claude-settings' },
+        { ref: pageRef, className: embedded ? 'dsh-claude-settings dsh-claude-settings-embedded' : 'dsh-claude-settings' },
         embedded ? null : React.createElement('div', { className: 'dsh-claude-settings-title' }, settingsCopy('title', 'Claude Style')),
-        rows,
+        React.createElement(ClaudeStyleSettingsTabStrip, { active: activeTab, onPick: setActiveTab }),
+        React.createElement('div', { className: 'dsh-claude-settings-rows', role: 'tabpanel', key: tab.id }, tab.rows(view)),
+        error === null ? null : React.createElement('div', { className: 'dsh-claude-settings-error' }, error),
       )
     }
 
@@ -356,18 +202,6 @@
       return React.createElement(ClaudeStyleSettingsSection, { embed: true })
     }
 
-    /**
-     * Register the settings section.
-     *
-     * Two waits are needed, and both are declarative rather than polling:
-     *
-     *   1. `ctx.inject(['slots'], …)` waits for the slot registry service. The
-     *      renderer provides it, so reading `ctx.get('slots')` directly during
-     *      `apply` could see nothing and silently drop the section.
-     *   2. `slots.inject('settings.section', …)` waits for the slot *declaration*,
-     *      which `dsh-client-ui-settings-general` publishes later. Registering
-     *      eagerly instead would throw and fail the boot.
-     *
     /**
      * Stamped onto the Claude Style nav button in the settings dialog so CSS
      * can replace the host's default settings gear with the black Claude mark.
@@ -390,6 +224,18 @@
       }
     }
 
+    /**
+     * Register the settings section.
+     *
+     * Two waits are needed, and both are declarative rather than polling:
+     *
+     *   1. `ctx.inject(['slots'], …)` waits for the slot registry service. The
+     *      renderer provides it, so reading `ctx.get('slots')` directly during
+     *      `apply` could see nothing and silently drop the section.
+     *   2. `slots.inject('settings.section', …)` waits for the slot *declaration*,
+     *      which `dsh-client-ui-settings-general` publishes later. Registering
+     *      eagerly instead would throw and fail the boot.
+     */
     function installSettingsSection(ctx, ui) {
       loadModelCopy()
       // The settings services are up by now even when they were not at apply

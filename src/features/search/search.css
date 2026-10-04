@@ -148,7 +148,7 @@ body[data-dsh-claude-style] .dsh-claude-search-dialog {
   gap: 0 !important;
   border: 1px solid var(--dsw-alias-border-l1, #e8e6dc) !important;
   border-radius: 16px !important;
-  background: var(--dsh-claude-canvas, #fcfcfb) !important;
+  background: var(--dsh-claude-card) !important;
   box-shadow: 0 16px 48px rgba(20, 20, 19, 0.14), 0 2px 8px rgba(20, 20, 19, 0.06) !important;
 }
 body[data-dsh-claude-style] [data-dsh-claude-search-closing] > .dsh-claude-search-dialog {

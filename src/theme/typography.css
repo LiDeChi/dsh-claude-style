@@ -76,11 +76,14 @@
 body[data-dsh-claude-style] {
   font-family: var(--dsw-font-family);
   color: var(--dsw-alias-label-primary);
+}
+
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%% {
   background-color: var(--dsh-claude-canvas);
 }
 
 body[data-dsh-claude-style] :is(h1, h2, h3, h4, [class*="headline"], [class*="title"]) {
-  font-family: var(--dsw-font-serif);
+  font-family: var(--dsh-claude-font-serif);
   font-weight: 500;
   letter-spacing: -0.01em;
   line-height: 1.25;
@@ -98,7 +101,7 @@ body[data-dsh-claude-style] :is(h1, [class*="headline"]) {
    face and lets Chinese fall through to a sans CJK; the serif display rule
    above stays for UI headlines. */
 body[data-dsh-claude-style] [class*="markdown"] {
-  font-family: var(--dsw-font-prose);
+  font-family: var(--dsh-claude-font-prose);
   line-height: calc(23px + var(--dsh-content-font-delta, 0px));
 }
 
@@ -112,13 +115,13 @@ body[data-dsh-claude-style] [class*="markdown"] p {
    family has to be re-stated wherever those shorthands land. The heading
    shorthand is re-asserted too, so the host's weight, size and line-height
    survive the serif display rule above. */
-body[data-dsh-claude-style] [class*="markdown"] h1 { font: var(--dsw-font-markdown-h1); font-family: var(--dsw-font-prose); }
-body[data-dsh-claude-style] [class*="markdown"] h2 { font: var(--dsw-font-markdown-h2); font-family: var(--dsw-font-prose); }
-body[data-dsh-claude-style] [class*="markdown"] h3 { font: var(--dsw-font-markdown-h3); font-family: var(--dsw-font-prose); }
-body[data-dsh-claude-style] [class*="markdown"] h4 { font: var(--dsw-font-markdown-h4); font-family: var(--dsw-font-prose); }
+body[data-dsh-claude-style] [class*="markdown"] h1 { font: var(--dsw-font-markdown-h1); font-family: var(--dsh-claude-font-prose); }
+body[data-dsh-claude-style] [class*="markdown"] h2 { font: var(--dsw-font-markdown-h2); font-family: var(--dsh-claude-font-prose); }
+body[data-dsh-claude-style] [class*="markdown"] h3 { font: var(--dsw-font-markdown-h3); font-family: var(--dsh-claude-font-prose); }
+body[data-dsh-claude-style] [class*="markdown"] h4 { font: var(--dsw-font-markdown-h4); font-family: var(--dsh-claude-font-prose); }
 
 body[data-dsh-claude-style] [class*="markdown"] :is(th, td) {
-  font-family: var(--dsw-font-prose);
+  font-family: var(--dsh-claude-font-prose);
   /* One type step up from the host's secondary table size (13px → 14px),
      not a literal +1px. */
   font-size: var(--dsh-content-font-size, 14px);
@@ -191,7 +194,7 @@ body[data-dsh-claude-style] [class*="markdown"] :is(h4, h5, h6) {
 }
 
 body[data-dsh-claude-style] :is(pre, code, kbd, samp, [class*="mono"], [class*="codeBlock"], [class*="CodeBlock"]) {
-  font-family: var(--dsw-font-code);
+  font-family: var(--dsh-claude-font-code);
 }
 
 /* editorial captions */
@@ -206,7 +209,7 @@ body[data-dsh-claude-style] :is([class*="caption"], [class*="sectionLabel"]) {
    and file mentions keep their own material inside a quote — the quote is a
    container, not a link, so it never borrows the link colour. */
 body[data-dsh-claude-style] blockquote {
-  font-family: var(--dsw-font-prose);
+  font-family: var(--dsh-claude-font-prose);
   font-style: normal;
   color: var(--dsw-alias-label-secondary);
   border-left: 2px solid var(--dsw-alias-label-caption);
@@ -257,7 +260,7 @@ body[data-dsh-claude-style] pre code {
    22px) and leaves the 1px padding as the visible inset; lower values start
    clipping descenders. */
 body[data-dsh-claude-style] code:not(pre code) {
-  font-family: var(--dsw-font-code);
+  font-family: var(--dsh-claude-font-code);
   background: var(--dsh-claude-inline-code-bg);
   color: var(--dsh-claude-inline-code-fg);
   border: 1px solid var(--dsw-alias-border-l1);
@@ -328,7 +331,7 @@ body[data-dsh-claude-style] [role="tab"] {
 body[data-dsh-claude-style] [class*="triggerLabel"],
 body[data-dsh-claude-style] [class*="selectLabel"],
 body[data-dsh-claude-style] [class*="monoLabel"] {
-  font-family: var(--dsw-font-code);
+  font-family: var(--dsh-claude-font-code);
   font-size: 12px;
   letter-spacing: 0;
 }

@@ -12,7 +12,9 @@
  *                                inlined as JS markup tables
  *   src/assets/mascot/deepy/*.png      Deepy's animation sheets, copied to
  *                                lib/deepy/ for the host half to serve
- *   src/core/                    host accessors, prefs, model copy, i18n, scheduler
+ *   src/assets/mascot/crab/*.png       the composer crab's animation sheets
+ *                                (scripts/draw-crab.py), inlined as data URIs
+ *   src/core/                   host accessors, prefs, model copy, i18n, scheduler
  *   src/shared/                  parts more than one feature uses (JS + CSS)
  *   src/theme/*.css              the global look no single feature owns
  *   src/features/<name>/         one feature: its installer, its split
@@ -40,8 +42,10 @@ const SRC = path.join(ROOT, 'src')
 const ASSETS = path.join(SRC, 'assets')
 /** Brand marks inlined as CSS data URIs. */
 const BRAND_ASSETS = path.join(ASSETS, 'brand')
-/** The composer crab's sprite strips, inlined as CSS data URIs. */
+/** The mascots' art. */
 const MASCOT_ASSETS = path.join(ASSETS, 'mascot')
+/** The composer crab's animation sheets (scripts/draw-crab.py), inlined as data URIs. */
+const CRAB_ASSETS = path.join(MASCOT_ASSETS, 'crab')
 /** Deepy's animation sheets, copied to lib/deepy/ for the host half to serve. */
 const DEEPY_ASSETS = path.join(MASCOT_ASSETS, 'deepy')
 /** Vendored vendor lockups (src/assets/icons/combine); mark + wordmark per brand id. */
@@ -119,10 +123,18 @@ const FRAGMENTS = [
   'features/home/models.js',
   'features/home/home-layout.js',
   'features/mascot/mascot-signals.js',
+  'features/mascot/mascot-player.js',
   'features/mascot/whale-sheets.js',
   'features/mascot/whale.js',
+  'features/mascot/crab.js',
   'features/mascot/mascot.js',
   'core/scheduler.js',
+  'features/settings/settings-controls.js',
+  'features/settings/settings-tab-general.js',
+  'features/settings/settings-tab-appearance.js',
+  'features/settings/settings-tab-composer.js',
+  'features/settings/settings-tab-sidebar.js',
+  'features/settings/settings-tab-conversation.js',
   'features/settings/settings.js',
   'entry.js',
 ]
@@ -156,7 +168,7 @@ const STYLE_FILES = [
   { file: 'features/home/home-panel.css' },
   { file: 'features/home/home-overview.css' },
   { file: 'features/home/home-models.css' },
-  { file: 'features/mascot/mascot.css' },
+  { file: 'features/mascot/crab.css' },
   { file: 'features/mascot/whale.css' },
   { file: 'features/theme-flip/theme-flip.css' },
 ]
@@ -200,12 +212,19 @@ function loadTokens() {
   const factory = new Function(`
     ${constants}
     return {
-      SANS, SERIF, PROSE, MONO, BRAND_ATTR, BRAND_CLAUDE, BRAND_DEEPSEEK, MOTION_ATTR, MOTION_REDUCED, FOOTER_ATTR, COMPOSER_ATTR, PERMISSIONS_ATTR, ACCOUNT_MENU_ATTR, ACCOUNT_ARMED_ATTR, ACCOUNT_READY_ATTR, HERO_MENU_ATTR,
+      SANS, SERIF, PROSE, MONO, BRAND_ATTR, BRAND_CLAUDE, BRAND_DEEPSEEK, MOTION_ATTR, MOTION_REDUCED, FOOTER_ATTR, COMPOSER_ATTR, PERMISSIONS_ATTR, ACCOUNT_MENU_ATTR, ACCOUNT_ARMED_ATTR, ACCOUNT_READY_ATTR, HERO_MENU_ATTR, SETTINGS_SCROLLER_ATTR,
       // "this brand is drawn by the skin": of the two brands, DeepSeek keeps the
       // host's own brand area, so the shared rules that hide the host's mark and
       // paint the ::before are gated on the Claude brand rather than on
       // :not(deepseek), which would have them paint over the host's whale.
       BRAND_ACTIVE: '[' + BRAND_ATTR + '="' + BRAND_CLAUDE + '"]',
+      // Who paints the colours and who sets the type: a rule that writes a
+      // host token carries the Claude gate (checkTokenGates), and the host
+      // blocks alias the skin's private tokens to the host's.
+      PALETTE_CLAUDE: '[' + PALETTE_ATTR + '="' + PALETTE_CLAUDE + '"]',
+      PALETTE_HOST: '[' + PALETTE_ATTR + '="' + PALETTE_HOST + '"]',
+      TYPEFACE_CLAUDE: '[' + TYPEFACE_ATTR + '="' + TYPEFACE_CLAUDE + '"]',
+      TYPEFACE_HOST: '[' + TYPEFACE_ATTR + '="' + TYPEFACE_HOST + '"]',
       CLAUDE_WORD_WIDTH: (18 * CLAUDE_WORD_ASPECT).toFixed(1),
     }
   `)
@@ -286,6 +305,66 @@ function gateComposerScope(file, text) {
  * @param file - stylesheet name, for diagnostics.
  * @param text - stylesheet source (LF-normalised).
  */
+/** A selector list's members: split at the commas outside any `(` / `[`. */
+function splitSelectorList(list) {
+  const parts = []
+  let depth = 0
+  let from = 0
+  for (let i = 0; i < list.length; i++) {
+    const ch = list[i]
+    if (ch === '(' || ch === '[') depth++
+    else if (ch === ')' || ch === ']') depth--
+    else if (ch === ',' && depth === 0) {
+      parts.push(list.slice(from, i).trim())
+      from = i + 1
+    }
+  }
+  parts.push(list.slice(from).trim())
+  return parts
+}
+
+/**
+ * Hold every write of a host token to its gate, and every private token the
+ * Claude choice defines to an alias under the host choice.
+ *
+ * A `--dsw-font-*` declaration must sit in a rule whose every selector carries
+ * %%TYPEFACE_CLAUDE%%; any other `--dsw-*` declaration in one that carries
+ * %%PALETTE_CLAUDE%%. Under "follow the host" those rules drop out and the
+ * host's tokens (or another theme plugin's) stand. The private tokens those
+ * rules define are recorded in `names`, together with the ones the
+ * %%PALETTE_HOST%% / %%TYPEFACE_HOST%% rules alias, for checkTokenAliases.
+ */
+function checkTokenGates(file, text, names) {
+  // Comments blanked in place, so offsets still give the right line.
+  const source = text.replace(/\/\*[\s\S]*?\*\//g, (comment) => comment.replace(/[^\n]/g, ' '))
+  const declaration = /(?<![\w(-])(--[A-Za-z0-9-]+)\s*:/g
+  for (const match of source.matchAll(declaration)) {
+    const name = match[1]
+    const open = source.lastIndexOf('{', match.index)
+    if (open === -1) continue
+    const start = Math.max(source.lastIndexOf('}', open), source.lastIndexOf('{', open - 1)) + 1
+    const selectors = splitSelectorList(source.slice(start, open))
+    const every = (token) => selectors.every((selector) => selector.includes(token))
+    const line = source.slice(0, match.index).split('\n').length
+    if (name.startsWith('--dsw-font-')) {
+      if (!every('%%TYPEFACE_CLAUDE%%')) throw new Error(`build: src/${file}:${line} writes ${name} outside the %%TYPEFACE_CLAUDE%% gate`)
+    } else if (name.startsWith('--dsw-')) {
+      if (!every('%%PALETTE_CLAUDE%%')) throw new Error(`build: src/${file}:${line} writes ${name} outside the %%PALETTE_CLAUDE%% gate`)
+    }
+    if (!name.startsWith('--dsh-claude-')) continue
+    const typeface = name.startsWith('--dsh-claude-font-')
+    if (every(typeface ? '%%TYPEFACE_CLAUDE%%' : '%%PALETTE_CLAUDE%%')) names.claude.add(name)
+    if (every(typeface ? '%%TYPEFACE_HOST%%' : '%%PALETTE_HOST%%')) names.host.add(name)
+  }
+}
+
+/** Every private token the Claude choice defines needs its alias under the host choice. */
+function checkTokenAliases(names) {
+  for (const name of names.claude) {
+    if (!names.host.has(name)) throw new Error(`build: ${name} is defined under the Claude palette or typeface but has no alias under the host's`)
+  }
+}
+
 function checkHasPlacement(file, text) {
   // Comments blanked in place, so offsets still give the right line.
   const source = text.replace(/\/\*[\s\S]*?\*\//g, (comment) => comment.replace(/[^\n]/g, ' '))
@@ -344,21 +423,44 @@ function loadSvgAssets() {
   return out
 }
 
-/**
- * The composer crab's frames: one strip of the crab in its colours and one of
- * the fishing rod as a mask, a frame per 34×23 cells side by side, one pixel
- * per cell (src/features/mascot). Encoded into CSS url() %%TOKEN%% values the
- * same way as the brand marks.
- */
-const PNG_TOKENS = {
-  MASCOT_BODY: 'crab-laptop-body.png',
-  MASCOT_ROD: 'crab-laptop-ink.png',
-}
+/** The file names a crab sheet may have: `<animation>.png` and its `<animation>-ink.png` mask. */
+const CRAB_FILE = /^[a-z]+(?:-[a-z]+)*\.png$/
 
-function loadPngAssets() {
+/**
+ * The composer crab's sheets, inlined into the bundle as CRAB_SHEET_URLS.
+ *
+ * Drawn by scripts/draw-crab.py into src/assets/mascot/crab/: per animation a
+ * sheet in the crab's colours and an ink mask, eight frames to a row, one
+ * pixel a cell. The table in src/constants.js (CRAB_SHEETS) is the list: each
+ * entry needs both sheets and a well-formed row — a frame count, a crop box
+ * inside the 52×36 grid, a still frame the sheet holds — and a file no entry
+ * names is refused. Together they are a few dozen kilobytes, so they ride the
+ * bundle as data URIs and every animation is ready the moment it is wanted.
+ *
+ * @returns animation → { body, ink } data URIs.
+ */
+function loadCrabSheets() {
+  const constants = fs.readFileSync(path.join(SRC, 'constants.js'), 'utf8')
+  const sheets = new Function(`${constants}\n    return CRAB_SHEETS`)()
+  const names = Object.keys(sheets)
+  const files = fs.readdirSync(CRAB_ASSETS)
+  for (const file of files) {
+    const name = file.replace(/(-ink)?\.png$/, '')
+    if (!CRAB_FILE.test(file) || !names.includes(name)) throw new Error(`build: src/assets/mascot/crab/${file} has no entry in CRAB_SHEETS`)
+  }
   const out = {}
-  for (const [token, file] of Object.entries(PNG_TOKENS)) {
-    out[token] = 'url("data:image/png;base64,' + fs.readFileSync(path.join(MASCOT_ASSETS, file)).toString('base64') + '")'
+  for (const name of names) {
+    const sheet = sheets[name]
+    const [x, y, w, h] = Array.isArray(sheet.box) ? sheet.box : []
+    const whole = [sheet.frames, sheet.still, x, y, w, h].every(Number.isInteger)
+    if (!whole || sheet.frames < 1 || sheet.still < 0 || sheet.still >= sheet.frames || x < 0 || y < 0 || w < 1 || h < 1 || x + w > 52 || y + h > 36) {
+      throw new Error(`build: CRAB_SHEETS["${name}"] needs whole frames, still < frames and a box inside the 52×36 grid`)
+    }
+    const read = (file) => {
+      if (!files.includes(file)) throw new Error(`build: CRAB_SHEETS["${name}"] has no ${file} in src/assets/mascot/crab/`)
+      return 'data:image/png;base64,' + fs.readFileSync(path.join(CRAB_ASSETS, file)).toString('base64')
+    }
+    out[name] = { body: read(`${name}.png`), ink: read(`${name}-ink.png`) }
   }
   return out
 }
@@ -607,6 +709,30 @@ const NON_FEATURE_INSTALLS = ['scheduler']
  * fragment FRAGMENTS does not list, and a feature directory no id covers all
  * fail the build.
  */
+/**
+ * Every FEATURES entry answers whether the reader can switch it off: exactly
+ * one of `pref: '<preference key>'` or `ungated: '<reason>'`. The preference
+ * keys are host/settings.js's PREFS_DEFAULT, the one table both halves mirror.
+ * An entry with neither, with both, or naming a key the table lacks fails the
+ * build, so a new feature cannot ship without deciding.
+ */
+function checkFeatureSwitches(entry) {
+  const settings = fs.readFileSync(path.join(ROOT, 'host', 'settings.js'), 'utf8')
+  const table = settings.match(/const PREFS_DEFAULT = Object\.freeze\(\{([\s\S]*?)\n\}\)/)
+  if (table === null) throw new Error('build: host/settings.js has no PREFS_DEFAULT table')
+  const keys = new Set([...table[1].matchAll(/^\s+([A-Za-z][A-Za-z0-9]*):/gm)].map((match) => match[1]))
+  const block = entry.match(/const FEATURES = \[([\s\S]*?)\n\s*\]\n/)
+  if (block === null) throw new Error('build: src/entry.js has no FEATURES table')
+  for (const line of block[1].split('\n')) {
+    const name = line.match(/\bname: '([A-Za-z][A-Za-z0-9]*)'/)
+    if (name === null) continue
+    const pref = line.match(/\bpref: '([A-Za-z][A-Za-z0-9]*)'/)
+    const ungated = /\bungated: '[^']+'/.test(line)
+    if ((pref === null) === !ungated) throw new Error(`build: FEATURES entry "${name[1]}" must declare exactly one of pref or ungated`)
+    if (pref !== null && !keys.has(pref[1])) throw new Error(`build: FEATURES entry "${name[1]}" names pref "${pref[1]}", which host/settings.js PREFS_DEFAULT does not carry`)
+  }
+}
+
 function checkFeatureRegistry() {
   for (const [id, file] of Object.entries(FEATURE_MAINS)) {
     if (!FRAGMENTS.includes(file)) throw new Error(`build: feature "${id}" names ${file}, which FRAGMENTS does not list`)
@@ -620,6 +746,7 @@ function checkFeatureRegistry() {
   for (const id of Object.keys(FEATURE_MAINS)) {
     if (!declared.has(id)) throw new Error(`build: FEATURE_MAINS names "${id}", which src/entry.js does not install`)
   }
+  checkFeatureSwitches(entry)
   const covered = new Set(Object.values(FEATURE_MAINS).map((file) => file.split('/')[1]))
   const dirs = fs.readdirSync(path.join(SRC, 'features'), { withFileTypes: true })
     .filter((item) => item.isDirectory())
@@ -632,19 +759,22 @@ function checkFeatureRegistry() {
 function main() {
   checkListed()
   checkFeatureRegistry()
-  const tokens = { ...loadTokens(), ...loadSvgAssets(), ...loadPngAssets() }
+  const tokens = { ...loadTokens(), ...loadSvgAssets() }
   const combines = loadCombines()
 
+  const tokenNames = { claude: new Set(), host: new Set() }
   const cssText = STYLE_FILES
     .map((fileDef) => {
       const file = fileDef.file
       const gated = fileDef.gate === true
       let text = fs.readFileSync(path.join(SRC, file), 'utf8').replace(/\r\n/g, '\n')
       checkHasPlacement(file, text)
+      checkTokenGates(file, text, tokenNames)
       if (gated) text = gateComposerScope(file, text)
       return substitute(file, text, tokens).replace(/\n+$/, '')
     })
     .join('\n\n')
+  checkTokenAliases(tokenNames)
 
   const cssDecl = [
     '    // ============================================================================',
@@ -704,6 +834,14 @@ function main() {
     `    var DEEPY_STAMPS = ${JSON.stringify(stampDeepySheets())}`,
   ].join('\n')
 
+  // The crab's sheets, inlined (loadCrabSheets).
+  const crabSheetDecl = [
+    '    // ============================================================================',
+    '    // 螃蟹帧图（由 src/assets/mascot/crab/*.png 内联生成，勿手改） (Crab sheets)',
+    '    // ============================================================================',
+    `    var CRAB_SHEET_URLS = ${JSON.stringify(loadCrabSheets())}`,
+  ].join('\n')
+
   const draft = [
     HEADER,
     fragment(FRAGMENTS[0]),
@@ -711,6 +849,7 @@ function main() {
     combineDecl,
     buildDecl,
     deepyStampDecl,
+    crabSheetDecl,
     ...FRAGMENTS.slice(1).map(fragment),
     FOOTER,
   ].join('\n\n')

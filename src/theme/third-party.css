@@ -12,7 +12,7 @@ body[data-dsh-claude-style] .agy-tv-header {
   min-height: 24px;
 }
 body[data-dsh-claude-style] .agy-tv-title {
-  font-family: var(--dsw-font-code);
+  font-family: var(--dsh-claude-font-code);
   font-weight: 500;
   font-size: 12px;
   letter-spacing: 0;
@@ -20,7 +20,7 @@ body[data-dsh-claude-style] .agy-tv-title {
   color: var(--dsw-alias-label-secondary);
 }
 body[data-dsh-claude-style] .agy-tv-badge {
-  font-family: var(--dsw-font-code);
+  font-family: var(--dsh-claude-font-code);
   font-size: 11px;
   line-height: 16px;
   padding: 0 6px;

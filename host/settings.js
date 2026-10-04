@@ -53,6 +53,15 @@ const PREFS_DEFAULT = Object.freeze({
   username: '',
   banLocale: 'en',
   homeLayout: 'studio',
+  palette: 'claude',
+  typeface: 'claude',
+  mascot: 'brand',
+  mascotScope: 'all',
+  permissionsControl: true,
+  workspaceView: true,
+  sidebarSearch: true,
+  turnStatus: true,
+  viewTabs: true,
 })
 
 /**
@@ -125,6 +134,15 @@ export const Config = SchemaFactory === null
       username: volatileField(SchemaFactory.string().default(PREFS_DEFAULT.username)),
       banLocale: volatileField(SchemaFactory.string().default(PREFS_DEFAULT.banLocale)),
       homeLayout: volatileField(SchemaFactory.string().default(PREFS_DEFAULT.homeLayout)),
+      palette: volatileField(SchemaFactory.string().default(PREFS_DEFAULT.palette)),
+      typeface: volatileField(SchemaFactory.string().default(PREFS_DEFAULT.typeface)),
+      mascot: volatileField(SchemaFactory.string().default(PREFS_DEFAULT.mascot)),
+      mascotScope: volatileField(SchemaFactory.string().default(PREFS_DEFAULT.mascotScope)),
+      permissionsControl: volatileField(SchemaFactory.boolean().default(PREFS_DEFAULT.permissionsControl)),
+      workspaceView: volatileField(SchemaFactory.boolean().default(PREFS_DEFAULT.workspaceView)),
+      sidebarSearch: volatileField(SchemaFactory.boolean().default(PREFS_DEFAULT.sidebarSearch)),
+      turnStatus: volatileField(SchemaFactory.boolean().default(PREFS_DEFAULT.turnStatus)),
+      viewTabs: volatileField(SchemaFactory.boolean().default(PREFS_DEFAULT.viewTabs)),
     })
 
 /**
@@ -168,6 +186,15 @@ function buildPrefsSchema(Schema) {
     username: Schema.any().default(PREFS_DEFAULT.username),
     banLocale: Schema.any().default(PREFS_DEFAULT.banLocale),
     homeLayout: Schema.any().default(PREFS_DEFAULT.homeLayout),
+    palette: Schema.any().default(PREFS_DEFAULT.palette),
+    typeface: Schema.any().default(PREFS_DEFAULT.typeface),
+    mascot: Schema.any().default(PREFS_DEFAULT.mascot),
+    mascotScope: Schema.any().default(PREFS_DEFAULT.mascotScope),
+    permissionsControl: Schema.any().default(PREFS_DEFAULT.permissionsControl),
+    workspaceView: Schema.any().default(PREFS_DEFAULT.workspaceView),
+    sidebarSearch: Schema.any().default(PREFS_DEFAULT.sidebarSearch),
+    turnStatus: Schema.any().default(PREFS_DEFAULT.turnStatus),
+    viewTabs: Schema.any().default(PREFS_DEFAULT.viewTabs),
   })
 }
 

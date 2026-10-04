@@ -31,14 +31,14 @@ body[data-dsh-claude-style]:not([data-ds-dark-theme]) button[data-dsh-section="c
 /* The skin's own page in the settings dialog and on the plugin page. Its
    segmented controls reuse the composer permission picker's classes
    (`.dsh-claude-segments` / `.dsh-claude-segment`), so the two are literally one
-   control rather than two lookalikes; the row shell, the switch and the brand
-   cards are new here. */
+   control rather than two lookalikes; the switch and the brand cards are new
+   here. The rows follow the host's own settings rows (ui-chat's PreferenceRow):
+   full width, 16px above and below, a hairline between two rows. */
 body[data-dsh-claude-style] .dsh-claude-settings {
   display: flex;
   flex-direction: column;
   gap: 16px;
   padding: 20px 24px;
-  max-width: 640px;
   box-sizing: border-box;
   font-family: var(--dsw-font-family);
 }
@@ -49,25 +49,85 @@ body[data-dsh-claude-style] .dsh-claude-settings-title {
   color: var(--dsw-alias-label-primary);
 }
 
+/* The tab strip is the segmented control itself, stretched across the page so
+   every tab gets an equal share; the open tab's rows follow in their own
+   column. */
+body[data-dsh-claude-style] .dsh-claude-settings-tabs {
+  display: flex;
+  align-self: stretch;
+}
+
+body[data-dsh-claude-style] .dsh-claude-settings-tabs > [role="tab"] {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+body[data-dsh-claude-style] .dsh-claude-settings-rows {
+  display: flex;
+  flex-direction: column;
+}
+
+body[data-dsh-claude-style] .dsh-claude-settings-rows > :first-child {
+  border-top: none;
+}
+
+/* A sub-row belongs to the row above it: no hairline between the two and no
+   air above it, so they read as one group, and it greys out while its parent
+   is off (its control is disabled as well, so the keyboard skips it). */
+body[data-dsh-claude-style] .dsh-claude-settings-row.dsh-claude-settings-row-sub {
+  border-top: none;
+  padding-top: 0;
+}
+
+/* The host's scroller around the page (the settings dialog's options column,
+   the plugin page) always keeps the scrollbar's room: a tab short enough to
+   need no scrollbar then lays out at the same width as one that does. The
+   page marks its nearest scrolling ancestor while it is mounted (settings.js). */
+body[data-dsh-claude-style] [%%SETTINGS_SCROLLER_ATTR%%] {
+  scrollbar-gutter: stable;
+}
+
+body[data-dsh-claude-style] .dsh-claude-settings-row-sub[data-disabled] {
+  opacity: .5;
+}
+
+body[data-dsh-claude-style] .dsh-claude-settings-row-sub[data-disabled] :is(button, input) {
+  cursor: not-allowed;
+}
+
 body[data-dsh-claude-style] .dsh-claude-settings-row {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  border: 1px solid var(--dsw-alias-border-l1);
-  border-radius: 12px;
+  gap: 8px;
+  padding: 16px 0;
+  border-top: 0.5px solid var(--dsw-alias-border-l2);
 }
 
 body[data-dsh-claude-style] .dsh-claude-settings-row-text {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-right: 48px;
 }
 
-/* A block row stacks its control under the text across the row's full width —
-   the brand picker's cards need more room than an inline control slot gives. */
+/* A block row stacks its control under the text — the brand picker's cards
+   and the four-way mascot choice need more room than an inline control slot
+   gives. A control keeps its own width; only the brand cards span the row. */
 body[data-dsh-claude-style] .dsh-claude-settings-row-block {
   flex-direction: column;
-  align-items: stretch;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-settings-row-block > .dsh-claude-settings-row-text {
+  align-self: stretch;
+  padding-right: 0;
+}
+
+body[data-dsh-claude-style] .dsh-claude-settings-row-block > .dsh-claude-brand-picker {
+  align-self: stretch;
 }
 
 /* The brand picker: one card per brand, the brand's mark above its name. The
@@ -134,17 +194,20 @@ body[data-dsh-claude-style] .dsh-claude-brand-card-name {
   line-height: 1.5;
 }
 
+/* The row title is UI text in the host's row metrics: the sans face, not the
+   serif display face theme/typography.css gives every class naming a title. */
 body[data-dsh-claude-style] .dsh-claude-settings-row-title {
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1.5;
+  font-family: var(--dsw-font-family);
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: normal;
+  line-height: 22px;
   color: var(--dsw-alias-label-primary);
 }
 
 body[data-dsh-claude-style] .dsh-claude-settings-row-desc {
-  margin-top: 4px;
   font-size: 12px;
-  line-height: 1.5;
+  line-height: 18px;
   color: var(--dsw-alias-label-tertiary);
 }
 

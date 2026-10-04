@@ -142,8 +142,8 @@
     "title": { "zh": "Claude Style", "en": "Claude Style" },
     "brandTitle": { "zh": "品牌标识", "en": "Brand mark" },
     "brandDesc": {
-      "zh": "侧栏与首页的品牌标识和整套配色。DeepSeek 为蓝色系，输入框上的像素螃蟹同时换成小鲸鱼 Deepy。",
-      "en": "The brand mark and palette. DeepSeek switches to a blue palette and swaps the pixel crab on the composer for Deepy the whale."
+      "zh": "侧栏与首页的品牌标识和配色色系：Claude 为暖色系，DeepSeek 为蓝色系。配色选「跟随宿主」时色系不生效，只换品牌标识。",
+      "en": "The brand mark in the sidebar and on the home page, and its colour family: warm for Claude, blue for DeepSeek. While Colours is set to Follow the host, only the mark changes."
     },
     "collapseTitle": { "zh": "折叠侧栏设置区", "en": "Collapse the sidebar settings area" },
     "collapseDesc": {
@@ -211,6 +211,66 @@
     },
     "banLocaleZh": { "zh": "中文", "en": "中文" },
     "banLocaleEn": { "zh": "English", "en": "English" },
+    "tabGeneral": { "zh": "通用", "en": "General" },
+    "tabAppearance": { "zh": "外观", "en": "Appearance" },
+    "tabComposer": { "zh": "输入区", "en": "Composer" },
+    "tabSidebar": { "zh": "侧栏", "en": "Sidebar" },
+    "tabConversation": { "zh": "对话", "en": "Conversation" },
+    "paletteTitle": { "zh": "配色", "en": "Colours" },
+    "paletteDesc": {
+      "zh": "「Claude」使用本插件的配色；「跟随宿主」把颜色交还给 DSH 和其他主题插件（例如壁纸插件），本插件只保留布局和控件。",
+      "en": "Claude uses the skin's own colours; Follow the host leaves the colours to DSH and to other theme plugins (a wallpaper plugin, say), and the skin keeps only its layout and controls."
+    },
+    "paletteClaude": { "zh": "Claude", "en": "Claude" },
+    "paletteHost": { "zh": "跟随宿主", "en": "Follow the host" },
+    "typefaceTitle": { "zh": "字体", "en": "Typefaces" },
+    "typefaceDesc": {
+      "zh": "「Claude」使用 Anthropic 字体（缺少时换用外观相近的 Inter 与 Noto Serif）和 JetBrains Mono 代码字体；「跟随宿主」使用 DSH 或其他插件设定的字体。",
+      "en": "Claude uses the Anthropic faces (or the lookalike Inter and Noto Serif when they are missing) and JetBrains Mono for code; Follow the host keeps the fonts DSH or another plugin sets."
+    },
+    "typefaceClaude": { "zh": "Claude", "en": "Claude" },
+    "typefaceHost": { "zh": "跟随宿主", "en": "Follow the host" },
+    "mascotTitle": { "zh": "吉祥物", "en": "Mascot" },
+    "mascotDesc": {
+      "zh": "站在输入框上沿的像素小伙伴，随智能体的工作状态换动画。「跟随品牌」在 Claude 品牌下是像素螃蟹，在 DeepSeek 品牌下是小鲸鱼 Deepy。",
+      "en": "The pixel companion on the input area's top edge, animated by what the agent is doing. Follow the brand shows the pixel crab under Claude and Deepy the whale under DeepSeek."
+    },
+    "mascotBrand": { "zh": "跟随品牌", "en": "Follow the brand" },
+    "mascotCrab": { "zh": "螃蟹", "en": "Crab" },
+    "mascotDeepy": { "zh": "Deepy", "en": "Deepy" },
+    "mascotOff": { "zh": "关闭", "en": "Off" },
+    "mascotScopeTitle": { "zh": "出现位置", "en": "Where it appears" },
+    "mascotScopeDesc": {
+      "zh": "吉祥物只在新会话页出现，还是新会话页和对话页都出现。",
+      "en": "The new-conversation page alone, or the new-conversation page and the conversation."
+    },
+    "mascotScopeHome": { "zh": "首页", "en": "Home" },
+    "mascotScopeAll": { "zh": "首页与对话", "en": "Home and conversation" },
+    "permissionsTitle": { "zh": "重绘权限控件", "en": "Redraw the permission control" },
+    "permissionsDesc": {
+      "zh": "把输入框上的权限菜单换成分段控件，会话统计数字收进上下文弹层。关闭后恢复系统的权限菜单和统计弹窗。",
+      "en": "Replace the composer's permission menu with a segmented control and move the session numbers into the context popover. Off restores the host's permission menu and statistics dialogs."
+    },
+    "searchTitle": { "zh": "侧栏搜索", "en": "Sidebar search" },
+    "searchDesc": {
+      "zh": "在侧栏品牌行放一个搜索框，可以搜索会话、项目、插件、Skill 和快捷键。关闭后侧栏品牌行恢复原样。",
+      "en": "A search box in the sidebar's brand row that finds sessions, projects, plugins, Skills and shortcuts. Off restores the host's brand row."
+    },
+    "workspaceTitle": { "zh": "进行中 / 已归档视图", "en": "In progress / Archived view" },
+    "workspaceDesc": {
+      "zh": "把侧栏工作区分成「进行中」和「已归档」两页，已归档页的会话可以恢复或删除。关闭后恢复系统的工作区列表。",
+      "en": "Split the sidebar's workspace section into In progress and Archived; archived conversations can be restored or deleted. Off restores the host's workspace list."
+    },
+    "turnStatusTitle": { "zh": "轮次状态行", "en": "Turn status line" },
+    "turnStatusDesc": {
+      "zh": "把进行中、已停止和失败轮次的状态移到这一轮内容的末尾，显示用时、输出 token 数和当前动作。关闭后恢复系统的轮次状态。",
+      "en": "Move the status of a running, stopped or failed turn to the end of the turn's work, with the elapsed time, the output tokens and what the model is doing. Off restores the host's turn status."
+    },
+    "viewTabsTitle": { "zh": "对话 / 轨迹标签条", "en": "Chat / Trajectory tabs" },
+    "viewTabsDesc": {
+      "zh": "重绘对话区顶部的「对话 / 轨迹」标签条，标题那一行放得下时移上去。关闭后恢复系统的标签条。",
+      "en": "Redraw the Chat / Trajectory tab strip at the top of the conversation, lifted onto the title's line when it fits. Off restores the host's tab strip."
+    },
     "unavailable": {
       "zh": "设置存储不可用，改动不会被保存。",
       "en": "The settings store is unavailable, so changes will not be saved."

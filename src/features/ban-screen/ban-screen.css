@@ -306,7 +306,7 @@ body[data-dsh-claude-style] .dsh-claude-ban-lock {
 
 body[data-dsh-claude-style] .dsh-claude-ban-title {
   margin: 26px 0 0;
-  font-family: var(--dsw-font-serif);
+  font-family: var(--dsh-claude-font-serif);
   font-size: 31px;
   font-weight: 500;
   line-height: 1.2;

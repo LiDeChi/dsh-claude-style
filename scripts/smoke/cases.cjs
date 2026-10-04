@@ -69,7 +69,7 @@ const CASES = {
         greeting.held === greeting.low && typeof greeting.high === 'string' && greeting.high !== 'Host greeting' &&
         greeting.high !== greeting.low,
       JSON.stringify(greeting))
-    check('the classic hero page carries no crab', r.classicCrab === false, JSON.stringify(r.classicCrab))
+    check('the classic hero page carries the crab too', r.classicCrab === true, JSON.stringify(r.classicCrab))
     const palette = r.claudePalette || {}
     check('the Claude brand keeps its ivory and warm-black canvases and the clay accent',
       palette.canvas === 'rgb(252, 252, 251)' && palette.accent === '#d97757' && !!palette.dark &&
@@ -347,16 +347,15 @@ const CASES = {
       rows('models') === 6 && said('models', /^Show 2 more$/),
       JSON.stringify({ rows: rows('models'), texts: renders.models && renders.models.texts.slice(-3) }))
     const mascot = r.mascot || {}
-    check('the crab stands on the hero card on its resting frame, drawn from the inlined crab strip and rod mask',
-      mascot.mounted === true && mascot.frame === '0' && mascot.body === true && mascot.rod === true &&
-        mascot.bodyShift === '0px', JSON.stringify(mascot))
-    check('the pointer leaving the crab plays the routine and it ends on the resting frame, without waking a pass',
-      mascot.early !== '0' && mascot.early !== '' && mascot.earlyShift === `${-68 * Number(mascot.early)}px` &&
-        mascot.settled === '0' && mascot.passesDuring === 0,
+    check('the crab stands on the hero card idling, drawn from its inlined sheet and ink mask',
+      mascot.mounted === true && mascot.ready === true && mascot.animation === 'idle' && mascot.body === true && mascot.ink === true,
       JSON.stringify(mascot))
-    check('a click reaches the crab; with the animation choice on "reduced" only a click plays the routine',
-      mascot.reachable === true && mascot.reducedAttr === 'reduced' && mascot.reducedLeave === '0' &&
-        mascot.clicked !== '0' && mascot.clickSettled === '0',
+    check('a click on its left half reaches the crab and pokes it; the poke plays back to idle without waking a pass',
+      mascot.reachable === true && mascot.poked === 'poke-left' && mascot.afterPoke === 'idle' && mascot.passesDuring === 0,
+      JSON.stringify(mascot))
+    check('with the animation choice on "reduced" it holds the idle still frame; a click still pokes it',
+      mascot.reducedAttr === 'reduced' && mascot.stillFrame === 'translate(0px, 0px)' && mascot.stillAnimations === 0 &&
+        mascot.reducedClick === 'poke-left',
       JSON.stringify(mascot))
     check('the crab leaves with the hero page', mascot.afterHero === false, JSON.stringify(mascot))
     check('the studio hero mark is on the document on the hero page and off it elsewhere, and the studio rules reach the stack',
@@ -537,10 +536,131 @@ const CASES = {
       JSON.stringify(failed))
     commonChecks(r)
   },
+  switches(r) {
+    check('apply() completes', r.applyError === null, r.applyError)
+    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    const sw = r.switches || {}
+    const keys = Object.keys(sw.start || {})
+    const present = (marks, key) => !!marks && marks[key] > 0
+    check('every switched feature is on by default', keys.length === 5 && keys.every((key) => present(sw.start, key)), JSON.stringify(sw.start))
+    for (const step of sw.steps || []) {
+      check(`switching ${step.key} off leaves none of its marks and keeps the others`,
+        !present(step.off, step.key) && keys.filter((key) => key !== step.key).every((key) => present(step.off, key)),
+        JSON.stringify(step.off))
+      check(`switching ${step.key} back on brings it back, live`,
+        keys.every((key) => present(step.on, key)), JSON.stringify(step.on))
+    }
+    check('all switches off leave no switched feature on the page',
+      !!sw.allOff && keys.every((key) => !present(sw.allOff, key)), JSON.stringify(sw.allOff))
+    check('all switches back on bring every feature back', !!sw.allOn && keys.every((key) => present(sw.allOn, key)), JSON.stringify(sw.allOn))
+    commonChecks(r)
+  },
+  'switches-off'(r) {
+    check('apply() completes', r.applyError === null, r.applyError)
+    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    const sw = r.switches || {}
+    const keys = Object.keys(sw.start || {})
+    check('a feature switched off before the page loads never installs',
+      keys.length === 5 && keys.every((key) => sw.start[key] === 0), JSON.stringify(sw.start))
+    check('switching them on installs every one, live',
+      !!sw.allOn && keys.every((key) => sw.allOn[key] > 0), JSON.stringify(sw.allOn))
+    commonChecks(r)
+  },
+  'host-palette'(r) {
+    check('apply() completes', r.applyError === null, r.applyError)
+    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    const hp = r.hostPalette || {}
+    const host = hp.host || {}
+    check('under the host\'s colours and type the skin writes none of the host\'s tokens',
+      host.base === 'rgb(250, 250, 252)' && host.family === '"Host Sans", sans-serif', JSON.stringify(host))
+    check('and paints none of the host\'s frame: the sidebar keeps the host\'s fill, the conversation column and the canvases stay unpainted',
+      host.sidebar === 'rgb(244, 245, 250)' && host.conversation === 'rgba(0, 0, 0, 0)' &&
+        host.body === 'rgba(0, 0, 0, 0)' && host.html === 'rgba(0, 0, 0, 0)',
+      JSON.stringify(host))
+    check('the skin\'s own cards take the host\'s overlay layer, blurred behind',
+      host.popover === 'rgb(240, 241, 250)' && host.account === 'rgb(240, 241, 250)' && host.search === 'rgb(240, 241, 250)' &&
+        /blur\(16px\)/.test(host.popoverBlur || ''),
+      JSON.stringify(host))
+    check('the inverted chip becomes the host\'s hover plate with its primary ink',
+      host.group === 'rgba(10, 20, 30, 0.08)' && host.groupInk === 'rgb(17, 18, 19)', JSON.stringify(host))
+    check('the skin\'s display and code faces fall back to the host\'s',
+      host.heading === '"Host Sans", sans-serif' && host.code === '"Host Mono", monospace', JSON.stringify(host))
+    const wall = hp.wallpaper || {}
+    check('a wallpaper plugin\'s cleared canvas and glass reach the sidebar and the cards',
+      wall.sidebar === 'rgba(0, 0, 0, 0)' && wall.popover === 'rgba(255, 255, 255, 0.6)' &&
+        wall.account === 'rgba(255, 255, 255, 0.6)' && wall.body === 'rgba(0, 0, 0, 0)',
+      JSON.stringify(wall))
+    const claude = hp.claude || {}
+    check('back on Claude the skin\'s palette and faces return',
+      claude.base === '#fcfcfb' && claude.body === 'rgb(252, 252, 251)' && claude.account === 'rgb(252, 252, 251)' &&
+        claude.popover === 'rgb(255, 255, 255)' && /Anthropic Serif Web Text/.test(claude.heading || ''),
+      JSON.stringify(claude))
+    commonChecks(r)
+  },
+  settings(r) {
+    check('apply() completes', r.applyError === null, r.applyError)
+    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    const settings = r.settings || {}
+    check('the settings section registers with the settings dialog', settings.registered === true, JSON.stringify(settings.registered))
+    const expected = {
+      general: ['username', 'motion', 'autoPopover', 'banLocale'],
+      appearance: ['brand', 'palette', 'typeface', 'mascot', 'mascotScope'],
+      composer: ['composerScope', 'homeLayout', 'modelPicker', 'quickProviders', 'permissionsControl'],
+      sidebar: ['collapseFooter', 'sidebarSearch', 'workspaceView'],
+      conversation: ['turnStatus', 'viewTabs'],
+    }
+    const pages = settings.pages || {}
+    for (const tab of Object.keys(expected)) {
+      const page = pages[tab] || {}
+      check(`the ${tab} tab is selected in the five-tab strip and carries its rows, every sub-row enabled`,
+        JSON.stringify(page.tabs) === JSON.stringify(Object.keys(expected)) && page.selected === tab &&
+          JSON.stringify(page.rows) === JSON.stringify(expected[tab]) && Array.isArray(page.disabled) && page.disabled.length === 0,
+        JSON.stringify(page))
+    }
+    const off = settings.parentsOff || {}
+    check('a sub-row greys out while its parent is off: the mascot\'s place with the mascot off, the quick providers with the model picker off',
+      !!off.appearance && JSON.stringify(off.appearance.disabled) === '["mascotScope"]' &&
+        !!off.composer && JSON.stringify(off.composer.disabled) === '["quickProviders"]',
+      JSON.stringify(off))
+    commonChecks(r)
+  },
+  'crab-states'(r) {
+    check('apply() completes', r.applyError === null, r.applyError)
+    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    const crab = r.states || {}
+    const is = (state, animation, place) => !!state && state.animation === animation && state.place === place && state.ready === true
+    check('picked under the Claude brand, the crab stands on the home card idling, from its inlined sheet',
+      is(crab.home, 'idle', 'card') && /^url\("data:image\/png/.test(crab.home.sheet), JSON.stringify(crab.home))
+    check('its frames change on its own node without waking a pass',
+      !!crab.idle && crab.idle.before !== crab.idle.after && crab.idle.passes === 0, JSON.stringify(crab.idle))
+    check('a click on its left half pokes it', is(crab.poke, 'poke-left', 'card'), JSON.stringify(crab.poke))
+    check('on the conversation page it stands on the input area: thinking, typing, the hard hat with three sessions at work',
+      is(crab.thinking, 'thinking', 'stack') && is(crab.typing, 'typing', 'stack') && is(crab.building, 'building', 'stack'),
+      JSON.stringify({ thinking: crab.thinking, typing: crab.typing, building: crab.building }))
+    check('an approval puts it on the approval panel with the notification',
+      is(crab.notification, 'notification', 'panel'), JSON.stringify(crab.notification))
+    check('compaction, the celebration when it ends, and the error shake over it',
+      is(crab.compacting, 'compacting', 'stack') && is(crab.celebrating, 'happy', 'stack') && is(crab.failed, 'error', 'stack'),
+      JSON.stringify({ compacting: crab.compacting, celebrating: crab.celebrating, failed: crab.failed }))
+    // The error sheet's still frame is its fifth: column 4 of 26-cell-wide frames at 2px a cell.
+    check('reduced motion holds the error sheet\'s still frame',
+      crab.stillAttr === 'reduced' && !!crab.still && crab.still.before === '-208px 0px' && crab.still.after === '-208px 0px',
+      JSON.stringify(crab.still))
+    check('it idles after work, sleeps after a quiet minute, and a pointer move wakes it',
+      is(crab.afterWork, 'idle', 'stack') && is(crab.asleep, 'sleeping', 'stack') && is(crab.woken, 'waking', 'stack'),
+      JSON.stringify({ afterWork: crab.afterWork, asleep: crab.asleep, woken: crab.woken }))
+    check('it leaves with the conversation, and takes its anchor mark along', crab.gone === true, JSON.stringify(crab.gone))
+    check('kept to the home page it stays off the conversation and stands on the home card',
+      crab.backInConversation === true && crab.homeOnly === null && is(crab.homeOnlyHero, 'idle', 'card'),
+      JSON.stringify({ back: crab.backInConversation, homeOnly: crab.homeOnly, hero: crab.homeOnlyHero }))
+    check('with the mascot off it leaves; picking Deepy puts the whale out instead',
+      crab.off === null && crab.deepyPicked === true, JSON.stringify({ off: crab.off, deepy: crab.deepyPicked }))
+    commonChecks(r)
+  },
   deepy(r) {
     check('apply() completes', r.applyError === null, r.applyError)
     check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
-    const deepy = r.deepy || {}
+    const deepy = r.states || {}
     const is = (state, animation, place) => !!state && state.animation === animation && state.place === place && state.ready === true
     check('the brand stored as "off" reads as DeepSeek, and the light canvas turns sky white',
       deepy.brand === 'deepseek' && deepy.canvas === 'rgb(250, 251, 255)', JSON.stringify({ brand: deepy.brand, canvas: deepy.canvas }))

@@ -70,7 +70,7 @@ body[data-dsh-claude-style] [data-composer-card] [class*="_row"] {
 }
 
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) [data-composer-card] {
-  background: #ffffff;
+  background: var(--dsw-specific-input-major);
   box-shadow: 0 4px 12px rgba(20, 20, 19, 0.04), 0 1px 3px rgba(20, 20, 19, 0.02);
 }
 

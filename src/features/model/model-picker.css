@@ -74,17 +74,12 @@ body[data-dsh-claude-style] .dsh-claude-model-group {
   gap: 5px !important;
   margin: 0 !important;
   padding: 1px 7px !important;
-  background: #141413 !important;
-  color: #faf9f5 !important;
+  background: var(--dsh-claude-inverse-fill) !important;
+  color: var(--dsh-claude-inverse-ink) !important;
   border-radius: 6px !important;
   font-size: 11px !important;
   font-weight: 600 !important;
   line-height: 16px !important;
-}
-
-body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-model-group {
-  background: #faf9f5 !important;
-  color: #141413 !important;
 }
 
 /* Model / effort option: same row metrics and hover as the drawer items. */
@@ -122,7 +117,7 @@ body[data-dsh-claude-style] .dsh-claude-model-name {
 /* Claude's wordmark is set in Anthropic's serif, so the rest of the label follows
    it — the row reads as one piece of lettering rather than serif art beside sans. */
 body[data-dsh-claude-style] .dsh-claude-model-option[data-brand='claude'] .dsh-claude-model-name {
-  font-family: var(--dsw-font-brand-claude) !important;
+  font-family: var(--dsh-claude-font-brand) !important;
 }
 /* A vendor lockup: the mark and the vendor's own wordmark as one piece of art,
    drawn in place of the vendor's name in the label. Its viewBox is the wordmark's

@@ -62,6 +62,11 @@
       username: '',
       banLocale: fallbackBanLocale || DEFAULT_BAN_LOCALE,
       homeLayout: DEFAULT_HOME_LAYOUT,
+      palette: DEFAULT_PALETTE,
+      typeface: DEFAULT_TYPEFACE,
+      mascot: DEFAULT_MASCOT,
+      mascotScope: DEFAULT_MASCOT_SCOPE,
+      ...FEATURE_PREF_DEFAULTS,
     }
     let prefsAvailable = false
     const prefsListeners = []
@@ -293,6 +298,9 @@
       // The brand is one attribute write; the other preferences gate rules the
       // stylesheet and the scheduler read directly.
       document.body.setAttribute(BRAND_ATTR, next.brand)
+      document.body.setAttribute(PALETTE_ATTR, next.palette)
+      document.body.setAttribute(TYPEFACE_ATTR, next.typeface)
+      document.body.setAttribute(MASCOT_ATTR, resolveMascot(next))
       writeMotionAttribute(next.motion)
       if (next.collapseFooter && !footerTakeoverRetired) document.body.setAttribute(FOOTER_ATTR, '')
       else document.body.removeAttribute(FOOTER_ATTR)
@@ -403,10 +411,33 @@
       return value === BRAND_DEEPSEEK_LEGACY ? BRAND_DEEPSEEK : BRAND_CLAUDE
     }
 
+    /**
+     * The mascot actually on the page: `brand` resolves through the brand (the
+     * crab under Claude, Deepy under DeepSeek); the other choices stand as
+     * they are.
+     * @returns MASCOT_CRAB, MASCOT_DEEPY or MASCOT_OFF.
+     */
+    function resolveMascot(current) {
+      if (current.mascot !== MASCOT_BRAND) return current.mascot
+      return current.brand === BRAND_DEEPSEEK ? MASCOT_DEEPY : MASCOT_CRAB
+    }
+
+    /** Clamp the feature switches: anything but an explicit `false` keeps a feature on. */
+    function normalizeFeaturePrefs(section) {
+      const out = {}
+      for (const key in FEATURE_PREF_DEFAULTS) out[key] = section[key] !== false
+      return out
+    }
+
     /** Clamp one host value into the preference shape (the host already did this). */
     function normalizePrefs(value) {
       const section = value && typeof value === 'object' ? value : {}
       return {
+        ...normalizeFeaturePrefs(section),
+        palette: PALETTES.includes(section.palette) ? section.palette : DEFAULT_PALETTE,
+        typeface: TYPEFACES.includes(section.typeface) ? section.typeface : DEFAULT_TYPEFACE,
+        mascot: MASCOTS.includes(section.mascot) ? section.mascot : DEFAULT_MASCOT,
+        mascotScope: MASCOT_SCOPES.includes(section.mascotScope) ? section.mascotScope : DEFAULT_MASCOT_SCOPE,
         brand: normalizeBrand(section.brand),
         motion: MOTION_MODES.includes(section.motion) ? section.motion : DEFAULT_MOTION,
         collapseFooter: section.collapseFooter !== false,

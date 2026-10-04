@@ -216,6 +216,60 @@
     const MOTION_ATTR = 'data-dsh-claude-motion'
 
     /**
+     * Who paints the colours, and who sets the type. `claude` is the skin's own
+     * palette (or typefaces); `host` leaves the host's colour (or font) tokens
+     * to the host and to whatever other theme plugin writes them — a wallpaper
+     * plugin's glass, say — and the skin's own surfaces read those tokens
+     * through its private aliases. Each choice rides <body> as its attribute,
+     * and the stylesheet gates every rule that writes the host's tokens on it.
+     */
+    const PALETTE_CLAUDE = 'claude'
+    const PALETTE_HOST = 'host'
+    const PALETTES = [PALETTE_CLAUDE, PALETTE_HOST]
+    const DEFAULT_PALETTE = PALETTE_CLAUDE
+    const PALETTE_ATTR = 'data-dsh-claude-palette'
+    const TYPEFACE_CLAUDE = 'claude'
+    const TYPEFACE_HOST = 'host'
+    const TYPEFACES = [TYPEFACE_CLAUDE, TYPEFACE_HOST]
+    const DEFAULT_TYPEFACE = TYPEFACE_CLAUDE
+    const TYPEFACE_ATTR = 'data-dsh-claude-typeface'
+
+    /**
+     * The mascot on the composer, chosen apart from the brand. `brand` follows
+     * the brand (the crab under Claude, Deepy under DeepSeek); `crab` and
+     * `deepy` pick one whatever the brand; `off` shows none. The resolved
+     * mascot (`crab`, `deepy` or `off`) rides <body> as MASCOT_ATTR.
+     *
+     * MASCOT_SCOPES says where it stands: the home page alone, or the home page
+     * and the conversation.
+     */
+    const MASCOT_BRAND = 'brand'
+    const MASCOT_CRAB = 'crab'
+    const MASCOT_DEEPY = 'deepy'
+    const MASCOT_OFF = 'off'
+    const MASCOTS = [MASCOT_BRAND, MASCOT_CRAB, MASCOT_DEEPY, MASCOT_OFF]
+    const DEFAULT_MASCOT = MASCOT_BRAND
+    const MASCOT_ATTR = 'data-dsh-claude-mascot'
+    const MASCOT_SCOPE_HOME = 'home'
+    const MASCOT_SCOPE_ALL = 'all'
+    const MASCOT_SCOPES = [MASCOT_SCOPE_HOME, MASCOT_SCOPE_ALL]
+    const DEFAULT_MASCOT_SCOPE = MASCOT_SCOPE_ALL
+
+    /**
+     * Feature switches: one boolean preference per feature that replaces or
+     * moves a host control, all on by default. src/entry.js's FEATURES table
+     * names each feature's key (`pref`), and switching one off runs that
+     * feature's teardown, which hands its surface back to the host.
+     */
+    const FEATURE_PREF_DEFAULTS = {
+      permissionsControl: true,
+      workspaceView: true,
+      sidebarSearch: true,
+      turnStatus: true,
+      viewTabs: true,
+    }
+
+    /**
      * Deepy's animations (src/features/mascot/whale.js), one sheet each under
      * src/assets/mascot/deepy/. The build copies the sheets to lib/deepy/ and
      * the host half serves them under DEEPY_ROUTE, so the browser loads a
@@ -250,6 +304,44 @@
       'poke-right': { frames: 40, box: [8, 16, 44, 34], still: 0 },
       'tickle': { frames: 48, box: [9, 17, 43, 33], still: 0 },
       'drag': { frames: 24, box: [10, 4, 41, 46], still: 0 },
+    }
+
+    /**
+     * The composer crab's animations (src/features/mascot/crab.js), drawn by
+     * scripts/draw-crab.py into src/assets/mascot/crab/: one sheet in the crab's
+     * colours and one ink mask per animation, inlined by the build as
+     * CRAB_SHEET_URLS.
+     *
+     * The crab is drawn on a 52×36 grid of cells at 2px a cell, feet on the
+     * bottom row, the right claw four cells in from the right edge. A sheet
+     * holds its animation's frames eight to a row, each cropped to `box` —
+     * `[x, y, width, height]` in cells — and every frame lasts CRAB_FRAME_MS,
+     * the pace of Claude Code's own crab. `still` is the frame shown for the
+     * animation when the reader asks for reduced motion. The keys are Deepy's,
+     * so the two share one state machine; `idle-wave` and `idle-laptop` (Claude
+     * Code's laptop routine, whole) are the crab's own idle extras.
+     */
+    const CRAB_FRAME_MS = 80
+    const CRAB_SHEETS = {
+      'idle': { frames: 24, box: [24, 20, 24, 16], still: 0 },
+      'idle-look': { frames: 31, box: [24, 20, 24, 16], still: 0 },
+      'idle-wave': { frames: 12, box: [24, 15, 24, 21], still: 0 },
+      'idle-laptop': { frames: 43, box: [14, 13, 34, 23], still: 0 },
+      'thinking': { frames: 32, box: [14, 4, 34, 32], still: 18 },
+      'typing': { frames: 6, box: [15, 22, 28, 14], still: 0 },
+      'music': { frames: 16, box: [22, 1, 30, 35], still: 0 },
+      'conducting': { frames: 24, box: [24, 12, 27, 24], still: 0 },
+      'building': { frames: 6, box: [15, 19, 28, 17], still: 0 },
+      'error': { frames: 24, box: [23, 11, 26, 25], still: 4 },
+      'happy': { frames: 32, box: [18, 6, 34, 30], still: 3 },
+      'notification': { frames: 16, box: [24, 8, 24, 28], still: 0 },
+      'compacting': { frames: 20, box: [21, 20, 30, 16], still: 3 },
+      'sleeping': { frames: 32, box: [23, 3, 29, 33], still: 0 },
+      'waking': { frames: 12, box: [24, 4, 24, 32], still: 11 },
+      'poke-left': { frames: 10, box: [24, 20, 27, 16], still: 0 },
+      'poke-right': { frames: 10, box: [21, 20, 27, 16], still: 0 },
+      'tickle': { frames: 16, box: [23, 18, 26, 18], still: 0 },
+      'drag': { frames: 8, box: [23, 12, 26, 22], still: 0 },
     }
 
     /** Present while the skin takes over the sidebar footer (settings area + account row). */
@@ -323,6 +415,12 @@
      * document and the stylesheet switches on this attribute.
      */
     const WINDOW_BLUR_ATTR = 'data-dsh-window-blur'
+    /**
+     * On the host's scroller around the settings page while the page is
+     * mounted (src/features/settings/settings.js): the stylesheet keeps the
+     * scrollbar's room there, so switching tabs never shifts the layout.
+     */
+    const SETTINGS_SCROLLER_ATTR = 'data-dsh-claude-settings-scroller'
     /**
      * Which home layout is in force. The stylesheet branches on it, and the two
      * layouts differ only in arrangement — the hero's own markup is the host's

@@ -33,7 +33,7 @@ The settings page's Brand mark row switches between the Claude and DeepSeek pale
   </tr>
 </table>
 
-> Light mode pairs an ivory canvas `#FCFCFB` with a pale sidebar `#FBFBF9`; dark mode uses warm black `#141413`. Ember orange `#D97757` is the single action accent across both canvases, and Claude Code's pixel crab stands on the Studio home page's composer.
+> Light mode pairs an ivory canvas `#FCFCFB` with a pale sidebar `#FBFBF9`; dark mode uses warm black `#141413`. Ember orange `#D97757` is the single action accent across both canvases, and Claude Code's pixel crab stands on the composer on the home page and in conversations alike.
 
 ### DeepSeek
 
@@ -66,6 +66,24 @@ The settings page's Brand mark row switches between the Claude and DeepSeek pale
 > </table>
 
 > The workspaces, sessions, usage figures and nickname in the screenshots are sample data.
+
+## Settings
+
+The settings page appears both in the settings dialog (the "Claude Style" tab) and on the plugin page, in five tabs:
+
+| Tab | Settings |
+|---|---|
+| General | Username, Animation, Open popovers on hover, Account-hold easter egg language |
+| Appearance | Brand mark, Colours, Typefaces, Mascot, Where it appears |
+| Composer | Composer restyle, Home layout, Redraw the model picker (with Quick providers under it), Redraw the permission control |
+| Sidebar | Collapse the sidebar settings area, Sidebar search, In progress / Archived view |
+| Conversation | Turn status line, Chat / Trajectory tabs |
+
+Every feature that takes over part of the host's interface has its own switch; turning it off brings the host's original back at once, without a reload.
+
+**Alongside other theme plugins**: with Colours and Typefaces set to Follow the host, the skin no longer rewrites the host's colours and fonts and keeps only its layout and controls; the colours are left to DSH itself, or to another theme plugin enabled at the same time. With [dsh-wallpaper-engine](https://github.com/elysia395/dsh-wallpaper-engine), for example, the wallpaper shows through the sidebar and the conversation, and the skin's own popovers take that plugin's glass, translucent and blurring the picture behind them.
+
+**Mascot**: a pixel companion stands on the composer's top edge and changes its animation with what the agent is doing (thinking, writing and calling tools, several sessions at work, subagents, waiting on you, compacting the context, finished, failed, asleep). Follow the brand shows the pixel crab under Claude and Deepy the whale under DeepSeek; either can be picked for good, or none. Where it appears keeps it to the new-conversation page, or puts it in conversations as well.
 
 ## Fonts
 
@@ -120,6 +138,8 @@ Keep only one theme enabled at a time. dsh ≥ 0.1.7 is required, and a restart 
 ## Acknowledgements
 
 The animation frames of Deepy the pixel whale come from the Deepy whale theme pack drawn by calmly-eating-bugs ([@wp3171216237](https://github.com/wp3171216237)), and ship with the plugin by the author's permission. Many thanks to the author! GIFs of all 20 animations, contributed by the author, are in [showcase/gifs/](showcase/gifs/).
+
+The pixel crab (Clawd) is a character of Anthropic, and all rights in it remain with Anthropic. Its laptop animation is taken from Claude Code; the animations of its other states are drawn by this project after that character. The crab's frames are not covered by the MIT license (see [LICENSE](LICENSE)). This plugin is an unofficial fan work, not affiliated with or endorsed by Anthropic.
 
 ## Related projects
 

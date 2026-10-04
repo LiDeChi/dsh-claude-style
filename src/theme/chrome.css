@@ -1,12 +1,17 @@
 /* --- 2.3 Host Chrome Restyling (Sidebar, Composer, Buttons) --- */
 /* ---------- canvas + hairline structure ---------- */
-body[data-dsh-claude-style] :is([data-pane="sidebar"], [class*="sidebarCol"], .dshDesktopSidebarSurface) {
+/* The canvases are the Claude palette's; under "follow the host" the host
+   paints its own columns (or a theme plugin does), and only the hairline stays. */
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%% :is([data-pane="sidebar"], [class*="sidebarCol"], .dshDesktopSidebarSurface) {
   --dsw-specific-sidebar-fill: var(--dsh-claude-sidebar-canvas) !important;
   background: var(--dsh-claude-sidebar-canvas) !important;
+}
+
+body[data-dsh-claude-style] :is([data-pane="sidebar"], [class*="sidebarCol"], .dshDesktopSidebarSurface) {
   border-right: 1px solid var(--dsw-alias-border-l1) !important;
 }
 
-body[data-dsh-claude-style] :is([data-pane="conversation"], [class*="centerCol"]) {
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%% :is([data-pane="conversation"], [class*="centerCol"]) {
   background: var(--dsh-claude-canvas);
 }
 

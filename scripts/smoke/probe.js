@@ -365,8 +365,8 @@
         return greetSpan.textContent
       }
       r.greeting = { low: await arrive(0) }
-      // The crab belongs to the studio home page alone.
-      r.classicCrab = document.querySelector('.dsh-claude-mascot') !== null
+      // The crab stands on the classic home page's card too, as Deepy does.
+      r.classicCrab = document.querySelector('[data-composer-card] > .dsh-claude-crab') !== null
       document.body.appendChild(document.createElement('i'))
       await sleep(150)
       r.greeting.held = greetSpan.textContent
@@ -646,50 +646,48 @@
           react.states = null
         }
       }
-      // The crab rides the hero card, drawn from the two inlined strips. The
-      // pointer leaving it starts the routine: under half a second in it is
-      // blinking, off the resting frame, and past the routine's 3.44 seconds it
-      // rests again — and no frame of it wakes a pass. The wait is the routine's
-      // own duration plus a quarter, not a race: timer callbacks run late on a
-      // loaded machine, and a margin of a few hundred milliseconds read a crab
-      // still mid-routine as one that never came back to rest.
-      var mascot = document.querySelector('[data-composer-card] > .dsh-claude-mascot')
-      var mascotFrame = function () { return mascot.style.getPropertyValue('--dsh-claude-mascot-frame') }
-      r.mascot = { mounted: mascot !== null }
-      if (mascot !== null) {
-        var mascotBody = mascot.querySelector('.dsh-claude-mascot-body')
-        var mascotRod = mascot.querySelector('.dsh-claude-mascot-rod')
-        r.mascot.frame = mascotFrame()
-        r.mascot.body = getComputedStyle(mascotBody).backgroundImage.indexOf('data:image/png') !== -1
-        r.mascot.rod = getComputedStyle(mascotRod).maskImage.indexOf('data:image/png') !== -1
-        r.mascot.bodyShift = getComputedStyle(mascotBody).backgroundPositionX
+      // The crab rides the hero card, idling, drawn from its inlined sheet and
+      // ink mask. A click on its left half pokes it, and the poke plays out
+      // back to idle on the browser's animation engine, so no frame wakes a
+      // pass. With the animation choice on "reduced" it holds the idle
+      // sheet's still frame; a click still plays the poke.
+      var crab = document.querySelector('[data-composer-card] > .dsh-claude-crab')
+      r.mascot = { mounted: crab !== null }
+      if (crab !== null) {
+        var crabStrip = crab.querySelector('.dsh-claude-crab-strip')
+        var crabHit = crab.querySelector('.dsh-claude-crab-hit')
+        r.mascot.ready = crab.hasAttribute('data-ready')
+        r.mascot.animation = crab.getAttribute('data-animation')
+        r.mascot.body = getComputedStyle(crabStrip).backgroundImage.indexOf('data:image/png') !== -1
+        r.mascot.ink = getComputedStyle(crabStrip, '::after').maskImage.indexOf('data:image/png') !== -1
         // A real press has to reach the crab: nothing on the page may cover it.
-        mascot.scrollIntoView({ block: 'center' })
-        var hitBox = mascot.querySelector('.dsh-claude-mascot-hit').getBoundingClientRect()
-        var topmost = document.elementFromPoint(hitBox.left + hitBox.width / 2, hitBox.top + hitBox.height / 2)
-        r.mascot.reachable = topmost !== null && topmost.classList.contains('dsh-claude-mascot-hit')
+        crab.scrollIntoView({ block: 'center' })
+        var crabBox = crabHit.getBoundingClientRect()
+        var topmost = document.elementFromPoint(crabBox.left + crabBox.width / 2, crabBox.top + crabBox.height / 2)
+        r.mascot.reachable = topmost === crabHit
+        var crabPress = { pointerId: 1, pointerType: 'mouse', isPrimary: true, button: 0, clientX: crabBox.left + 6, clientY: crabBox.top + crabBox.height / 2, bubbles: true }
+        var pokeCrab = function () {
+          crabHit.dispatchEvent(new PointerEvent('pointerdown', Object.assign({ buttons: 1 }, crabPress)))
+          crabHit.dispatchEvent(new PointerEvent('pointerup', Object.assign({ buttons: 0 }, crabPress)))
+        }
         var passesBefore = window.__passes
-        mascot.querySelector('.dsh-claude-mascot-hit').dispatchEvent(new PointerEvent('pointerleave'))
-        await sleep(450)
-        r.mascot.early = mascotFrame()
-        r.mascot.earlyShift = getComputedStyle(mascotBody).backgroundPositionX
-        await sleep(4300)
-        r.mascot.settled = mascotFrame()
+        pokeCrab()
+        await sleep(150)
+        r.mascot.poked = crab.getAttribute('data-animation')
+        await sleep(1300)
+        r.mascot.afterPoke = crab.getAttribute('data-animation')
         r.mascot.passesDuring = window.__passes - passesBefore
-        // With the animation choice set to "reduced" the pointer passing by
-        // leaves it still, and a click still plays it. The choice is pushed
-        // through the host form, which is what the settings row does.
+        // The choice is pushed through the host form, which is what the
+        // settings row does.
         window.__pushForm({ motion: 'reduced' })
         await sleep(150)
         r.mascot.reducedAttr = document.body.getAttribute('data-dsh-claude-motion')
-        mascot.querySelector('.dsh-claude-mascot-hit').dispatchEvent(new PointerEvent('pointerleave'))
-        await sleep(450)
-        r.mascot.reducedLeave = mascotFrame()
-        mascot.querySelector('.dsh-claude-mascot-hit').dispatchEvent(new MouseEvent('click', { bubbles: true }))
-        await sleep(450)
-        r.mascot.clicked = mascotFrame()
-        await sleep(4300)
-        r.mascot.clickSettled = mascotFrame()
+        r.mascot.stillFrame = crabStrip.style.transform
+        r.mascot.stillAnimations = crabStrip.getAnimations().length
+        pokeCrab()
+        await sleep(150)
+        r.mascot.reducedClick = crab.getAttribute('data-animation')
+        await sleep(1300)
         window.__pushForm({ motion: 'full' })
       }
       // The cold start screen: no session yet, so the host renders no dock
@@ -739,7 +737,7 @@
       heroRoot.remove()
       await sleep(200)
       r.homeHero.offHero = document.body.hasAttribute('data-dsh-claude-home-hero')
-      r.mascot.afterHero = document.querySelector('.dsh-claude-mascot') !== null
+      r.mascot.afterHero = document.querySelector('.dsh-claude-crab') !== null
       // The stylesheet alone decides where a panel may draw: under the hero
       // stack's dock it shows, and the moment the host drops the stack's hero
       // class (the first message sent) it is gone, before any pass runs.
@@ -830,7 +828,8 @@
     // the failed turn has its error and its footer, and a queued message
     // follows the running turn. Each status line has to show below its turn's
     // work, above what follows.
-    if (window.SMOKE_CASE === 'turn-status') {
+    var switchCase = window.SMOKE_CASE === 'switches' || window.SMOKE_CASE === 'switches-off'
+    if (window.SMOKE_CASE === 'turn-status' || switchCase) {
       var chatSession = document.createElement('div')
       chatSession.setAttribute('data-conversation-session', 'smoke-session')
       chatSession.innerHTML = '<div data-chat-flow="" style="display:flex;flex-direction:column">' +
@@ -865,25 +864,180 @@
         live: lineOf(statusButtons[1]),
       }
     }
+    // The feature switches: each switched feature's own marks on the page,
+    // read after a preference write and a pass. Off has to leave none of a
+    // feature's marks (its teardown handed the surface back); on brings them
+    // back, live, without touching the others.
+    if (switchCase) {
+      // The host surfaces the three sidebar and header features take over:
+      // the brand row (search), the workspace section with its tree
+      // (workspace view) and the conversation's view-tab strip.
+      var switchSidebar = document.createElement('div')
+      switchSidebar.setAttribute('data-slot', 'sidebar')
+      switchSidebar.innerHTML = '<div class="_n_root_1"><div class="_n_logoRow_1" data-window-drag="true">' +
+        '<button type="button" class="_n_brand_1 _n_wide_1" aria-label="New session">brand</button>' +
+        '<button type="button" class="_n_iconButton_1 _n_toggle_1" aria-label="Collapse sidebar">toggle</button></div>' +
+        '<div class="_w_section_1"><div class="_w_sectionHeader_1"><span class="_w_sectionLabel_1">Workspaces</span></div>' +
+        '<div role="tree" class="_w_list_1"><div data-row-key="w1" class="_w_projectRow_1">project</div></div></div></div>'
+      document.body.appendChild(switchSidebar)
+      var switchHeader = document.createElement('div')
+      switchHeader.className = '_c_header_1'
+      switchHeader.innerHTML = '<div class="_c_tabs_1" role="tablist" data-conversation-tabs="">' +
+        '<button type="button" role="tab" aria-selected="true" class="_c_tab_1 _c_tabActive_1">Chat</button>' +
+        '<button type="button" role="tab" aria-selected="false" class="_c_tab_1">Trajectory</button></div>'
+      document.body.appendChild(switchHeader)
+      var switchMarks = function () {
+        return {
+          permissionsControl: document.querySelectorAll('.dsh-claude-perm-container').length + (document.body.hasAttribute('data-dsh-claude-permissions') ? 1 : 0),
+          workspaceView: document.querySelectorAll('.dsh-claude-ws-segments').length,
+          sidebarSearch: document.querySelectorAll('[data-dsh-claude-search-row], .dsh-claude-search-trigger').length,
+          turnStatus: document.querySelectorAll('[data-dsh-claude-turn-status], [style*="--dsh-claude-turn-order"]').length,
+          viewTabs: document.querySelectorAll('[data-dsh-view-tabs]').length,
+        }
+      }
+      var settleSwitch = async function (patch) {
+        window.__pushForm(patch)
+        document.body.appendChild(document.createElement('i'))
+        await sleep(300)
+        return switchMarks()
+      }
+      var switchKeys = ['permissionsControl', 'workspaceView', 'sidebarSearch', 'turnStatus', 'viewTabs']
+      var allSwitches = function (value) {
+        var patch = {}
+        for (var ki = 0; ki < switchKeys.length; ki++) patch[switchKeys[ki]] = value
+        return patch
+      }
+      await sleep(300)
+      r.switches = { start: switchMarks(), steps: [] }
+      if (window.SMOKE_CASE === 'switches') {
+        for (var si = 0; si < switchKeys.length; si++) {
+          var offPatch = {}
+          offPatch[switchKeys[si]] = false
+          var off = await settleSwitch(offPatch)
+          var onPatch = {}
+          onPatch[switchKeys[si]] = true
+          var on = await settleSwitch(onPatch)
+          r.switches.steps.push({ key: switchKeys[si], off: off, on: on })
+        }
+        r.switches.allOff = await settleSwitch(allSwitches(false))
+      }
+      r.switches.allOn = await settleSwitch(allSwitches(true))
+    }
+    // Following the host's colours and type: with the host's palette in the
+    // page, the skin writes none of the host's tokens, paints none of the
+    // host's frame, and its own surfaces read the host's tokens; a wallpaper
+    // plugin's cleared canvas and glass then reach both. Back on Claude the
+    // skin's own palette returns.
+    if (window.SMOKE_CASE === 'host-palette') {
+      var hostProbe = function (html) {
+        var holder = document.createElement('div')
+        holder.innerHTML = html
+        document.body.appendChild(holder.firstChild)
+        return document.body.lastChild
+      }
+      var hostNodes = {
+        sidebar: hostProbe('<div data-pane="sidebar">s</div>'),
+        conversation: hostProbe('<div data-pane="conversation">c</div>'),
+        popover: hostProbe('<div class="dsh-claude-popover-card" data-open="true">p</div>'),
+        search: hostProbe('<div class="dsh-claude-search-dialog">q</div>'),
+        group: hostProbe('<span class="dsh-claude-model-group">g</span>'),
+        heading: hostProbe('<h1>h</h1>'),
+        code: hostProbe('<pre><code>c</code></pre>'),
+      }
+      var readHost = async function (patch, wallpaper) {
+        if (patch !== null) window.__pushForm(patch)
+        if (wallpaper) document.body.setAttribute('data-we-wallpaper', '')
+        else document.body.removeAttribute('data-we-wallpaper')
+        await sleep(120)
+        var bodyStyle = getComputedStyle(document.body)
+        return {
+          base: bodyStyle.getPropertyValue('--dsw-alias-bg-base').trim(),
+          family: bodyStyle.getPropertyValue('--dsw-font-family').trim(),
+          body: bodyStyle.backgroundColor,
+          html: getComputedStyle(document.documentElement).backgroundColor,
+          sidebar: getComputedStyle(hostNodes.sidebar).backgroundColor,
+          conversation: getComputedStyle(hostNodes.conversation).backgroundColor,
+          popover: getComputedStyle(hostNodes.popover).backgroundColor,
+          popoverBlur: getComputedStyle(hostNodes.popover).backdropFilter,
+          // The account drawer the footer feature built (it sweeps any other copy).
+          account: getComputedStyle(document.querySelector('.dsh-claude-account-popover')).backgroundColor,
+          search: getComputedStyle(hostNodes.search).backgroundColor,
+          group: getComputedStyle(hostNodes.group).backgroundColor,
+          groupInk: getComputedStyle(hostNodes.group).color,
+          heading: getComputedStyle(hostNodes.heading).fontFamily,
+          code: getComputedStyle(hostNodes.code.firstChild).fontFamily,
+        }
+      }
+      await sleep(300)
+      r.hostPalette = {
+        host: await readHost({ palette: 'host', typeface: 'host' }, false),
+        wallpaper: await readHost(null, true),
+        claude: await readHost({ palette: 'claude', typeface: 'claude' }, false),
+      }
+      for (var hostKey in hostNodes) hostNodes[hostKey].remove()
+    }
+    // The settings page, rendered through the stand-in React into a plain tree:
+    // the tab strip, which rows each tab carries, and the sub-rows that grey
+    // out while their parent is off. A tab is opened by standing the tab state
+    // in for a click (the stand-in's `states`).
+    if (window.SMOKE_CASE === 'settings') {
+      var Section = (window.__slotComponents || {})['claude-style']
+      var walk = function (node, visit) {
+        if (node === null || node === undefined || typeof node !== 'object') return
+        if (Array.isArray(node)) { node.forEach(function (child) { walk(child, visit) }); return }
+        visit(node)
+        walk(node.props && node.props.children, visit)
+      }
+      var renderTab = function (tabId) {
+        var react = window.__react
+        react.rendering = true
+        react.states = tabId === 'general' ? null : { general: tabId }
+        var tree = Section({})
+        react.rendering = false
+        react.states = null
+        var out = { tabs: [], selected: null, rows: [], disabled: [] }
+        walk(tree, function (node) {
+          var props = node.props || {}
+          if (props.role === 'tab') {
+            out.tabs.push(props.key)
+            if (props['aria-selected'] === 'true') out.selected = props.key
+          }
+          if (typeof props.className === 'string' && /(^| )dsh-claude-settings-row( |$)/.test(props.className)) {
+            out.rows.push(props.key)
+            if (props['data-disabled'] === '') out.disabled.push(props.key)
+          }
+        })
+        return out
+      }
+      r.settings = { registered: typeof Section === 'function', pages: {} }
+      if (r.settings.registered) {
+        var tabIds = ['general', 'appearance', 'composer', 'sidebar', 'conversation']
+        for (var ti = 0; ti < tabIds.length; ti++) r.settings.pages[tabIds[ti]] = renderTab(tabIds[ti])
+        window.__pushForm({ modelPicker: false, mascot: 'off' })
+        r.settings.parentsOff = { appearance: renderTab('appearance'), composer: renderTab('composer') }
+        window.__pushForm({ modelPicker: true, mascot: 'brand' })
+      }
+    }
     // The DeepSeek brand, stored under its old name ("off"): the whale takes
     // the crab's place and the canvas turns sky white. On the home page it
     // stands on the card; on the conversation page it follows the session's
     // work from the top of the input area, and stands on the panel that takes
     // the card's place while the reader is asked for something.
-    if (window.SMOKE_CASE === 'deepy') {
+    if (window.SMOKE_CASE === 'deepy' || window.SMOKE_CASE === 'crab-states') {
+      var mascotName = window.SMOKE_CASE === 'deepy' ? 'deepy' : 'crab'
       var driver = window.__deepy
       var whaleNow = function () {
-        var node = document.querySelector('.dsh-claude-deepy')
+        var node = document.querySelector('.dsh-claude-' + mascotName)
         if (node === null) return null
         // The frame is the strip's translation: read the computed matrix (a
         // running WAAPI animation has no inline style) as "Xpx Ypx".
-        var strip = node.querySelector('.dsh-claude-deepy-strip')
+        var strip = node.querySelector('.dsh-claude-' + mascotName + '-strip')
         var matrix = getComputedStyle(strip).transform
         var offsets = matrix === 'none' ? null : matrix.match(/matrix\([^,]+,[^,]+,[^,]+,[^,]+,\s*(-?[\d.]+),\s*(-?[\d.]+)\)/)
         return {
           animation: node.getAttribute('data-animation'),
           ready: node.hasAttribute('data-ready'),
-          place: node.parentElement === null ? null : node.parentElement.getAttribute('data-dsh-claude-deepy-anchor'),
+          place: node.parentElement === null ? null : node.parentElement.getAttribute('data-dsh-claude-' + mascotName + '-anchor'),
           frame: offsets === null ? '0px 0px' : offsets[1] + 'px ' + offsets[2] + 'px',
           sheet: getComputedStyle(strip).backgroundImage,
         }
@@ -894,7 +1048,7 @@
         document.body.removeChild(node)
       }
       var bodyStyle = getComputedStyle(document.body)
-      r.deepy = {
+      r.states = {
         brand: document.body.getAttribute('data-dsh-claude-brand'),
         canvas: bodyStyle.backgroundColor,
         accent: bodyStyle.getPropertyValue('--dsw-alias-brand-primary').trim(),
@@ -903,7 +1057,7 @@
       // The dark palette, read with the host's dark marker set for a moment.
       document.body.setAttribute('data-ds-dark-theme', '')
       var darkStyle = getComputedStyle(document.body)
-      r.deepy.dark = {
+      r.states.dark = {
         canvas: darkStyle.backgroundColor,
         accent: darkStyle.getPropertyValue('--dsw-alias-brand-primary').trim(),
         raised: darkStyle.getPropertyValue('--dsh-claude-raised').trim(),
@@ -913,20 +1067,20 @@
       deepyHero.setAttribute('data-phase', 'hero')
       document.body.appendChild(deepyHero)
       await sleep(500)
-      r.deepy.home = whaleNow()
-      r.deepy.crab = document.querySelector('.dsh-claude-mascot') !== null
+      r.states.home = whaleNow()
+      r.states.crab = document.querySelector('.dsh-claude-crab') !== null
       // Frames change on the whale's own node, and no frame wakes a pass.
       var deepyPasses = window.__passes
       await sleep(600)
-      r.deepy.idle = { before: r.deepy.home && r.deepy.home.frame, after: whaleNow().frame, passes: window.__passes - deepyPasses }
+      r.states.idle = { before: r.states.home && r.states.home.frame, after: whaleNow().frame, passes: window.__passes - deepyPasses }
       // A click on its face pokes it.
-      var hit = document.querySelector('.dsh-claude-deepy-hit')
+      var hit = document.querySelector('.dsh-claude-' + mascotName + '-hit')
       var hitBox = hit.getBoundingClientRect()
       var press = { pointerId: 1, pointerType: 'mouse', isPrimary: true, button: 0, clientX: hitBox.left + 6, clientY: hitBox.top + hitBox.height / 2, bubbles: true }
       hit.dispatchEvent(new PointerEvent('pointerdown', Object.assign({ buttons: 1 }, press)))
       hit.dispatchEvent(new PointerEvent('pointerup', Object.assign({ buttons: 0 }, press)))
       await sleep(250)
-      r.deepy.poke = whaleNow()
+      r.states.poke = whaleNow()
       // The poke plays out (2s) before the page moves on.
       await sleep(1900)
       deepyHero.remove()
@@ -946,19 +1100,19 @@
       driver.setTurn('reasoning')
       wakeDeepyPass()
       await sleep(400)
-      r.deepy.thinking = whaleNow()
-      r.deepy.chatFollowed = driver.chatFollowed()
+      r.states.thinking = whaleNow()
+      r.states.chatFollowed = driver.chatFollowed()
       driver.setTurn('text')
       wakeDeepyPass()
       await sleep(250)
-      r.deepy.typing = whaleNow()
+      r.states.typing = whaleNow()
       // Two more sessions at work: the hard hat, once the typing whale has
       // held the stage for its second.
       driver.addSessions(['smoke-two', 'smoke-three'])
       driver.setStatus('smoke-two', { running: true })
       driver.setStatus('smoke-three', { running: true })
       await sleep(1300)
-      r.deepy.building = whaleNow()
+      r.states.building = whaleNow()
       // An approval: the host hides the composer and mounts its panel after it.
       var fallback = deepyConversation.querySelector('[data-chain-overlay-fallback]')
       var panel = document.createElement('div')
@@ -968,7 +1122,7 @@
       fallback.parentElement.appendChild(panel)
       driver.setStatus('smoke-deepy', { running: true, pendingInteraction: { kind: 'approval', key: 'smoke' } })
       await sleep(400)
-      r.deepy.notification = whaleNow()
+      r.states.notification = whaleNow()
       // Answered and finished; a compaction starts, then ends.
       panel.remove()
       fallback.style.display = 'contents'
@@ -980,37 +1134,37 @@
       wakeDeepyPass()
       // Each state holds the stage for a second against a lesser one.
       await sleep(1100)
-      r.deepy.compacting = whaleNow()
+      r.states.compacting = whaleNow()
       await sleep(100)
       driver.emit({ type: 'compaction/end', seq: 2, time: Date.now(), data: { compactionId: 'c1', turn: null } })
       // The celebration's sheet converts on its first use (one of the biggest
       // sheets); the switch holds the current animation until the vector is
       // ready, so wait it out instead of landing on a fixed delay.
       for (var ci = 0; ci < 60 && (whaleNow() || {}).animation !== 'happy'; ci++) await sleep(50)
-      r.deepy.celebrating = whaleNow()
+      r.states.celebrating = whaleNow()
       driver.emit({ type: 'tool/result', seq: 3, time: Date.now(), data: { turn: 2, step: 1, message: { isError: true } } })
       await sleep(400)
-      r.deepy.failed = whaleNow()
+      r.states.failed = whaleNow()
       // Reduced motion: the settings page's animation choice, pushed through the
       // host form the way the settings row writes it. The choice resolves onto
       // <body> (src/core/prefs.js) and the whale holds the state's still frame.
       window.__pushForm({ motion: 'reduced' })
       await sleep(150)
-      r.deepy.stillAttr = document.body.getAttribute('data-dsh-claude-motion')
+      r.states.stillAttr = document.body.getAttribute('data-dsh-claude-motion')
       var stillBefore = whaleNow().frame
       await sleep(400)
-      r.deepy.still = { before: stillBefore, after: whaleNow().frame }
+      r.states.still = { before: stillBefore, after: whaleNow().frame }
       window.__pushForm({ motion: 'full' })
       await sleep(150)
-      r.deepy.alwaysAttr = document.body.getAttribute('data-dsh-claude-motion')
+      r.states.alwaysAttr = document.body.getAttribute('data-dsh-claude-motion')
       // A compaction starts; the connection drops and the feed comes back
       // whole with the compaction's end in it. The shake above holds 4.8s.
       driver.emit({ type: 'compaction/start', seq: 4, time: Date.now(), data: { compactionId: 'c2', turn: null } })
       await sleep(4200)
-      r.deepy.resendBefore = whaleNow()
+      r.states.resendBefore = whaleNow()
       driver.resend([{ type: 'compaction/end', seq: 5, time: Date.now(), data: { compactionId: 'c2', turn: null } }])
       await sleep(1200)
-      r.deepy.resent = whaleNow()
+      r.states.resent = whaleNow()
       // The quiet minute to sleep, with the page's clock moved ahead: a minute
       // of work is no quiet spell, a minute idle is, and a pointer move wakes it.
       var deepyClock = Date.now
@@ -1024,23 +1178,48 @@
       driver.setTurn(null)
       driver.setStatus('smoke-deepy', { running: false })
       await sleep(1200)
-      r.deepy.afterWork = whaleNow()
+      r.states.afterWork = whaleNow()
       deepyAhead += 61000
       // The probe's clock is fake while setTimeout runs on the real one: wake a
       // pass to stand in for the sleep deadline the whale's timer would fire.
       wakeDeepyPass()
       await sleep(400)
-      r.deepy.asleep = whaleNow()
+      r.states.asleep = whaleNow()
       // Asleep for its second on stage first, as any state holds it.
       await sleep(700)
       document.dispatchEvent(new PointerEvent('pointermove', { bubbles: true }))
       await sleep(400)
       for (var wi = 0; wi < 60 && (whaleNow() || {}).animation !== 'waking'; wi++) await sleep(50)
-      r.deepy.woken = whaleNow()
+      r.states.woken = whaleNow()
       Date.now = deepyClock
       deepyConversation.remove()
       await sleep(200)
-      r.deepy.gone = whaleNow() === null && document.querySelectorAll('[data-dsh-claude-deepy-anchor]').length === 0
+      r.states.gone = whaleNow() === null && document.querySelectorAll('[data-dsh-claude-' + mascotName + '-anchor]').length === 0
+      if (mascotName === 'crab') {
+        // Where it appears: kept to the home page, the crab stays off the
+        // conversation; with the mascot off it leaves the home card as well.
+        document.body.appendChild(deepyConversation)
+        await sleep(300)
+        r.states.backInConversation = whaleNow() !== null
+        window.__pushForm({ mascotScope: 'home' })
+        await sleep(300)
+        r.states.homeOnly = whaleNow()
+        deepyConversation.remove()
+        var scopeHero = document.createElement('div')
+        scopeHero.setAttribute('data-phase', 'hero')
+        document.body.appendChild(scopeHero)
+        await sleep(300)
+        r.states.homeOnlyHero = whaleNow()
+        window.__pushForm({ mascot: 'off' })
+        await sleep(300)
+        r.states.off = whaleNow()
+        window.__pushForm({ mascot: 'deepy' })
+        await sleep(300)
+        r.states.deepyPicked = document.querySelector('.dsh-claude-deepy') !== null && document.querySelector('.dsh-claude-crab') === null
+        window.__pushForm({ mascot: 'crab', mascotScope: 'all' })
+        scopeHero.remove()
+        await sleep(200)
+      }
     }
     // The host's own account row, when the host has one: the skin marks it and
     // repaints it as a Claude row, so the teardown has to hand it back exactly as
@@ -1090,7 +1269,7 @@
       await sleep(200)
       r.passesAfterTeardown = window.__passes - before
       r.leftNodes = document.querySelectorAll('[class*="dsh-claude-"]').length
-      r.leftMarkers = document.querySelectorAll('[data-dsh-claude-footer-entry], [data-dsh-claude-footer-hidden], [data-dsh-claude-footer-overlay], [data-dsh-claude-model-host], [data-dsh-claude-account-host-row], [data-dsh-claude-context-stats], [data-dsh-claude-motion], [data-dsh-claude-turn-state], [data-dsh-claude-turn-status], [style*="--dsh-claude-turn-order"], [data-dsh-claude-deepy-anchor]').length
+      r.leftMarkers = document.querySelectorAll('[data-dsh-claude-footer-entry], [data-dsh-claude-footer-hidden], [data-dsh-claude-footer-overlay], [data-dsh-claude-model-host], [data-dsh-claude-account-host-row], [data-dsh-claude-context-stats], [data-dsh-claude-motion], [data-dsh-claude-turn-state], [data-dsh-claude-turn-status], [style*="--dsh-claude-turn-order"], [data-dsh-claude-deepy-anchor], [data-dsh-claude-crab-anchor]').length
       r.leftAttrs = Array.prototype.filter.call(document.body.attributes, function (a) { return /^data-dsh-(claude|window)/.test(a.name) }).map(function (a) { return a.name })
       r.leftStylesheet = !!document.getElementById('dsh-claude-style-style')
       if (viewStrip) r.viewPill.left = viewStrip.hasAttribute('data-dsh-claude-pill') || viewStrip.hasAttribute('data-dsh-view-tabs') || viewStrip.style.length > 0

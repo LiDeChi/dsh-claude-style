@@ -65,11 +65,56 @@ Two fills are palette-specific rather than carried over from the dark base:
 in light) and `--dsw-alias-button-elevated-fill` (a surface above the canvas in
 light, a raised gray in dark).
 
+## Two palettes · 两套配色归属
+
+The Colours and Typefaces rows each choose who paints: **Claude** (the default)
+or **Follow the host**. Every rule that writes a host token carries the Claude
+gate in its selector — `%%PALETTE_CLAUDE%%` for colours, `%%TYPEFACE_CLAUDE%%`
+for `--dsw-font-*` — and so does every rule that paints the skin's canvas onto
+the host's frame (`<html>`, `<body>`, `#root`, the sidebar and conversation
+columns); the build refuses an ungated one. Under "follow the host" those rules
+drop out: the host's own tokens stand, or another theme plugin's, such as a
+wallpaper plugin that clears the canvas and turns the overlays to glass.
+
+The skin's own surfaces read only its private tokens and host tokens. Under the
+host palette each private token is an alias of a host token, so those surfaces
+follow whoever paints the host's. A new private colour token is written into
+both the Claude blocks and the host block (the build checks the host block
+covers every one). Cards take the host's overlay layer rather than its canvas:
+a plugin that clears the canvas still gives its overlays a readable fill, and the
+shared popover card blurs what lies behind it (`blur(16px) saturate(1.4)`).
+
+| Private token | Host alias | Use |
+|---|---|---|
+| `--dsh-claude-canvas` | `--dsw-alias-bg-base` | the page canvas, the search box |
+| `--dsh-claude-sidebar-canvas` | `--dsw-specific-sidebar-fill` | the sidebar |
+| `--dsh-claude-raised` | `--dsw-alias-bg-overlay` | popovers, menus (dark) |
+| `--dsh-claude-card` | `--dsw-alias-bg-overlay` | cards on the canvas in light and raised in dark: the account popover, the search palette |
+| `--dsh-claude-chip` | `--dsw-specific-selector` | segmented control and switch at rest |
+| `--dsh-claude-hover-bg` | `--dsw-alias-interactive-bg-hover` | hover wash |
+| `--dsh-claude-inline-code-bg` / `-fg` | `--dsw-alias-markdown-inline-code` / `--dsw-alias-label-primary` | inline code |
+| `--dsh-claude-link` / `-underline` / `-hover` | `--dsw-alias-link` (underline at 60%) | markdown links |
+| `--dsh-claude-ink-strong` / `--dsh-claude-session-ink` | `--dsw-alias-label-primary` / `--dsw-alias-label-secondary` | active row ink, session title at rest |
+| `--dsh-claude-table-head` | `--dsw-alias-bg-layer-2` | table header row |
+| `--dsh-claude-scrollbar` / `-hover` | `--dsw-alias-border-l2` / `--dsw-alias-label-caption` | scrollbar thumb |
+| `--dsh-claude-inverse-fill` / `-ink` | `--dsw-alias-interactive-bg-hover` / `--dsw-alias-label-primary` | the model picker's group label (an inverted chip under Claude, a hover-plate chip under the host) |
+| `--dsh-claude-logo-ink` | `--dsw-alias-label-primary` | sidebar brand art |
+
+Under the host typeface the skin's own faces fall back to the host's:
+`--dsh-claude-font-serif`, `-prose` and `-brand` to `--dsw-font-family` (the host
+carries no serif), `--dsh-claude-font-code` to `--ds-font-family-code`.
+
+Two colours stay whoever paints: the reasoning slider's violet top rung
+(`--dsh-claude-apex*`) and the account-hold page, which reproduces a Claude
+screen. Translucent neutral hover tints and the usage panel's data colours stay
+literal; they read on any canvas. Every other colour that paints a surface, a
+text, a border or an accent reads a token.
+
 ## Typography
 
-- **Serif display** — headings / editorial statements (`--dsw-font-serif`).
+- **Serif display** — headings / editorial statements (`--dsh-claude-font-serif`).
 - **Sans UI** — chrome, body (`--dsw-font-family`).
-- **Mono** — code, technical labels (`--dsw-font-code`).
+- **Mono** — code, technical labels (`--dsh-claude-font-code`).
 
 
 ## Shapes
@@ -466,27 +511,42 @@ placeholder, a zero day draws the grid's own base tone.
 
 ## The composer crab · 输入卡片上的螃蟹
 
-On the studio layout's new-conversation page, Claude Code's pixel crab stands on
-the composer card's top edge. Its frames are Claude Code's own animation, cut to
-34×23 cells and drawn at 2px a cell, crisp (68×46px); the resting crab is 48×32px
-with its feet on the card's edge and the right arm 8px inside the single-line
-card's right edge, so the feet stand where its 18px corner starts to round. The
-classic layout keeps its centred hero without the crab. The shell is the clay
-accent `#d97757` in both themes, the side-on back is `#b9603f`, the eyes
-`#141413`, and the rod takes the tertiary label ink. When the crab is clicked,
-when the pointer leaves it, and on its own every 25–45 seconds while the page is
-in view, it plays Claude Code's fishing routine, 43 frames of 80ms (3.44s): a
-blink, the rod raised overhead and cast down past the card's edge, a hop into a
-side-on stance, a spell of fishing, and the rod reeled in as it turns back to
-face front. With the animation choice resolved to "reduced" (the settings page's
-Animation row, or the system's own setting under "follow the system"), only a
-click plays it: the pointer passing by and the idle timer leave it still. Only
-the crab takes the pointer; the room the rod swings through does not.
+Claude Code's pixel crab is the mascot under the Claude brand (or when picked in
+the Mascot row). It stands where Deepy does — the composer card's top edge on
+both home layouts, the input area or the panel that replaces its card in a
+conversation (unless Where it appears keeps it to the home page) — and follows
+the same states with the same keys. It is drawn on a 52×36 grid of cells at 2px
+a cell, crisp (`pixelated`, 104×72px): feet on the bottom row, on the edge of
+what it stands on; the right claw four cells in from the grid's right edge, so
+it stands 8px inside the card's right edge, where the 18px corner starts to
+round, and the four spare cells take a lean, a note or a sparkle. The resting
+crab — shell 16×12 cells, claws 4×4, eyes 2×2, four legs 2×4 — is 48×32px
+(columns 24–47, rows 20–35) and only it takes the pointer. The shell is the clay
+accent `#d97757` in both themes, the side-on back `#b9603f`, the eyes `#141413`;
+the props (the laptop, the thought bubble, letters, notes, the hard hat) are an
+ink mask filled with the tertiary label ink. Every frame lasts 80ms, Claude
+Code's pace. Its laptop frames are Claude Code's own routine; the rest are drawn
+by `scripts/draw-crab.py` after the same character. With the animation choice
+resolved to "reduced" each state holds its still frame; a click or a pull still
+plays its reaction.
+
+| State | Animation | Still frame |
+|---|---|---|
+| idle, every 20–40 s a look around, a claw wave or Claude Code's whole laptop routine | `idle`, `idle-look`, `idle-wave`, `idle-laptop` | 0 |
+| the model reasons or has not answered: eyes up to a thought bubble | `thinking` | 18 |
+| the model writes or tools run: 1 / 2 / 3+ sessions at work (typing / headphones / typing in a hard hat) | `typing` / `music` / `building` | 0 / 0 / 0 |
+| subagents running: 1 / 2+ (headphones / conducting) | `music` / `conducting` | 0 / 0 |
+| a compaction runs: squashed | `compacting` | 3 |
+| an approval, a question or a plan review waits: an exclamation mark | `notification` | 0 |
+| a tool call or a turn failed (4.8 s): crossed eyes, a shake | `error` | 4 |
+| a turn or a compaction finished (5.2 s): hops, claws up | `happy` | 3 |
+| a quiet minute / the next pointer move or key | `sleeping` / `waking` | 0 / 11 |
+| a click on the left / right half, four quick clicks, a pull | `poke-left` / `poke-right`, `tickle`, `drag` | 0 |
 
 ## Deepy · 小鲸鱼
 
-Under the DeepSeek brand the crab gives way to Deepy, the pixel whale of the
-Deepy theme pack: a 52×52 grid of logical pixels drawn at 2px a pixel (a 104px
+Under the DeepSeek brand (or when picked in the Mascot row) the mascot is
+Deepy, the pixel whale of the Deepy theme pack: a 52×52 grid of logical pixels drawn at 2px a pixel (a 104px
 square), its ground line — row 48.5, the middle of its shadow — on the top edge
 of what it stands on. Every sheet's crop box reaches 3px past that ground line,
 and the whale paints over the host's cards, so its box is lifted by those 3px:

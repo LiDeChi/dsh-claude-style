@@ -1,7 +1,7 @@
     /**
-     * What Deepy reads off the host (src/features/mascot/whale.js): the state
-     * a session — or, on the home page, the whole workspace — is in right now,
-     * and the moments that end a piece of work.
+     * What the mascot reads off the host (src/features/mascot/mascot-player.js):
+     * the state a session — or, on the home page, the whole workspace — is in
+     * right now, and the moments that end a piece of work.
      *
      * The state is read on demand from the host's own client state: the
      * session status (`uiSession.sessionStatus`: whether a session runs, and
@@ -20,8 +20,9 @@
      * that finishes out of view (the host's `completionUnread`, the sidebar's
      * green dot) is the moment.
      *
-     * The names follow the Clawd on Desk theme Deepy was drawn for: a state
-     * picks an animation, and its priority decides which of two states shows.
+     * The names follow the Clawd on Desk themes both mascots are drawn to: a
+     * state picks an animation, and its priority decides which of two states
+     * shows.
      *
      * @param ctx - client context.
      * @param onMoment - `onMoment(moment)` with 'error' or 'attention'.
@@ -30,7 +31,7 @@
      *     compaction started or ended.
      * @returns `{ follow, read, dispose }`.
      */
-    function createMascotWhaleSignals(ctx, onMoment, onChange) {
+    function createMascotSignals(ctx, onMoment, onChange) {
       const IDLE = { state: 'idle', animation: 'idle', priority: 1 }
       const THINKING = { state: 'thinking', animation: 'thinking', priority: 2 }
       const NOTIFICATION = { state: 'notification', animation: 'notification', priority: 7 }
@@ -153,7 +154,7 @@
           if (kind === 'completed' || kind === 'max-tokens') onMoment('attention')
           else if (kind === 'error' || kind === 'blocked') onMoment('error')
         } else if (event.type === 'tool/result') {
-          // A call cut short by a stop is not a failure the whale reacts to.
+          // A call cut short by a stop is not a failure the mascot reacts to.
           if (data.message.isError === true && data.error?.name !== 'AbortError') onMoment('error')
         } else if (event.type === 'compaction/start') {
           compactions.add(data.compactionId)
