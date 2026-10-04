@@ -18,8 +18,8 @@
     /** Exact entry: `provider/model`, bare id, folded id, then the alias table. */
     function exactModelCopy(groupId, modelId) {
       if (modelCopy === null) return null
-      const gid = String(groupId === void 0 || groupId === null ? '' : groupId).toLowerCase()
-      const mid = String(modelId === void 0 || modelId === null ? '' : modelId)
+      const gid = textOf(groupId).toLowerCase()
+      const mid = textOf(modelId)
       const midLower = mid.toLowerCase()
       const byProvider = modelCopy.exact[`${groupId}/${mid}`] || modelCopy.exact[`${gid}/${midLower}`]
       if (byProvider) return byProvider
@@ -43,8 +43,8 @@
      */
     function familyModelCopy(groupId, modelId) {
       if (modelCopy === null) return null
-      const id = String(modelId === void 0 || modelId === null ? '' : modelId).toLowerCase()
-      const haystacks = [id, `${String(groupId === void 0 || groupId === null ? '' : groupId).toLowerCase()}/${id}`]
+      const id = textOf(modelId).toLowerCase()
+      const haystacks = [id, `${textOf(groupId).toLowerCase()}/${id}`]
       for (let h = 0; h < haystacks.length; h++) {
         for (let i = 0; i < modelCopy.families.length; i++) {
           const rule = modelCopy.families[i]
@@ -59,7 +59,7 @@
     /** Last-resort tier rule, read out of the id itself. */
     function tierModelCopy(modelId) {
       if (modelCopy === null) return null
-      const id = String(modelId === void 0 || modelId === null ? '' : modelId).toLowerCase()
+      const id = textOf(modelId).toLowerCase()
       for (let i = 0; i < modelCopy.tiers.length; i++) {
         if (modelCopy.tiers[i].re.test(id)) return modelCopy.tiers[i].text
       }

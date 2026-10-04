@@ -1,4 +1,21 @@
     /**
+     * A two-digit number for a clock or a date part: "09", "23". Every caller
+     * hands it a value in [0, 60); the padding is what keeps a time string the
+     * same width at every hour.
+     */
+    function pad2(value) {
+      return value < 10 ? `0${value}` : String(value)
+    }
+
+    /**
+     * One value as text: a missing id or name reads as empty, so a lookup key
+     * built from an absent provider, model or session still forms a string.
+     */
+    function textOf(value) {
+      return value === void 0 || value === null ? '' : String(value)
+    }
+
+    /**
      * One token count the way Claude Code writes it: one decimal at most, a
      * whole number without its ".0", and a lowercase k — "109M", "4.4M",
      * "963.6k". The unit is picked on the rounded value, so a count just under

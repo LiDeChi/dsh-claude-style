@@ -119,8 +119,7 @@
 
     /** A local calendar day, matching the host half's day keys. */
     function homeDayKey(date) {
-      const pad = value => value < 10 ? `0${value}` : String(value)
-      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+      return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`
     }
 
     /** The short day-label formatter, in the shell's language: "Aug 26", "8月26日". */
@@ -568,15 +567,11 @@
         })
       }
       const models = homeModelList(value, listed)
+      // Only what the two views draw: the window's own bookkeeping (the range
+      // start, its milliseconds, the day test) stays local to this file.
       return {
-        ready,
-        value,
         listed,
         known,
-        windowDays,
-        start,
-        startMs,
-        inRange,
         tokens,
         calls,
         sessions,

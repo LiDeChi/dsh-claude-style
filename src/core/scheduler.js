@@ -150,8 +150,10 @@
       // Every focus move is then offered to the features that take one (the
       // search palette answers the host's own sidebar search taking focus).
       function onGlobalFocusIn(e) {
-        const target = e.target
-        if (!target || typeof target.closest !== 'function') return
+        // Every handler below reads `tagName` and `closest` off the target, so
+        // a non-element focus target (a text node) is turned away here.
+        const target = closestFrom(e.target, '*')
+        if (target === null) return
         if (closestComposerCard(target) !== null) {
           for (let i = 0; i < HOOK_FEATURES.length; i++) {
             const handle = ui[HOOK_FEATURES[i]]

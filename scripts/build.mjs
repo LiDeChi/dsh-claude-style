@@ -87,6 +87,7 @@ const FRAGMENTS = [
   'core/i18n.js',
   'shared/dom.js',
   'shared/notify.js',
+  'shared/resource.js',
   'shared/format.js',
   'shared/popover.js',
   'shared/sliding-pill.js',

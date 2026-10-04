@@ -34,9 +34,8 @@
 
     /** The composer card `node` sits in, or null; `variant` narrows it to one variant. */
     function closestComposerCard(node, variant) {
-      if (node === null || node === void 0 || typeof node.closest !== 'function') return null
-      if (variant === void 0) return node.closest(COMPOSER_CARD)
-      return node.closest(`${COMPOSER_CARD}[data-composer-variant="${variant}"]`)
+      if (variant === void 0) return closestFrom(node, COMPOSER_CARD)
+      return closestFrom(node, `${COMPOSER_CARD}[data-composer-variant="${variant}"]`)
     }
 
     function findComposerPlaceholders() {
@@ -61,8 +60,7 @@
     }
 
     function closestConversationSession(node) {
-      if (node === null || node === void 0 || typeof node.closest !== 'function') return null
-      return node.closest(CONVERSATION_SESSION)
+      return closestFrom(node, CONVERSATION_SESSION)
     }
 
     /** The session id `host` carries, or null when it carries none. */
@@ -167,8 +165,6 @@
      * workspace parsing, no polling.
      */
     let usernameFromHost = ''
-    let usernameRequested = false
-    const usernameListeners = []
 
     /** Last OS-user probe this browser saw; the cache that outlives the page. */
     const PROBED_USERNAME_KEY = 'dsh-claude-style.probed-username'
@@ -182,66 +178,51 @@
       if (value) localStorage.setItem(PROBED_USERNAME_KEY, value)
     }
 
-    function onUsernameLoaded(listener) {
-      usernameListeners.push(listener)
-      return () => {
-        const index = usernameListeners.indexOf(listener)
-        if (index !== -1) usernameListeners.splice(index, 1)
+    /**
+     * The host half's OS user. An answer the contract does not carry is not
+     * adopted: the cached probe or 'User' stays.
+     */
+    const usernameResource = createHostResource(USERNAME_ROUTE, (data) => {
+      if (!data || data.ok !== true || typeof data.username !== 'string') return undefined
+      usernameFromHost = data.username.trim().slice(0, USERNAME_MAX)
+      if (usernameFromHost) {
+        probedUsername = usernameFromHost
+        storeProbeUsername(usernameFromHost)
       }
+      return usernameFromHost
+    })
+
+    function onUsernameLoaded(listener) {
+      return usernameResource.onLoaded(listener)
     }
 
     function loadUsername() {
-      if (usernameRequested) return
-      usernameRequested = true
-      fetch(USERNAME_ROUTE, { credentials: 'same-origin' })
-        .then(response => {
-          if (!response.ok) throw new Error(`HTTP ${response.status}`)
-          return response.json()
-        })
-        .then(data => {
-          if (!data || data.ok !== true || typeof data.username !== 'string') return
-          usernameFromHost = data.username.trim().slice(0, USERNAME_MAX)
-          if (usernameFromHost) {
-            probedUsername = usernameFromHost
-            storeProbeUsername(usernameFromHost)
-          }
-          notifyAll(usernameListeners, usernameFromHost)
-        }, () => { /* the host half did not answer: the cached probe or 'User' stays */ })
+      usernameResource.load()
     }
 
-    /**
-     * The HDSL launcher's account contract, when this instance was launched by
-     * it. Read once: the contract is fixed for the process lifetime.
-     */
     let hdslContract = false
     let hdslName = ''
     let hdslAvatar = false
-    let hdslRequested = false
-    const hdslListeners = []
+
+    /**
+     * The HDSL launcher's account contract, when this instance was launched by
+     * it. An answer that is no contract is not adopted: the chain skips the
+     * launcher.
+     */
+    const hdslResource = createHostResource(HDSL_ROUTE, (data) => {
+      if (!data || data.ok !== true || data.contract !== true) return undefined
+      hdslContract = true
+      hdslName = typeof data.name === 'string' ? data.name.trim().slice(0, USERNAME_MAX) : ''
+      hdslAvatar = data.hasSkinImage === true
+      return true
+    })
 
     function onHdslLoaded(listener) {
-      hdslListeners.push(listener)
-      return () => {
-        const index = hdslListeners.indexOf(listener)
-        if (index !== -1) hdslListeners.splice(index, 1)
-      }
+      return hdslResource.onLoaded(listener)
     }
 
     function loadHdsl() {
-      if (hdslRequested) return
-      hdslRequested = true
-      fetch(HDSL_ROUTE, { credentials: 'same-origin' })
-        .then(response => {
-          if (!response.ok) throw new Error(`HTTP ${response.status}`)
-          return response.json()
-        })
-        .then(data => {
-          if (!data || data.ok !== true || data.contract !== true) return
-          hdslContract = true
-          hdslName = typeof data.name === 'string' ? data.name.trim().slice(0, USERNAME_MAX) : ''
-          hdslAvatar = data.hasSkinImage === true
-          notifyAll(hdslListeners)
-        }, () => { /* the host half did not answer: the chain skips the launcher */ })
+      hdslResource.load()
     }
 
     /**
@@ -282,9 +263,9 @@
       // apply resolves once again rather than reusing the previous host's
       // answers. The probe cache survives on purpose — it is the same machine
       // until something says otherwise.
-      usernameRequested = false
+      usernameResource.reset()
       usernameFromHost = ''
-      hdslRequested = false
+      hdslResource.reset()
       hdslContract = false
       hdslName = ''
       hdslAvatar = false

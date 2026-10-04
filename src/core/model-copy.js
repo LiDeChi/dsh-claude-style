@@ -7,32 +7,27 @@
      * where both zones can reach it.
      */
     let modelCopy = null
-    let modelCopyRequested = false
-    const modelCopyListeners = []
+
+    /**
+     * The model copy document the host half serves. A document that does not
+     * index is not adopted: the bundle's English constants stay.
+     */
+    const modelCopyResource = createHostResource(MODEL_COPY_ROUTE, (doc) => {
+      const indexed = indexModelCopy(doc)
+      if (indexed === null) return undefined
+      modelCopy = indexed
+      return modelCopy
+    })
 
     function onModelCopyLoaded(listener) {
-      modelCopyListeners.push(listener)
-      return () => {
-        const index = modelCopyListeners.indexOf(listener)
-        if (index !== -1) modelCopyListeners.splice(index, 1)
-      }
+      return modelCopyResource.onLoaded(listener)
     }
 
     /**
      * Fetch the model copy document the host half serves.
      */
     function loadModelCopy() {
-      if (modelCopyRequested) return
-      modelCopyRequested = true
-      fetch(MODEL_COPY_ROUTE, { credentials: 'same-origin' })
-        .then(response => {
-          if (!response.ok) throw new Error(`HTTP ${response.status}`)
-          return response.json()
-        })
-        .then(doc => {
-          modelCopy = indexModelCopy(doc)
-          if (modelCopy !== null) notifyAll(modelCopyListeners, modelCopy)
-        }, () => { /* the host half did not answer: the bundle's English constants stay */ })
+      modelCopyResource.load()
     }
 
     /**

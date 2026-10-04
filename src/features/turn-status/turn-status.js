@@ -81,9 +81,8 @@
         const hours = Math.floor(total / 3600)
         const minutes = Math.floor(total / 60) % 60
         const seconds = total % 60
-        const pad = (value) => String(value).padStart(2, '0')
-        if (hours > 0) return t('duration.hours', { hours, minutes: pad(minutes), seconds: padded ? pad(seconds) : String(seconds) })
-        if (minutes > 0) return t('duration.minutes', { minutes, seconds: padded ? pad(seconds) : String(seconds) })
+        if (hours > 0) return t('duration.hours', { hours, minutes: pad2(minutes), seconds: padded ? pad2(seconds) : String(seconds) })
+        if (minutes > 0) return t('duration.minutes', { minutes, seconds: padded ? pad2(seconds) : String(seconds) })
         return t('duration.seconds', { seconds })
       }
 
