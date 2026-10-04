@@ -488,19 +488,22 @@ the crab takes the pointer; the room the rod swings through does not.
 Under the DeepSeek brand the crab gives way to Deepy, the pixel whale of the
 Deepy theme pack: a 52×52 grid of logical pixels drawn at 2px a pixel (a 104px
 square), its ground line — row 48.5, the middle of its shadow — on the top edge
-of what it stands on, its box 8px in from the right end of the card it stands
-over. On the home page that is the composer card (both layouts); in a
-conversation it is the whole input area, and the panel that replaces the card
-while the reader is asked for something (those panels start 6–8px above their
-card). Every frame lasts 50ms. The sheets carry five device pixels to a logical
-pixel and are scaled down smoothly, so the whale stays crisp from 1× to 2×
-screens without `image-rendering: pixelated`, which would drop rows on a
-downscale. The body is Deepy's blue `#4E6FFF` with a navy `#142660` outline and
-a white belly in both themes; on the dark canvas the outline and the soft shadow
-recede and the blue body carries the shape. Only the resting body (columns
-12–44, rows 30–48) takes the pointer. With the animation choice resolved to
-"reduced" each state holds its still frame; a click or a pull still plays its
-reaction.
+of what it stands on. Every sheet's crop box reaches 3px past that ground line,
+and the whale paints over the host's cards, so its box is lifted by those 3px:
+the sprite's last row lands on the card's top edge, and the shadow's tail stays
+off the card instead of being stamped across it. Its box is 8px in from the
+right end of the card it stands over. On the home page that is the composer card
+(both layouts); in a conversation it is the whole input area, and the panel that
+replaces the card while the reader is asked for something (those panels start
+6–8px above their card). Every frame lasts 50ms. The sheets carry five device
+pixels to a logical pixel and are scaled down smoothly, so the whale stays crisp
+from 1× to 2× screens without `image-rendering: pixelated`, which would drop
+rows on a downscale. The body is Deepy's blue `#4E6FFF` with a navy `#142660`
+outline and a white belly in both themes; on the dark canvas the outline and the
+soft shadow recede and the blue body carries the shape. Only the resting body
+(columns 12–44, rows 30–48) takes the pointer. With the animation choice
+resolved to "reduced" each state holds its still frame; a click or a pull still
+plays its reaction.
 
 | State | Animation | Still frame |
 |---|---|---|

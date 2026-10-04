@@ -10,10 +10,18 @@
    (src/features/mascot/whale.js); the sheet holds eight frames to a row.
    Only the whale's body takes the pointer. */
 
+/* Feet on the top edge of what it stands on. Every sheet's crop box ends 3px
+   below the whale's ground line (logical row 50 against the ground line at
+   48.5), and the whale paints over the host's cards — the composer card, and
+   the todo, goal and queue cards stacked above it in a conversation — so that
+   overhang, which is the soft tail of the shadow, would darken the top of the
+   card being stood on. Lifting the box by that 3px lands the sprite's last row
+   on the card's top edge instead, which leaves the shadow resting on the card
+   and nothing painted across it. */
 body[data-dsh-claude-style] .dsh-claude-deepy {
   position: absolute;
   right: 8px;
-  bottom: calc(100% - 7px);
+  bottom: calc(100% - 4px);
   z-index: 1;
   width: 104px;
   height: 104px;
@@ -41,7 +49,7 @@ body[data-dsh-claude-style] [data-dsh-claude-deepy-anchor="stack"] > .dsh-claude
 
 body[data-dsh-claude-style] [data-dsh-claude-deepy-anchor="panel"] > .dsh-claude-deepy {
   right: calc(max(var(--dsh-composer-side-clearance, 16px) + 16px, (100% - var(--dsh-chat-content-width, 100%)) / 2) + 8px);
-  bottom: calc(100% - 14px);
+  bottom: calc(100% - 11px);
 }
 
 body[data-dsh-claude-style] .dsh-claude-deepy-sprite {

@@ -2,6 +2,18 @@
 
 All notable changes to `dsh-claude-style` are documented here, newest first.
 
+## [Unreleased]
+
+[中文](#cn-unreleased) | [English](#en-unreleased)
+
+<h3 id="cn-unreleased">问题修复</h3>
+
+- **小鲸鱼不再把阴影画在目标、待办与排队卡片上**：DeepSeek 品牌下，小鲸鱼被叠在输入卡片上方的目标、待办与排队卡片顶起时，它身下阴影的末端落在那张卡片的最上缘。现在小鲸鱼抬高 3 像素，阴影落在卡片上，卡片上不再压着一道暗色。
+
+<h3 id="en-unreleased">Bug Fixes</h3>
+
+- **Deepy no longer paints its shadow across the goal, todo and queue cards**: under the DeepSeek brand, when the goal, todo or queue cards pushed the whale up off the composer card, the tail of the shadow under it landed on the top edge of that card. The whale now sits 3px higher: the shadow rests on the card instead of a dark band being stamped across it.
+
 ## [0.10.4] - 2026-10-03
 
 [中文](#cn-0.10.4) | [English](#en-0.10.4)
