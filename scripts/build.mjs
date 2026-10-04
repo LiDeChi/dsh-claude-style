@@ -207,11 +207,18 @@ const FOOTER = `  },
 })
 `
 
-/** Evaluate src/constants.js (pure, DOM-free) to obtain the %%TOKEN%% values. */
-function loadTokens() {
-  const constants = fs.readFileSync(path.join(SRC, 'constants.js'), 'utf8')
-  const factory = new Function(`
-    ${constants}
+/**
+ * Evaluate src/constants.js once (pure, DOM-free) and hand back one namespace:
+ * the %%TOKEN%% values, the two sheet tables and the names the host half
+ * mirrors. The file is written for both halves — the bundle inlines it and
+ * host/routes.js reads it as text — so nothing imports it directly.
+ */
+let constantsNamespace = null
+function constants() {
+  if (constantsNamespace !== null) return constantsNamespace
+  const source = fs.readFileSync(path.join(SRC, 'constants.js'), 'utf8')
+  constantsNamespace = new Function(`
+    ${source}
     return {
       SANS, SERIF, PROSE, MONO, BRAND_ATTR, BRAND_CLAUDE, BRAND_DEEPSEEK, MOTION_ATTR, MOTION_REDUCED, FOOTER_ATTR, COMPOSER_ATTR, PERMISSIONS_ATTR, ACCOUNT_MENU_ATTR, ACCOUNT_ARMED_ATTR, ACCOUNT_READY_ATTR, HERO_MENU_ATTR, SETTINGS_SCROLLER_ATTR,
       // "this brand is drawn by the skin": of the two brands, DeepSeek keeps the
@@ -227,9 +234,48 @@ function loadTokens() {
       TYPEFACE_CLAUDE: '[' + TYPEFACE_ATTR + '="' + TYPEFACE_CLAUDE + '"]',
       TYPEFACE_HOST: '[' + TYPEFACE_ATTR + '="' + TYPEFACE_HOST + '"]',
       CLAUDE_WORD_WIDTH: (18 * CLAUDE_WORD_ASPECT).toFixed(1),
+      CRAB_SHEETS,
+      DEEPY_SHEETS,
     }
-  `)
-  return factory()
+  `)()
+  return constantsNamespace
+}
+
+/** The %%TOKEN%% values, read off the one constants namespace. */
+function loadTokens() {
+  const ns = constants()
+  return {
+    SANS: ns.SANS,
+    SERIF: ns.SERIF,
+    PROSE: ns.PROSE,
+    MONO: ns.MONO,
+    BRAND_ATTR: ns.BRAND_ATTR,
+    BRAND_CLAUDE: ns.BRAND_CLAUDE,
+    BRAND_DEEPSEEK: ns.BRAND_DEEPSEEK,
+    MOTION_ATTR: ns.MOTION_ATTR,
+    MOTION_REDUCED: ns.MOTION_REDUCED,
+    FOOTER_ATTR: ns.FOOTER_ATTR,
+    COMPOSER_ATTR: ns.COMPOSER_ATTR,
+    PERMISSIONS_ATTR: ns.PERMISSIONS_ATTR,
+    ACCOUNT_MENU_ATTR: ns.ACCOUNT_MENU_ATTR,
+    ACCOUNT_ARMED_ATTR: ns.ACCOUNT_ARMED_ATTR,
+    ACCOUNT_READY_ATTR: ns.ACCOUNT_READY_ATTR,
+    HERO_MENU_ATTR: ns.HERO_MENU_ATTR,
+    SETTINGS_SCROLLER_ATTR: ns.SETTINGS_SCROLLER_ATTR,
+    // "this brand is drawn by the skin": of the two brands, DeepSeek keeps the
+    // host's own brand area, so the shared rules that hide the host's mark and
+    // paint the ::before are gated on the Claude brand rather than on
+    // :not(deepseek), which would have them paint over the host's whale.
+    BRAND_ACTIVE: ns.BRAND_ACTIVE,
+    // The colour and type gates are already the full attribute selectors in
+    // the namespace; deriving them again here would nest the selector in its
+    // own value, because the namespace's raw constants share these names.
+    PALETTE_CLAUDE: ns.PALETTE_CLAUDE,
+    PALETTE_HOST: ns.PALETTE_HOST,
+    TYPEFACE_CLAUDE: ns.TYPEFACE_CLAUDE,
+    TYPEFACE_HOST: ns.TYPEFACE_HOST,
+    CLAUDE_WORD_WIDTH: ns.CLAUDE_WORD_WIDTH,
+  }
 }
 
 /** Marker delimiting the region of a stylesheet the composer preference gates. */
@@ -441,8 +487,7 @@ const CRAB_FILE = /^[a-z]+(?:-[a-z]+)*\.png$/
  * @returns animation → { body, ink } data URIs.
  */
 function loadCrabSheets() {
-  const constants = fs.readFileSync(path.join(SRC, 'constants.js'), 'utf8')
-  const sheets = new Function(`${constants}\n    return CRAB_SHEETS`)()
+  const sheets = constants().CRAB_SHEETS
   const names = Object.keys(sheets)
   const files = fs.readdirSync(CRAB_ASSETS)
   for (const file of files) {
@@ -474,20 +519,21 @@ function loadCrabSheets() {
 const DEEPY_FILE = /^[a-z]+(?:-[a-z]+)*\.png$/
 
 /**
- * Copy Deepy's sheets to lib/deepy/.
+ * Check Deepy's sheets before lib/ is touched.
  *
  * The animation table in src/constants.js (DEEPY_SHEETS) is the list. Each
  * entry needs its sheet and a well-formed row — a frame count, a crop box
  * inside the 52×52 grid, a still frame the sheet holds — and a sheet no entry
  * names is refused, so the package never ships a sheet the whale cannot play
  * or an entry that would draw nothing. The sheets are too large to inline
- * (about 0.4 MB together), and the browser only fetches the ones it plays.
+ * (about 0.4 MB together) and the browser only fetches the ones it plays, so
+ * they are copied; every check that can fail runs here, while nothing has been
+ * written yet.
  *
- * @returns the number of sheets and their total size, for the build log.
+ * @returns the sheet names in table order and their total size.
  */
-function copyDeepySheets() {
-  const constants = fs.readFileSync(path.join(SRC, 'constants.js'), 'utf8')
-  const sheets = new Function(`${constants}\n    return DEEPY_SHEETS`)()
+function planDeepySheets() {
+  const sheets = constants().DEEPY_SHEETS
   const names = Object.keys(sheets)
   const files = fs.readdirSync(DEEPY_ASSETS)
   for (const file of files) {
@@ -503,15 +549,18 @@ function copyDeepySheets() {
     }
     if (!files.includes(`${name}.png`)) throw new Error(`build: DEEPY_SHEETS["${name}"] has no sheet in src/assets/mascot/deepy/`)
   }
+  let bytes = 0
+  for (const name of names) bytes += fs.statSync(path.join(DEEPY_ASSETS, `${name}.png`)).size
+  return { names, bytes }
+}
+
+/** Copy the planned sheets into lib/deepy/, replacing whatever was there. */
+function writeDeepySheets(names) {
   fs.rmSync(DEEPY_OUT, { recursive: true, force: true })
   fs.mkdirSync(DEEPY_OUT)
-  let bytes = 0
   for (const name of names) {
-    const target = path.join(DEEPY_OUT, `${name}.png`)
-    fs.copyFileSync(path.join(DEEPY_ASSETS, `${name}.png`), target)
-    bytes += fs.statSync(target).size
+    fs.copyFileSync(path.join(DEEPY_ASSETS, `${name}.png`), path.join(DEEPY_OUT, `${name}.png`))
   }
-  return { count: names.length, bytes }
 }
 
 /**
@@ -521,8 +570,7 @@ function copyDeepySheets() {
  * touches no sheet leaves every cached vector valid.
  */
 function stampDeepySheets() {
-  const constants = fs.readFileSync(path.join(SRC, 'constants.js'), 'utf8')
-  const sheets = new Function(`${constants}\n    return DEEPY_SHEETS`)()
+  const sheets = constants().DEEPY_SHEETS
   const stamps = {}
   for (const name of Object.keys(sheets)) {
     const file = path.join(DEEPY_ASSETS, `${name}.png`)
@@ -868,23 +916,29 @@ function main() {
     process.exit(1)
   }
 
-  fs.writeFileSync(OUT, bundle)
+  // Everything is validated before anything is written: a refusal anywhere in
+  // this build must not leave lib/ holding one half of a new build beside the
+  // other half of the previous one.
+  const copy = JSON.parse(fs.readFileSync(path.join(SRC, MODEL_COPY), 'utf8'))
+  const exact = validateModelCopy(copy, combines)
+  const copyText = JSON.stringify(copy, null, 2) + '\n'
+  const iconSource = path.join(BRAND_ASSETS, ICON_SOURCE)
+  const iconTarget = path.join(LIB, ICON_FILE)
+  if (!fs.existsSync(iconSource)) throw new Error(`build: src/assets/brand/${ICON_SOURCE} is missing`)
+  const deepy = planDeepySheets()
 
+  fs.writeFileSync(OUT, bundle)
   const lines = bundle.split('\n').length
   console.log(`built lib/client.js (${lines} lines, ${bundle.length} bytes, build ${buildId}) from src/ (${STYLE_FILES.length} stylesheets + ${FRAGMENTS.length} fragments + ${Object.keys(combines).length} lockups)`)
 
-  const copy = JSON.parse(fs.readFileSync(path.join(SRC, MODEL_COPY), 'utf8'))
-  const exact = validateModelCopy(copy, combines)
-  fs.writeFileSync(path.join(LIB, MODEL_COPY), JSON.stringify(copy, null, 2) + '\n')
+  fs.writeFileSync(path.join(LIB, MODEL_COPY), copyText)
   console.log(`built lib/${MODEL_COPY} (${exact} exact entries, ${copy.families.length} family rules, ${copy.tiers.length} tier rules)`)
 
-  const iconSource = path.join(BRAND_ASSETS, ICON_SOURCE)
-  const iconTarget = path.join(LIB, ICON_FILE)
   fs.copyFileSync(iconSource, iconTarget)
   console.log(`built lib/${ICON_FILE} (${fs.statSync(iconTarget).size} bytes) from src/assets/brand/${ICON_SOURCE}`)
 
-  const deepy = copyDeepySheets()
-  console.log(`built lib/deepy/ (${deepy.count} sheets, ${deepy.bytes} bytes) from src/assets/mascot/deepy/`)
+  writeDeepySheets(deepy.names)
+  console.log(`built lib/deepy/ (${deepy.names.length} sheets, ${deepy.bytes} bytes) from src/assets/mascot/deepy/`)
 }
 
 main()
