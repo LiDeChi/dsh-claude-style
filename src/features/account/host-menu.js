@@ -27,28 +27,25 @@
       }
 
       /**
-       * The host's account trigger: the menu anchor inside the FOOTER, which is
-       * where the account row lives. Taking "the first menu anchor that is not
-       * ours" was wrong — the shell has several (the open-in-app picker, the
-       * workspace selector), and on a host without the desktop account the skin
-       * then mirrored THAT menu into the account drawer. The trigger names
-       * itself ("账号菜单" / "Account menu"), so the label is matched first.
+       * The host's account trigger: the menu anchor the host itself marks with
+       * the sign-in state (`data-signed-out`). No other element carries that
+       * mark, so no label text is read. The footer scope comes first — that is
+       * where the account row lives — and the document is the fallback for a
+       * host that seats it elsewhere.
+       *
+       * No structural fallback beyond the mark: "the first non-ours anchor in
+       * the footer" picked the open-in-app menu instead, filling the drawer
+       * with Cursor / VS Code / … Returning null is the honest answer: the
+       * surface self-builds instead.
        */
       function hostAccountTrigger() {
         const foot = findFootArea()
         const scopes = [foot, document]
         for (let s = 0; s < scopes.length; s++) {
           if (scopes[s] === null || scopes[s] === undefined) continue
-          const anchors = scopes[s].querySelectorAll('[aria-haspopup="menu"]')
-          for (let i = 0; i < anchors.length; i++) {
-            const el = anchors[i]
-            if (String(el.className || '').includes('dsh-claude-')) continue
-            if (/账号|account/i.test(el.getAttribute('aria-label') || '')) return el
-          }
+          const el = scopes[s].querySelector('[aria-haspopup="menu"][data-signed-out]')
+          if (el !== null && !String(el.className || '').includes('dsh-claude-')) return el
         }
-        // No fallback. "The first non-ours anchor in the footer" picked the
-        // open-in-app menu instead, filling the drawer with Cursor / VS Code / …
-        // Returning null is the honest answer: the surface self-builds instead.
         return null
       }
 
@@ -63,37 +60,32 @@
         return foot === null ? null : foot.querySelector('[class*="settingsArea"] button[aria-haspopup="dialog"]')
       }
 
-      const SETTINGS_LABEL = /^(设置|settings)$/i
-
       /**
-       * Whether an open `role=menu` is the host's account menu.
+       * The host's open account menu, or null while it is closed.
        *
-       * Content-matched, not class-matched: the shell renders several menus (the
-       * permission control's, the model picker's submenu) and the host's class
-       * names are hashed. Only the account menu carries a sign-out/sign-in row,
-       * or both a settings and a feedback row.
+       * Identified through the trigger, never through the menu's text: the
+       * account trigger reports `aria-expanded` while its menu is up, so the
+       * open host menu (the skin's own cards carry `dsh-claude-` classes) is
+       * the account menu. Opening a menu folds the shell's other menus, so at
+       * most one host menu is ever open.
        */
-      function isAccountMenu(menu) {
-        const items = menu.querySelectorAll('[role="menuitem"]')
-        let sign = false
-        let settings = false
-        let feedback = false
-        for (let i = 0; i < items.length; i++) {
-          const text = (items[i].textContent || '').trim()
-          if (/退出登录|登出|Sign out|登录|Sign in/i.test(text)) sign = true
-          if (SETTINGS_LABEL.test(text)) settings = true
-          if (/反馈|Feedback|contact|意见/i.test(text)) feedback = true
-        }
-        return sign || (settings && feedback)
-      }
-
-      /** The host's open account menu, or null while it is closed. */
       function findAccountMenu() {
+        const trigger = hostAccountTrigger()
+        if (trigger === null || trigger.getAttribute('aria-expanded') !== 'true') return null
         const menus = document.querySelectorAll('[role="menu"]')
         for (let i = 0; i < menus.length; i++) {
-          if (isAccountMenu(menus[i])) return menus[i]
+          if (!String(menus[i].className || '').includes('dsh-claude-')) return menus[i]
         }
         return null
+      }
+
+      /**
+       * The settings row of an open account menu: the only row the host marks
+       * with its keyboard shortcut. The visible label follows the interface
+       * language; `aria-keyshortcuts` does not.
+       */
+      function settingsRowOf(menu) {
+        return menu.querySelector('[role="menuitem"][aria-keyshortcuts]')
       }
 
       /**
@@ -107,10 +99,11 @@
 
       /**
        * Open the host's settings: its settings button where it has one, or else
-       * the 设置 item of its account menu — the desktop, where that menu is the
-       * settings launcher. The menu's rows carry no ids, so the item is found by
-       * the host's own label in its two locales. The drive is hidden in place
-       * while it runs: the menu is a means to the dialog, never the answer.
+       * the settings row of its account menu — the desktop, where that menu is
+       * the settings launcher. The row is found by the shortcut mark the host
+       * puts on it, never by its label, which follows the interface language.
+       * The drive is hidden in place while it runs: the menu is a means to the
+       * dialog, never the answer.
        */
       function openHostSettings() {
         options.close()
@@ -126,18 +119,16 @@
         function look() {
           const menu = findAccountMenu()
           if (menu !== null) {
-            const items = menu.querySelectorAll('[role="menuitem"]')
+            const row = settingsRowOf(menu)
+            if (row === null) {
+              // No settings row in this menu: fold it back, the drive is over.
+              realClick(account)
+              return
+            }
             const previous = menu.style.visibility
             menu.style.visibility = 'hidden'
-            for (let k = 0; k < items.length; k++) {
-              if (SETTINGS_LABEL.test((items[k].textContent || '').trim())) {
-                realClick(items[k])
-                menu.style.visibility = previous
-                return
-              }
-            }
+            realClick(row)
             menu.style.visibility = previous
-            realClick(account)
             return
           }
           if (tries++ > 20) return
@@ -146,13 +137,6 @@
         setTimeout(look, 40)
       }
 
-      /**
-       * Open the host's account menu the way the row's own click does. The
-       * "Open popovers on hover" preference opens the account surface without a
-       * click, so the footer has to drive the host's trigger from outside; a
-       * plain click is not enough for the host's React handlers, hence the full
-       * press the settings drive already uses.
-       */
       /**
        * Open the host's account menu for the hover preference. The trigger opens
        * on its own onClick, so one click is the whole press: the extra

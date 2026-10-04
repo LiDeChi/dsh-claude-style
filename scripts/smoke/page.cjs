@@ -24,7 +24,9 @@ function page(name) {
     ? '<div class="_x_footArea_1">' + footerActions +
         '<div class="_x_settingsArea_1"><div data-slot="sidebar.settings"><div class="_s_triggerRow_1">' +
           '<div data-slot="settings.launcher"><div class="_a_root_1"><span>' +
-            '<button id="host-account" aria-label="Account menu" aria-haspopup="menu" aria-expanded="false">Ada</button>' +
+            // data-signed-out is the host's own mark on the account trigger (ui-shell's
+            // AccountMenu), read off a live desktop instance.
+            '<button id="host-account" data-signed-out="false" aria-label="Account menu" aria-haspopup="menu" aria-expanded="false">Ada</button>' +
           '</span></div></div>' +
           '<button aria-label="Retry update">Retry update</button>' +
         '</div></div></div>' +

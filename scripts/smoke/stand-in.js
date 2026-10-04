@@ -62,6 +62,8 @@
     if (menu && menu.parentElement) menu.parentElement.removeChild(menu)
     menu = null
     menuViewport = null
+    // The host reports the menu state on its trigger (ui-primitives' Menu).
+    if (accountTrigger) accountTrigger.setAttribute('aria-expanded', 'false')
   }
   function openHostSettingsDialog() {
     var area = document.querySelector('[class*="settingsArea"]')
@@ -84,6 +86,7 @@
   var accountTrigger = document.getElementById('host-account')
   if (accountTrigger) accountTrigger.addEventListener('click', function () {
     if (menu) { closeHostMenu(); return }
+    accountTrigger.setAttribute('aria-expanded', 'true')
     // The host's real Menu DOM (ui-primitives/Menu.tsx): a role=menu portal to
     // body, a role=presentation viewport, and itemWrap > button[role=menuitem].
     // Picking an item selects it and the menu closes itself (onSelect), so the
@@ -91,7 +94,7 @@
     // LogoutIcon.tsx's geometry: a 16px relative box holding a 13.664x13.571 svg
     // at (1.168, 1.214) absolute.
     hostRowsHtml = CASE === 'desktop'
-      ? '<div class="itemWrap"><button type="button" role="menuitem">' +
+      ? '<div class="itemWrap"><button type="button" role="menuitem" aria-keyshortcuts="Control+,">' +
           '<svg viewBox="0 0 16 16" width="16" height="16"></svg>Settings</button></div>' +
         '<div class="itemWrap"><button type="button" role="menuitem">' +
           '<svg viewBox="0 0 16 16" width="16" height="16"></svg>Feedback</button></div>' +
