@@ -9,7 +9,7 @@
      * card's place, on top of that panel instead. Only the main conversation
      * carries it; the sidebar's subagent chats do not.
      *
-     * What it plays follows the work (src/features/mascot/whale-signals.js),
+     * What it plays follows the work (src/features/mascot/mascot-signals.js),
      * the way Deepy's Clawd on Desk theme maps agent states to animations:
      * idle breathing; thinking while the model reasons or has not answered;
      * typing while it writes or runs tools, headphones when two sessions

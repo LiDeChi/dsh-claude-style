@@ -118,7 +118,7 @@ const FRAGMENTS = [
   'features/home/overview.js',
   'features/home/models.js',
   'features/home/home-layout.js',
-  'features/mascot/whale-signals.js',
+  'features/mascot/mascot-signals.js',
   'features/mascot/whale-sheets.js',
   'features/mascot/whale.js',
   'features/mascot/mascot.js',
@@ -351,8 +351,8 @@ function loadSvgAssets() {
  * same way as the brand marks.
  */
 const PNG_TOKENS = {
-  MASCOT_BODY: 'crab-body.png',
-  MASCOT_ROD: 'crab-rod.png',
+  MASCOT_BODY: 'crab-laptop-body.png',
+  MASCOT_ROD: 'crab-laptop-ink.png',
 }
 
 function loadPngAssets() {
