@@ -105,12 +105,37 @@ body[data-dsh-claude-style] .dsh-claude-popover-item-text {
   white-space: nowrap !important;
   text-align: left !important;
 }
-/* The current choice's check, in the accent. */
+/* A two-line row: the title over a quieter second line, the pair sharing the
+   slack the one-line text block would take. */
+body[data-dsh-claude-style] .dsh-claude-popover-item-col {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  flex: 1 !important;
+  min-width: 0 !important;
+  text-align: left !important;
+}
+body[data-dsh-claude-style] .dsh-claude-popover-item-col .dsh-claude-popover-item-text {
+  font-weight: 500 !important;
+  line-height: 16px !important;
+}
+body[data-dsh-claude-style] .dsh-claude-popover-item-desc {
+  font-size: 11px !important;
+  line-height: 14px !important;
+  color: var(--dsw-alias-label-tertiary, #8f8d84) !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+/* The current choice's check, in the accent. A row that carries the mark for
+   every choice keeps it out of the flow until its `hidden` comes off. */
 body[data-dsh-claude-style] .dsh-claude-popover-check {
   flex: none !important;
   display: inline-flex !important;
   align-items: center !important;
   color: var(--dsw-alias-brand-primary, #d97757) !important;
+}
+body[data-dsh-claude-style] .dsh-claude-popover-check[hidden] {
+  display: none !important;
 }
 body[data-dsh-claude-style] .dsh-claude-popover-item-badge {
   margin-left: auto !important;

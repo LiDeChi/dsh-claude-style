@@ -1,13 +1,50 @@
     const POPOVER_MARGIN = 8
 
     /**
-     * Position a fixed-position popover relative to its trigger.
+     * The viewport coordinates of a popover anchored to a trigger's box.
      *
      * `side: 'right'` opens to the trigger's right and bottom-aligns it (the
      * account popover in the rail). The default `side: 'above'` right-aligns
      * the popover with the trigger and opens above it with `gap` spacing (the
-     * model picker). `important` switches to `style.setProperty(..., 'important')`
-     * and rounds the coordinates, as the account popover requires.
+     * model picker); `side: 'above-left'` opens above with the left edges
+     * aligned (the permission menu). The hero menu resolves through this too, but writes the
+     * answer into custom properties — the host re-places that card from its own
+     * geometry every frame, and an inline left/top would live only until the
+     * host's next frame.
+     *
+     * @param rect - the trigger's bounding box.
+     * @param width - the popover's laid-out width.
+     * @param height - the popover's laid-out height.
+     * @param opts - `{ side, gap, margin }`.
+     * @returns the chosen `{ x, y }` in viewport coordinates.
+     */
+    function resolveAnchoredPosition(rect, width, height, opts) {
+      opts = opts || {}
+      const margin = opts.margin || POPOVER_MARGIN
+      if (opts.side === 'right') {
+        let x = rect.right + margin
+        if (x + width > window.innerWidth - margin) {
+          x = Math.max(margin, rect.left - margin - width)
+        }
+        const y = Math.min(Math.max(margin, rect.bottom - height), Math.max(margin, window.innerHeight - height - margin))
+        return { x, y }
+      }
+      if (opts.side === 'above-left') {
+        const left = Math.max(margin, Math.min(rect.left, window.innerWidth - width - margin))
+        let top = rect.top - (opts.gap || 0) - height
+        if (top < margin) top = Math.min(rect.bottom + (opts.gap || 0), Math.max(margin, window.innerHeight - height - margin))
+        return { x: left, y: top }
+      }
+      const x = Math.max(margin, Math.min(rect.right - width, window.innerWidth - width - margin))
+      let y = rect.top - (opts.gap || 0) - height
+      if (y < margin) y = Math.min(rect.bottom + (opts.gap || 0), Math.max(margin, window.innerHeight - height - margin))
+      return { x, y }
+    }
+
+    /**
+     * Position a fixed-position popover relative to its trigger. `important`
+     * switches to `style.setProperty(..., 'important')`, as the account
+     * popover requires.
      *
      * @param trigger - element the popover is anchored to.
      * @param pop - the fixed-position popover element.
@@ -17,22 +54,7 @@
     function positionAnchoredPopover(trigger, pop, opts) {
       opts = opts || {}
       const rect = trigger.getBoundingClientRect()
-      const width = pop.offsetWidth
-      const height = pop.offsetHeight
-      const margin = opts.margin || POPOVER_MARGIN
-      let x
-      let y
-      if (opts.side === 'right') {
-        x = rect.right + margin
-        if (x + width > window.innerWidth - margin) {
-          x = Math.max(margin, rect.left - margin - width)
-        }
-        y = Math.min(Math.max(margin, rect.bottom - height), Math.max(margin, window.innerHeight - height - margin))
-      } else {
-        x = Math.max(margin, Math.min(rect.right - width, window.innerWidth - width - margin))
-        y = rect.top - (opts.gap || 0) - height
-        if (y < margin) y = Math.min(rect.bottom + (opts.gap || 0), Math.max(margin, window.innerHeight - height - margin))
-      }
+      const { x, y } = resolveAnchoredPosition(rect, pop.offsetWidth, pop.offsetHeight, opts)
       // Same-value guard: this runs on every scheduler pass while a popover is
       // open, and an identical write still dirties layout — the next geometry
       // read (the drag paths read rect/offset every frame) would then force a
@@ -50,6 +72,13 @@
     }
 
     /**
+     * The check mark a chosen row draws. Every picker's choice row carries the
+     * same shared slot (`dsh-claude-popover-check`), so its mark is shared
+     * markup: a tick drawn from one string, not one copy per picker.
+     */
+    const POPOVER_CHECK_SVG = '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.2 3.2L13 5"/></svg>'
+
+    /**
      * Hover dwell before a popover unfolds, and grace before it closes.
      *
      * The dwell exists to swallow a pointer that merely CROSSES a trigger on its
@@ -64,8 +93,8 @@
     const POPOVER_CLOSE_DELAY = 100
 
     /**
-     * Hover-intent helper shared by the model picker, permission popover and
-     * account popover.
+     * Hover-intent helper shared by the model picker, the effort and
+     * permission popovers, the account popover and the hero row's host menus.
      *
      * BOTH sides are scheduled: `scheduleOpen` waits out the dwell (so a pointer
      * crossing the trigger never unfolds anything) and `scheduleClose` waits out
@@ -181,6 +210,46 @@
         card.setAttribute('data-open', 'false')
         card.removeAttribute('role')
       }
+    }
+
+    /**
+     * One row of a popover card: the shared skeleton every picker's rows draw —
+     * an optional icon, the text block that takes the slack, an optional badge
+     * and an optional trailing mark. The look belongs to shared/popover.css, so
+     * a feature adds only its own classes and content.
+     *
+     * @param opts - `{ className, role, textClass, icon, badge, check, lines }`.
+     *   `lines: 2` splits the text block into a title and a quieter second
+     *   line; `textClass` replaces the shared text class for a feature whose
+     *   text block carries its own markup (the model rows' brand lockup).
+     * @returns `{ row, icon, text, desc, badge, check }`; a slot the options
+     *   did not ask for is null.
+     */
+    function buildPopoverItem(opts) {
+      opts = opts || {}
+      const row = buildElement('button', opts.className ? `dsh-claude-popover-item ${opts.className}` : 'dsh-claude-popover-item')
+      row.type = 'button'
+      if (opts.role) row.setAttribute('role', opts.role)
+      const icon = opts.icon ? buildElement('span', 'dsh-claude-popover-item-icon') : null
+      if (icon !== null) row.appendChild(icon)
+      let text = null
+      let desc = null
+      if (opts.lines === 2) {
+        const col = buildElement('div', 'dsh-claude-popover-item-col')
+        text = buildElement('span', 'dsh-claude-popover-item-text')
+        desc = buildElement('span', 'dsh-claude-popover-item-desc')
+        col.appendChild(text)
+        col.appendChild(desc)
+        row.appendChild(col)
+      } else {
+        text = buildElement('span', opts.textClass || 'dsh-claude-popover-item-text')
+        row.appendChild(text)
+      }
+      const badge = opts.badge ? buildElement('span', 'dsh-claude-popover-item-badge') : null
+      if (badge !== null) row.appendChild(badge)
+      const check = opts.check ? buildElement('span', 'dsh-claude-popover-check') : null
+      if (check !== null) row.appendChild(check)
+      return { row, icon, text, desc, badge, check }
     }
 
     /**
