@@ -549,28 +549,28 @@
       "en": "Claude Style"
     },
     "brandTitle": {
-      "zh": "修改品牌标识",
+      "zh": "品牌标识",
       "en": "Brand mark"
     },
     "brandDesc": {
-      "zh": "侧栏与首页显示的品牌标识。选 DeepSeek 时保留宿主自己的 DeepSeek 标识并画成 DeepSeek 蓝，整套配色换成蓝色系（亮色为淡天蓝的亮白，暗色为蓝黑），输入框上的像素螃蟹换成小鲸鱼 Deepy。",
-      "en": "The brand mark in the sidebar and on the home page. DeepSeek keeps the host's own DeepSeek mark in DeepSeek blue, turns the whole palette blue (a sky-tinted white in light, a blue-black in dark) and puts Deepy the pixel whale on the composer in place of the crab."
+      "zh": "侧栏与首页的品牌标识和配色色系：Claude 为暖色系，DeepSeek 为蓝色系。配色选「跟随宿主」时色系不生效，只换品牌标识。",
+      "en": "The brand mark in the sidebar and on the home page, and its colour family: warm for Claude, blue for DeepSeek. While Colours is set to Follow the host, only the mark changes."
     },
     "collapseTitle": {
-      "zh": "重绘设置弹层",
+      "zh": "折叠侧栏设置区",
       "en": "Collapse the sidebar settings area"
     },
     "collapseDesc": {
-      "zh": "把侧栏底栏的设置入口收进账户弹层。",
-      "en": "Fold the sidebar footer's settings entry into the account popover. Off hands the footer back to the host entirely: no account row, no mirrored popover entries."
+      "zh": "把侧栏底部的设置入口收进账户弹层。关闭后侧栏底部恢复原样。",
+      "en": "Fold the sidebar footer's settings entry into the account popover. Off restores the host's footer."
     },
     "autoPopoverTitle": {
-      "zh": "自动弹出弹层",
+      "zh": "悬停展开弹层",
       "en": "Open popovers on hover"
     },
     "autoPopoverDesc": {
-      "zh": "哪些弹层悬停即展开。「仅账号区」只让侧栏账户弹层这样；「全部」再加上权限、模型、会话统计与首页的目录/预设。",
-      "en": "Which popovers hover opens. \"Account only\" keeps it to the sidebar account popover; \"All\" adds the permission, model, session-stats and the home page's workspace and preset pickers."
+      "zh": "哪些弹层悬停即展开。「仅账号区」只有侧栏账户弹层；「全部」再加上权限、模型、会话统计和首页的目录与预设。关闭则全部点击展开。",
+      "en": "Which popovers open on hover. \"Account only\" keeps it to the sidebar account popover; \"All\" adds the permission, model, session-stats and home-page pickers. Off leaves every popover click-to-open."
     },
     "autoPopoverOff": {
       "zh": "关闭",
@@ -585,20 +585,20 @@
       "en": "All"
     },
     "composerTitle": {
-      "zh": "对话框样式改动范围",
+      "zh": "输入区重绘范围",
       "en": "Composer restyle"
     },
     "composerDesc": {
-      "zh": "重绘输入区，可选新会话页、对话内或两者。",
-      "en": "Which input area the skin restyles: the new-conversation page, the conversation, or both. The hero brand mark and headline are unaffected."
+      "zh": "重绘输入区的范围：新会话页、对话内或两者。关闭后恢复系统输入区。",
+      "en": "Which input area the skin restyles: the new-conversation page, the conversation, or both. Off restores the host's composer."
     },
     "homeTitle": {
       "zh": "首页版面",
       "en": "Home layout"
     },
     "homeDesc": {
-      "zh": "新会话页的排布：「经典」是居中大标题加输入卡片；「工作台」把标题移到左上、输入卡片贴住窗口底部，中间显示用量统计。",
-      "en": "The new-conversation page: the centered hero, or the dashboard form with the greeting at the top left, the composer at the bottom edge and the usage panel in between."
+      "zh": "新会话页的排布。「经典」为居中大标题与输入卡片；「工作台」标题居左上、输入卡片贴窗口底部，中间显示用量统计。",
+      "en": "The new-conversation page layout. Classic is the centered hero with the input card; Studio moves the greeting to the top left, pins the composer to the bottom and shows usage in between."
     },
     "homeClassic": {
       "zh": "经典",
@@ -609,20 +609,20 @@
       "en": "Studio"
     },
     "pickerTitle": {
-      "zh": "重做模型选择器",
+      "zh": "重绘模型选择器",
       "en": "Redraw the model picker"
     },
     "pickerDesc": {
-      "zh": "把输入框的模型席位换成 Claude 风格的两级弹层。关闭后交回系统自己的模型菜单，输入区其余改动不受影响。",
-      "en": "Replace the composer's model seat with the two-level Claude-style menu. Off hands the model menu back to the host; the rest of the composer restyle is unaffected."
+      "zh": "把输入框上的模型菜单换成 Claude 风格的两级弹层。关闭后恢复系统模型菜单。",
+      "en": "Replace the composer's model menu with the two-level Claude-style menu. Off restores the host's model menu."
     },
     "quickTitle": {
       "zh": "快捷供应商",
       "en": "Quick providers"
     },
     "quickDesc": {
-      "zh": "官方服务始终列在一级弹层最前面，不在这份清单里；勾选的供应商跟在它后面，各自的模型之间用一条横线分隔。已被移除的供应商会留在清单里，带「已移除」标记，取消勾选即可清除。",
-      "en": "The official service always leads the picker's first level and is not listed here; picked providers follow it, one rule between providers. A provider removed from the catalog stays in the list, marked \"Removed\", and can be unchecked to clear it."
+      "zh": "勾选的供应商列在模型弹层一级、官方服务之后，供应商之间用横线分隔。已从目录移除的供应商带「已移除」标记留在清单里，取消勾选即可清除。",
+      "en": "Picked providers follow the official service in the picker's first level, one rule between providers. A provider removed from the catalog stays in the list marked \"Removed\"; uncheck it to clear it."
     },
     "quickNone": {
       "zh": "未选择",
@@ -645,8 +645,8 @@
       "en": "Username"
     },
     "usernameDesc": {
-      "zh": "显示在新会话欢迎语与账号行中；留空则依次使用官方账号昵称、HDSL 启动器昵称、本机系统用户名。",
-      "en": "Shown in the new-conversation greeting and the account row. Leave empty to use the signed-in account name, then the HDSL launcher's account name, then the local system user."
+      "zh": "显示在新会话欢迎语和账号行里的名字。留空时依次使用官方账号昵称、HDSL 启动器昵称、本机系统用户名。",
+      "en": "The name shown in the new-conversation greeting and the account row. Leave empty to use the signed-in account name, then the HDSL launcher name, then the local system user."
     },
     "usernamePlaceholder": {
       "zh": "自动解析账号或系统用户",
@@ -665,8 +665,8 @@
       "en": "Animation"
     },
     "motionDesc": {
-      "zh": "「随系统」跟随 Windows 自己的「显示动画」设置；「减弱」无论系统怎么设置都把动画停在代表帧上；「总是」无论系统怎么设置都播放动画。后台任务的转圈在三种设置下都照常转动——停住的圈读起来像坏了，而不是安静。",
-      "en": "Follow the system keeps Windows' own \"show animations\" setting in charge. Reduced holds every animation on its still frame whatever the system says, and Always plays them whatever the system says; the background-work ring turns in every setting, since a still ring reads as broken rather than as calm."
+      "zh": "「随系统」跟随系统的动画设置；「减弱」把动画停在代表帧；「总是」始终播放。后台任务的进度圈在任何一档都照常转动。",
+      "en": "Follow the system keeps the system's animation setting in charge; Reduced holds animations on their still frame; Always plays them. The background-work ring turns in every setting."
     },
     "motionSystem": {
       "zh": "随系统",
@@ -701,8 +701,8 @@
       "en": "Account-hold easter egg language"
     },
     "banLocaleDesc": {
-      "zh": "账户横条彩蛋（点侧栏底栏账户弹层顶部那行用户名）里那页封号界面使用的语言。它是独立设置，不跟随界面语言——那页是 Claude 的原界面，按它本来的语言读才对。",
-      "en": "The language the account-hold page is written in (click the account row at the top of the sidebar footer's popover). It is its own choice rather than following the interface language: the page reproduces Claude's own screen, so it reads the way Claude wrote it."
+      "zh": "账户保留彩蛋页（点账户弹层顶部的用户名行进入）使用的语言，不跟随界面语言。",
+      "en": "The language of the account-hold easter egg page (open it from the account row at the top of the sidebar footer popover). It does not follow the interface language."
     },
     "banLocaleZh": {
       "zh": "中文",
@@ -711,6 +711,138 @@
     "banLocaleEn": {
       "zh": "English",
       "en": "English"
+    },
+    "tabGeneral": {
+      "zh": "通用",
+      "en": "General"
+    },
+    "tabAppearance": {
+      "zh": "外观",
+      "en": "Appearance"
+    },
+    "tabComposer": {
+      "zh": "输入区",
+      "en": "Composer"
+    },
+    "tabSidebar": {
+      "zh": "侧栏",
+      "en": "Sidebar"
+    },
+    "tabConversation": {
+      "zh": "对话",
+      "en": "Conversation"
+    },
+    "paletteTitle": {
+      "zh": "配色",
+      "en": "Colours"
+    },
+    "paletteDesc": {
+      "zh": "「Claude」使用本插件的配色；「跟随宿主」把颜色交还给 DSH 和其他主题插件（例如壁纸插件），本插件只保留布局和控件。",
+      "en": "Claude uses the skin's own colours; Follow the host leaves the colours to DSH and to other theme plugins (a wallpaper plugin, say), and the skin keeps only its layout and controls."
+    },
+    "paletteClaude": {
+      "zh": "Claude",
+      "en": "Claude"
+    },
+    "paletteHost": {
+      "zh": "跟随宿主",
+      "en": "Follow the host"
+    },
+    "typefaceTitle": {
+      "zh": "字体",
+      "en": "Typefaces"
+    },
+    "typefaceDesc": {
+      "zh": "「Claude」使用 Anthropic 字体（缺少时换用外观相近的 Inter 与 Noto Serif）和 JetBrains Mono 代码字体；「跟随宿主」使用 DSH 或其他插件设定的字体。",
+      "en": "Claude uses the Anthropic faces (or the lookalike Inter and Noto Serif when they are missing) and JetBrains Mono for code; Follow the host keeps the fonts DSH or another plugin sets."
+    },
+    "typefaceClaude": {
+      "zh": "Claude",
+      "en": "Claude"
+    },
+    "typefaceHost": {
+      "zh": "跟随宿主",
+      "en": "Follow the host"
+    },
+    "mascotTitle": {
+      "zh": "吉祥物",
+      "en": "Mascot"
+    },
+    "mascotDesc": {
+      "zh": "站在输入框上沿的像素小伙伴，随智能体的工作状态换动画。「跟随品牌」在 Claude 品牌下是像素螃蟹，在 DeepSeek 品牌下是小鲸鱼 Deepy。",
+      "en": "The pixel companion on the input area's top edge, animated by what the agent is doing. Follow the brand shows the pixel crab under Claude and Deepy the whale under DeepSeek."
+    },
+    "mascotBrand": {
+      "zh": "跟随品牌",
+      "en": "Follow the brand"
+    },
+    "mascotCrab": {
+      "zh": "螃蟹",
+      "en": "Crab"
+    },
+    "mascotDeepy": {
+      "zh": "Deepy",
+      "en": "Deepy"
+    },
+    "mascotOff": {
+      "zh": "关闭",
+      "en": "Off"
+    },
+    "mascotScopeTitle": {
+      "zh": "出现位置",
+      "en": "Where it appears"
+    },
+    "mascotScopeDesc": {
+      "zh": "吉祥物只在新会话页出现，还是新会话页和对话页都出现。",
+      "en": "The new-conversation page alone, or the new-conversation page and the conversation."
+    },
+    "mascotScopeHome": {
+      "zh": "首页",
+      "en": "Home"
+    },
+    "mascotScopeAll": {
+      "zh": "首页与对话",
+      "en": "Home and conversation"
+    },
+    "permissionsTitle": {
+      "zh": "重绘权限控件",
+      "en": "Redraw the permission control"
+    },
+    "permissionsDesc": {
+      "zh": "把输入框上的权限菜单换成分段控件，会话统计数字收进上下文弹层。关闭后恢复系统的权限菜单和统计弹窗。",
+      "en": "Replace the composer's permission menu with a segmented control and move the session numbers into the context popover. Off restores the host's permission menu and statistics dialogs."
+    },
+    "searchTitle": {
+      "zh": "侧栏搜索",
+      "en": "Sidebar search"
+    },
+    "searchDesc": {
+      "zh": "在侧栏品牌行放一个搜索框，可以搜索会话、项目、插件、Skill 和快捷键。关闭后侧栏品牌行恢复原样。",
+      "en": "A search box in the sidebar's brand row that finds sessions, projects, plugins, Skills and shortcuts. Off restores the host's brand row."
+    },
+    "workspaceTitle": {
+      "zh": "进行中 / 已归档视图",
+      "en": "In progress / Archived view"
+    },
+    "workspaceDesc": {
+      "zh": "把侧栏工作区分成「进行中」和「已归档」两页，已归档页的会话可以恢复或删除。关闭后恢复系统的工作区列表。",
+      "en": "Split the sidebar's workspace section into In progress and Archived; archived conversations can be restored or deleted. Off restores the host's workspace list."
+    },
+    "turnStatusTitle": {
+      "zh": "轮次状态行",
+      "en": "Turn status line"
+    },
+    "turnStatusDesc": {
+      "zh": "把进行中、已停止和失败轮次的状态移到这一轮内容的末尾，显示用时、输出 token 数和当前动作。关闭后恢复系统的轮次状态。",
+      "en": "Move the status of a running, stopped or failed turn to the end of the turn's work, with the elapsed time, the output tokens and what the model is doing. Off restores the host's turn status."
+    },
+    "viewTabsTitle": {
+      "zh": "对话 / 轨迹标签条",
+      "en": "Chat / Trajectory tabs"
+    },
+    "viewTabsDesc": {
+      "zh": "重绘对话区顶部的「对话 / 轨迹」标签条，标题那一行放得下时移上去。关闭后恢复系统的标签条。",
+      "en": "Redraw the Chat / Trajectory tab strip at the top of the conversation, lifted onto the title's line when it fits. Off restores the host's tab strip."
     },
     "unavailable": {
       "zh": "设置存储不可用，改动不会被保存。",

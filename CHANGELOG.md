@@ -2,11 +2,11 @@
 
 All notable changes to `dsh-claude-style` are documented here, newest first.
 
-## [Unreleased]
+## [0.10.5] - 2026-10-04
 
-[中文](#cn-unreleased) | [English](#en-unreleased)
+[中文](#cn-0.10.5) | [English](#en-0.10.5)
 
-<h3 id="cn-unreleased">新增功能</h3>
+<h3 id="cn-0.10.5">新增功能</h3>
 
 - **配色与字体可以交给宿主，与壁纸等主题插件一起使用**：插件以前总是改写宿主的颜色与字体，并在侧栏、对话区刷上实色底，和 dsh-wallpaper-engine 这类同样改写宿主颜色的主题插件同时启用时，壁纸被盖住，谁的颜色生效还取决于加载先后。设置页新增「配色」与「字体」两项，各有「Claude」与「跟随宿主」两档，默认仍是 Claude。选「跟随宿主」后，插件不再改写宿主的颜色或字体，也不再给侧栏、对话区刷底色，只保留布局和控件；插件自己画的弹层、卡片与选择器改用宿主的颜色，同时启用壁纸插件时随它的玻璃效果变成半透明，弹层还会模糊背后的画面以保证文字清楚。选 Claude 时外观与以前完全一致。
 - **接管宿主界面的功能都能单独关闭**：权限分段控件、侧栏搜索、进行中 / 已归档视图、轮次状态行与对话 / 轨迹标签条以前没有开关，不想要其中一项就只能停用整个插件。现在每一项都有自己的开关，关闭后宿主原来的界面立刻回来，再打开立刻生效，都不需要刷新页面。
@@ -28,7 +28,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 - **设置的保存字段新增九项**：插件的设置表单新增 `palette`、`typeface`、`mascot`、`mascotScope`、`permissionsControl`、`workspaceView`、`sidebarSearch`、`turnStatus`、`viewTabs`。宿主半边是旧版本时（更新插件后没有重启宿主），这几项改动保存不下来，重启宿主后恢复正常。
 
-<h3 id="en-unreleased">New Features</h3>
+<h3 id="en-0.10.5">New Features</h3>
 
 - **Colours and typefaces can be left to the host, so the skin works alongside wallpaper and other theme plugins**: the plugin always rewrote the host's colours and fonts and painted solid canvases under the sidebar and the conversation, so next to a theme plugin that rewrites the same colours, such as dsh-wallpaper-engine, the wallpaper was covered and whose colours won depended on load order. The settings page adds Colours and Typefaces, each with Claude and Follow the host; Claude stays the default. Under Follow the host the plugin rewrites neither the host's colours nor its fonts and paints no canvas under the sidebar or the conversation, keeping only its layout and controls; its own popovers, cards and pickers take the host's colours, turn translucent with a wallpaper plugin's glass, and blur what lies behind them so their text stays readable. Under Claude the look is exactly as before.
 - **Every feature that takes over the host's interface can be switched off on its own**: the permission control, the sidebar search, the In progress / Archived view, the turn status line and the Chat / Trajectory tabs had no switch, so dropping one meant disabling the whole plugin. Each now has its own switch; off brings the host's original back at once, on brings the feature back at once, with no reload either way.
@@ -49,6 +49,8 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 ### Chores
 
 - **Nine new stored settings**: the plugin's settings form gains `palette`, `typeface`, `mascot`, `mascotScope`, `permissionsControl`, `workspaceView`, `sidebarSearch`, `turnStatus` and `viewTabs`. With an older host half still running (the plugin updated without restarting the host), changes to these do not save until the host restarts.
+
+**Full Changelog**: [v0.10.4...v0.10.5](https://github.com/Nwflower/dsh-claude-style/compare/v0.10.4...v0.10.5)
 
 ## [0.10.4] - 2026-10-03
 
