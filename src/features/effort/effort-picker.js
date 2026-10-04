@@ -44,12 +44,12 @@
 
       /** What the catalog currently says about the seat's ladder. */
       function effortInfo() {
-        return ui.model && typeof ui.model.effort === 'function' ? ui.model.effort() : null
+        return typeof ui.model?.effort === 'function' ? ui.model.effort() : null
       }
 
       /** True while the catalog cannot name the seat (a selection in flight). */
       function seatInFlight() {
-        return !!(ui.model && typeof ui.model.settled === 'function' && !ui.model.settled())
+        return typeof ui.model?.settled === 'function' && !ui.model.settled()
       }
 
       /**
@@ -68,12 +68,12 @@
 
       /** The host slot the seat lives in (owned by the model picker). */
       function seat() {
-        return ui.model && typeof ui.model.seat === 'function' ? ui.model.seat() : null
+        return typeof ui.model?.seat === 'function' ? ui.model.seat() : null
       }
 
       /** The model trigger this one sits beside (owned by the model picker), or null. */
       function modelTrigger() {
-        return ui.model && typeof ui.model.trigger === 'function' ? ui.model.trigger() : null
+        return typeof ui.model?.trigger === 'function' ? ui.model.trigger() : null
       }
 
       /**
@@ -114,8 +114,11 @@
       const effortPlace = { left: -1, top: -1, need: 0, widthLabel: '', height: 0 }
 
       /** Pin the body-mounted trigger beside the model trigger (every pass: the
-       * seat moves with the window and the composer's own growth). */
-      function positionEffortTrigger(label) {
+       * seat moves with the window and the composer's own growth). The label is
+       * read off the button so the reposition hook gets the same cache the sync
+       * pass does — a caller that cannot name the label used to force a
+       * re-measure on every viewport change. */
+      function positionEffortTrigger() {
         if (effortBtn === null) return
         const modelBtn = modelTrigger()
         if (modelBtn === null) {
@@ -147,6 +150,8 @@
         if (effortBtn.style.display !== 'inline-flex') effortBtn.style.display = 'inline-flex'
         // The trigger's size follows its label: re-measure only when it moved
         // (offsetWidth/offsetHeight force a layout the pass would rather not pay).
+        const labelEl = effortBtn.querySelector('.dsh-claude-effort-btn-label')
+        const label = labelEl === null ? '' : labelEl.textContent
         if (label !== effortPlace.widthLabel) {
           effortPlace.widthLabel = label
           effortPlace.need = Math.max(0, effortBtn.offsetWidth - 6)
@@ -177,7 +182,7 @@
           effortSlider = createEffortControl({
             read: readEffort,
             onPick(levelId) {
-              if (ui.model && typeof ui.model.pickEffort === 'function') ui.model.pickEffort(levelId)
+              if (typeof ui.model?.pickEffort === 'function') ui.model.pickEffort(levelId)
             },
             // A drag must not be cut short by the hover-close timer: the pointer
             // is inside the control the whole time.
@@ -207,7 +212,6 @@
         if (slot !== null) removeStrayNodes(slot, '.dsh-claude-effort-btn', [effortBtn])
         removeStrayNodes(document, 'body > .dsh-claude-effort-popover', [effortPop])
         if (effortPop === null || effortPop.parentElement === null) {
-          if (effortPop !== null && effortPop.parentElement !== null) effortPop.parentElement.removeChild(effortPop)
           effortPop = document.createElement('div')
           effortPop.className = 'dsh-claude-popover-card dsh-claude-effort-popover'
           setMenuPopoverOpen(effortPop, false)
@@ -275,7 +279,7 @@
           // its snapshot yet) has said nothing about that seat's levels: the
           // trigger stays as it is, the way the in-flight branch above keeps it.
           // Only a named model without a ladder takes it away.
-          if (ui.model && typeof ui.model.named === 'function' && !ui.model.named()) return
+          if (typeof ui.model?.named === 'function' && !ui.model.named()) return
           // No ladder on this seat: the trigger goes away with it, exactly as the
           // model card drew no effort row for such a model.
           hideEffortTrigger()
@@ -316,7 +320,7 @@
         const aria = `${copyLabel('effortLabel', MODEL_EFFORT_LABEL)} ${info.label}`
         if (effortBtn.getAttribute('aria-label') !== aria) effortBtn.setAttribute('aria-label', aria)
         if (effortSlider !== null) effortSlider.update()
-        positionEffortTrigger(info.label)
+        positionEffortTrigger()
 
         if (effortPop !== null && effortPop.getAttribute('data-open') === 'true') positionEffortPopover()
       }
