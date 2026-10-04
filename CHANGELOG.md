@@ -6,12 +6,20 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 [中文](#cn-unreleased) | [English](#en-unreleased)
 
-<h3 id="cn-unreleased">问题修复</h3>
+<h3 id="cn-unreleased">体验优化</h3>
+
+- **设置项说明改为只说行为**：设置页十项的说明以前夹带设计缘由（进度圈为什么不停、彩蛋页为什么不跟随界面语言），动辄两三行。现在每条说明只说这一项改什么、各档分别是什么效果；「修改品牌标识」「重绘设置弹层」等动宾式或与其他条目不一致的标题一并统一为名词短语。
+
+### 问题修复
 
 - **小鲸鱼不再把阴影画在目标、待办与排队卡片上**：DeepSeek 品牌下，小鲸鱼被叠在输入卡片上方的目标、待办与排队卡片顶起时，它身下阴影的末端落在那张卡片的最上缘。现在小鲸鱼抬高 3 像素，阴影落在卡片上，卡片上不再压着一道暗色。
 - **侧栏搜索框与它下面的按钮等高、间距一致，桌面端也不再被顶栏盖住**：搜索框以前比「新会话」「插件」这些行高出 4 像素，与它们相隔也只有 4 像素，排在这一列里比其余各行都松。现在搜索框与各按钮同为 28 像素高，与「新会话」的间隔为 6 像素，与各按钮之间的间隔相同；Windows 桌面端那一行为此少抬高 4 像素，搜索框整块落在顶栏下方，不再被截去上缘。
 
-<h3 id="en-unreleased">Bug Fixes</h3>
+<h3 id="en-unreleased">Improvements</h3>
+
+- **Settings descriptions now state behavior only**: the ten settings rows used to mix design rationale into their descriptions (why the progress ring never stops, why the easter egg ignores the interface language) and ran two to three lines each. Every description now says only what the setting changes and what each option does; verb-form or inconsistent titles such as the brand and sidebar-footer rows are unified to noun phrases.
+
+### Bug Fixes
 
 - **Deepy no longer paints its shadow across the goal, todo and queue cards**: under the DeepSeek brand, when the goal, todo or queue cards pushed the whale up off the composer card, the tail of the shadow under it landed on the top edge of that card. The whale now sits 3px higher: the shadow rests on the card instead of a dark band being stamped across it.
 - **The sidebar search box matches the height and the rhythm of the rows under it, and no longer hides under the desktop titlebar**: the box stood 4px taller than New session, Plugins and the rows below them, and sat 4px from New session, which left the top of the list looser than the rest of it. The box is 28px like those rows now, 6px above New session, the same step the rows take among themselves; on the Windows Desktop that row rises 4px less, which keeps the whole box below the titlebar instead of cutting its top edge.

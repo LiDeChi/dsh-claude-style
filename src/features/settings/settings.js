@@ -210,7 +210,7 @@
         row(
           'username',
           settingsCopy('usernameTitle', 'Username'),
-          settingsCopy('usernameDesc', 'Shown in the new-conversation greeting and the account row. Leave empty to use the signed-in account name, then the HDSL launcher\'s account name, then the local system user.'),
+          settingsCopy('usernameDesc', 'The name shown in the new-conversation greeting and the account row. Leave empty to use the signed-in account name, then the HDSL launcher name, then the local system user.'),
           React.createElement('input', {
             type: 'text',
             className: 'dsh-claude-settings-input',
@@ -239,7 +239,7 @@
         row(
           'brand',
           settingsCopy('brandTitle', 'Brand mark'),
-          settingsCopy('brandDesc', 'The brand mark in the sidebar and on the home page. DeepSeek keeps the host\'s own DeepSeek mark in DeepSeek blue, turns the whole palette blue (a sky-tinted white in light, a blue-black in dark) and puts Deepy the pixel whale on the composer in place of the crab.'),
+          settingsCopy('brandDesc', 'The brand mark and palette. DeepSeek switches to a blue palette and swaps the pixel crab on the composer for Deepy the whale.'),
           // One card per brand: the brand's own mark above its name, the
           // active card outlined in the brand accent. The stylesheet picks the
           // mark off the logo's data-brand, so a new brand is one option here
@@ -266,43 +266,43 @@
         row(
           'motion',
           settingsCopy('motionTitle', 'Animation'),
-          settingsCopy('motionDesc', 'Follow the system keeps Windows\' own "show animations" setting in charge. Reduced holds every animation on its still frame whatever the system says, and Always plays them whatever the system says; the background-work ring turns in every setting, since a still ring reads as broken rather than as calm.'),
+          settingsCopy('motionDesc', 'Follow the system keeps the system\'s animation setting in charge; Reduced holds animations on their still frame; Always plays them. The background-work ring turns in every setting.'),
           segment(motionOptions, prefs.motion, value => { write({ motion: value }) }),
         ),
         row(
           'collapseFooter',
           settingsCopy('collapseTitle', 'Collapse the sidebar settings area'),
-          settingsCopy('collapseDesc', 'Fold the sidebar footer\'s settings entry into the account popover. Off hands the footer back to the host entirely.'),
+          settingsCopy('collapseDesc', 'Fold the sidebar footer\'s settings entry into the account popover. Off restores the host\'s footer.'),
           toggle(prefs.collapseFooter, value => { write({ collapseFooter: value }) }),
         ),
         row(
           'autoPopover',
           settingsCopy('autoPopoverTitle', 'Open popovers on hover'),
-          settingsCopy('autoPopoverDesc', 'Which popovers hover opens. Off leaves them all click-to-open.'),
+          settingsCopy('autoPopoverDesc', 'Which popovers open on hover. "Account only" keeps it to the sidebar account popover; "All" adds the permission, model, session-stats and home-page pickers. Off leaves every popover click-to-open.'),
           segment(autoPopoverOptions, prefs.autoPopover, value => { write({ autoPopover: value }) }),
         ),
         row(
           'composerScope',
           settingsCopy('composerTitle', 'Composer restyle'),
-          settingsCopy('composerDesc', 'Which input area the skin restyles: the new-conversation page, the conversation, or both.'),
+          settingsCopy('composerDesc', 'Which input area the skin restyles: the new-conversation page, the conversation, or both. Off restores the host\'s composer.'),
           segment(scopeOptions, prefs.composerScope, value => { write({ composerScope: value }) }),
         ),
         row(
           'homeLayout',
           settingsCopy('homeTitle', 'Home layout'),
-          settingsCopy('homeDesc', 'The new-conversation page: the centered hero, or the dashboard form with the greeting at the top left, the composer at the bottom edge and the usage panel in between.'),
+          settingsCopy('homeDesc', 'The new-conversation page layout. Classic is the centered hero with the input card; Studio moves the greeting to the top left, pins the composer to the bottom and shows usage in between.'),
           segment(homeLayoutOptions, prefs.homeLayout, value => { write({ homeLayout: value }) }),
         ),
         row(
           'modelPicker',
           settingsCopy('pickerTitle', 'Redraw the model picker'),
-          settingsCopy('pickerDesc', 'Replace the composer\'s model seat with the two-level Claude-style menu. Off hands the model menu back to the host; the rest of the composer restyle is unaffected.'),
+          settingsCopy('pickerDesc', 'Replace the composer\'s model menu with the two-level Claude-style menu. Off restores the host\'s model menu.'),
           toggle(prefs.modelPicker, value => { write({ modelPicker: value }) }),
         ),
         row(
           'quickProviders',
           settingsCopy('quickTitle', 'Quick providers'),
-          settingsCopy('quickDesc', 'Providers whose models the picker\'s first level lists, one rule between providers. Nothing picked keeps the default: the official service.'),
+          settingsCopy('quickDesc', 'Picked providers follow the official service in the picker\'s first level, one rule between providers. A provider removed from the catalog stays in the list marked "Removed"; uncheck it to clear it.'),
           React.createElement('button', {
             type: 'button',
             ref: quickTrigger,
@@ -318,7 +318,7 @@
         row(
           'banLocale',
           settingsCopy('banLocaleTitle', 'Account-hold easter egg language'),
-          settingsCopy('banLocaleDesc', 'The language the account-hold page (click the account row in the sidebar footer popover) is written in. It is its own choice, so the page reads the way Claude wrote it whatever the interface language is.'),
+          settingsCopy('banLocaleDesc', 'The language of the account-hold easter egg page (open it from the account row at the top of the sidebar footer popover). It does not follow the interface language.'),
           segment(banLocaleOptions, prefs.banLocale, value => { write({ banLocale: value }) }),
         ),
       ]
