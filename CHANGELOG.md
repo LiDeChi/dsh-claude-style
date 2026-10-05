@@ -2,11 +2,11 @@
 
 All notable changes to `dsh-claude-style` are documented here, newest first.
 
-## [Unreleased]
+## [0.10.6] - 2026-10-05
 
-[中文](#cn-unreleased) | [English](#en-unreleased)
+[中文](#cn-0.10.6) | [English](#en-0.10.6)
 
-<h3 id="cn-unreleased">新增功能</h3>
+<h3 id="cn-0.10.6">新增功能</h3>
 
 - **聊天气泡动效**：提交消息的那一下，输入卡片原样浮起一份，一边飞一边把多余的收掉——工具栏左右两组贴着最近的角缩小、淡出，描边与阴影跟着形状收回，草稿里的字跟着变窄的形状一行一行重新排——落地时正好就是那条真实气泡；真实气泡在飞行期间藏着，落定后原位出现。设置页的「动画效果」选了「减弱」、两端不在同一屏、或起点读不到（快捷键与程序化提交）时都不飞；页面切到后台时另有定时器兜底，藏起来的消息一定会放出来。与对话区其他动画一起合并在设置页「对话」页的「聊天区动画效果」开关里，默认开启。
 - **文件变更行**：从 run_code 程序里派发出去的写入与编辑按直接调用的样子显示——行尾带 `+n -m`，展开是改动卡片，路径可点开文件；失败与中断的行保留裁决信息、不再给路径链接，状态另有给读屏的说明。改动内容无法从参数推出的调用保留系统的输入 / 输出卡片。与对话区其他动画一起合并在设置页「对话」页的「聊天区动画效果」开关里，默认开启。
@@ -17,12 +17,12 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - **聊天区跟随交给系统自己的跟随，封顶的工作过程不再掉队**：思考行收起、工具调用行出现这些结构时刻，贴着底部的读者现在被交还给系统自己的跟随，内容成片到达时不再停在离底部几十像素的地方；「标准」与「简洁」档里封顶的过程组（思考与工具输出收在一个带滚动条的组体里）同样补到底部，最新两行不再长期悬在下方。补到底部是按曲线走完的：零散到达的字收得住尾巴，一次涌进上百个 token 那样的厚块则以一段恒定速度滑过去，再落到末尾——流式输出时新加的一行把上文顶起来是平滑的，不再几十像素一下地跳。流式输出期间主滚动条的跟随也交给同一条曲线：系统原来是把末尾一帧写到位，现在这段位移由插件接管并滑过去；输出很快时最新几行会短暂拖在屏幕下缘之外，流一停就滑到位。读者自己发出的消息不受这条曲线影响：宿主把新消息滚进视野的那一下照旧一步到位，插件在消息到达前后短暂让开。读者自己滚动离开底部之后，插件不再插手，直到他自己回到底部。与对话区其他动画一起合并在设置页「对话」页的「聊天区动画效果」开关里，默认开启。
 - **与 dsh-chat-ux 共存**：本机同时装着 [dsh-chat-ux](https://github.com/alm-allen/dsh-chat-ux) 时，上面这几项整体让位——那个插件实现了同一批交互，两套同时生效会互相拦点击、抢同一批按钮、往宿主同一个座位键位按同一优先级注册。设置页的「对话」页把「聊天区动画效果」与「输入框插入符动效」两行的控件禁用，控件本身仍显示你自己设的值，下面另起一行用强调色写明「该选项由 dsh-chat-ux 管理」；你的设置不会被改写，那个插件中途装卸也照常跟随。它不在时这些交互按本插件自己的开关运行。
 
-<h3 id="cn-unreleased">体验优化</h3>
+### 体验优化
 
 - **权限菜单在窗口上方放不下时改为在控件下方展开**：权限分段控件的卡片固定朝上展开，窗口很矮时它的上缘顶出屏幕外，最上面几项点不到。现在上方容不下整张卡片时，它在控件下方展开。
 - **上述动效跟随「动画效果」设置**：卷帘门过渡、聊天气泡动效、新文字淡入、插入符的滑动与闪烁、组头的流光此前只认系统的「减少动态效果」：设置页选「减弱」关不掉它们，选「总是」在系统开着减弱时也照样不动。现在它们读的是设置页解析出的那一档。
 
-<h3 id="cn-unreleased">问题修复</h3>
+### 问题修复
 
 - **「更多模型」的二级弹层在指针离开后收拢**：指针从「更多模型」挪到一级列表的模型行上之后，二级弹层在宽限期结束后收起，一级弹层保持不动。修复前只要指针还在一级弹层里它就永远挂着，遮住一级列表。
 - **模型选择器打开二级弹层的瞬间即定位**：此前打开动作先定位后标记打开，而定位只认已标记打开的卡片，于是二级弹层沿用上一次的位置（连同上一次的窗口宽度算出的坐标），要等下一次指针事件才可能被纠正。现在先标记打开再定位，每次打开都落在当前位置。
@@ -31,11 +31,11 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - **拖入附件后，输入区工具栏打开的面板不再被附件区域遮住**：附件存在时，从输入区工具栏按钮打开的面板（模型选择、思考强度等）中间被上方那块附件区域盖住一大截，只在卡片上方和输入框下方各露出一条边，面板里的行点不到。现在这类面板完整显示。
 - **侧栏账号区因故障停用后，设置快捷键不再失灵**：插件的侧栏账号区出错退役后，按 Ctrl+,（macOS 为 ⌘,，网页版宿主为 Ctrl+Alt+,）什么都不打开。现在按键交还宿主，宿主自己的设置快捷键照常打开设置。
 
-<h3 id="cn-unreleased">其他变更</h3>
+### 其他变更
 
 - **昵称与封号页语言只存在设置里**：早先在宿主半边不认这两个字段时存进浏览器本地的值，会在打开页面后写进插件设置，本地那份随后删除；此后两项与其他设置一样只保存在宿主的设置表单里。
 
-<h3 id="en-unreleased">New Features</h3>
+<h3 id="en-0.10.6">New Features</h3>
 
 - **Send flight**: on submission the composer card lifts as it is and sheds what is extra on the way — the toolbar's two groups shrink and fade into their nearest corners, the hairline and shadow shrink with the shape, the words in the draft re-flow into the narrowing shape a line at a time — landing exactly on the real bubble, which hides while the flight is up and reappears in place when it lands. Nothing flies when the animation choice is Reduced, when the two ends are not on one screen, or when the origin cannot be read (a shortcut or a programmatic submission); a timer releases a hidden message if the page is in the background. It rides the Chat-area animations switch on the settings page's Conversation tab, on by default.
 - **File change rows**: a write or edit dispatched from inside a run_code program is shown like a directly called one — the row carries the `+n -m` tail, expands into the diff card and its path opens the file; a failed or interrupted row keeps its verdict, drops the path link and announces its state to a screen reader. A call whose changed text cannot be derived from its arguments keeps the host's IN/OUT card. It rides the Chat-area animations switch on the settings page's Conversation tab, on by default.
@@ -46,12 +46,12 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - **The chat area's scroll goes back to the host's own follow, and a capped piece of work no longer lags behind**: at the structural moments — a thinking row folding, a tool call row arriving — a reader sitting at the bottom is now handed back to the host's own follow instead of being left tens of pixels short by the burst of content; a process group capped in the Standard and Compact tiers (thinking and tool output kept in one scrolling body) is caught up the same way, so the last two lines no longer hang below the fold. Catching up runs on a curve: a trickle of characters settles softly, and a thick burst — a hundred-odd tokens arriving at once — glides at one steady speed before landing, so while text streams a new line pushes the text above it up smoothly instead of in forty-pixel steps. While content streams, the main scroller's follow runs along the same curve: where the host wrote its end in one frame, that displacement is now taken over and walked, so with a fast stream the newest lines trail just below the fold and slide into place once it stops. A message the reader sends is not affected by that curve: the host's scroll to bring it into view lands at once, and the plugin stands down around the arrival. Once the reader scrolls away from the bottom himself, the plugin stays out of it until he returns. It rides the Chat-area animations switch on the settings page's Conversation tab, on by default.
 - **Coexisting with dsh-chat-ux**: with [dsh-chat-ux](https://github.com/alm-allen/dsh-chat-ux) installed on the same machine these effects stand down whole — that plugin implements the same interactions, and two copies intercept each other's clicks, press the same controls and register the same seat key at the same priority. The settings page's Conversation tab disables the Chat-area animations and Composer caret motion rows while each one goes on showing the value you set, with a line underneath in the accent colour reading "Managed by dsh-chat-ux"; your settings are not rewritten, and the hand-over follows that plugin being loaded or removed mid-session. With it gone they run on this plugin's own switches as usual.
 
-<h3 id="en-unreleased">Improvements</h3>
+### Improvements
 
 - **The permission menu opens below the control when it does not fit above**: the permission control's card always unfolded upward, so in a short window its top edge ran off-screen and the first rows could not be clicked. It now opens below the control when the card does not fit above.
 - **Those animations follow the Animation setting**: the rolling door, the send flight, the token fade, the caret's glide and blink and the header's live-detail sweep used to read the system's reduced-motion query alone, so Reduced on the settings page did not stop them and Always did nothing while the system asked for reduced motion. They now read the resolved choice.
 
-<h3 id="en-unreleased">Bug Fixes</h3>
+### Bug Fixes
 
 - **The More-models card folds once the pointer leaves**: moving the pointer from the More-models cell onto a model row of the first level now folds the second level after the grace, the first level staying put. Before, it hung open as long as the pointer stayed anywhere in the first level, covering its list.
 - **The model picker places its second level at the moment it opens**: the open path used to place the card before marking it open, and the placement only reads cards marked open — so the card kept its previous position (with coordinates computed for the previous window width) until some later pointer event corrected it. It is marked open first and placed after, so every open lands on the current position.
@@ -60,9 +60,11 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - **A panel opened from the composer's toolbar is no longer covered by the attachment area**: with an attachment in the composer, a panel opened from a toolbar button — the model picker, the reasoning-effort slider — lost its middle to the attachment area above it and showed only a strip above the card and another below the input box, so none of its rows could be clicked. Such panels now draw in full.
 - **The settings shortcut keeps working after the sidebar account area is switched off by a fault**: once the plugin's sidebar account area failed and retired, Ctrl+, (⌘, on macOS, Ctrl+Alt+, in the web host) opened nothing. The keys now go back to the host, and the host's own settings shortcut opens the settings as usual.
 
-<h3 id="en-unreleased">Chores</h3>
+### Chores
 
 - **The nickname and the account-hold page's language live in the settings alone**: a value kept in the browser's local storage while the host half did not know these fields yet is written into the plugin settings when the page opens, and the local copy is removed afterwards; from then on both are saved in the host's settings form like every other setting.
+
+**Full Changelog**: [v0.10.5...v0.10.6](https://github.com/Nwflower/dsh-claude-style/compare/v0.10.5...v0.10.6)
 
 ## [0.10.5] - 2026-10-04
 

@@ -836,6 +836,38 @@
       "zh": "把进行中、已停止和失败轮次的状态移到这一轮内容的末尾，显示用时、输出 token 数和当前动作。关闭后恢复系统的轮次状态。",
       "en": "Move the status of a running, stopped or failed turn to the end of the turn's work, with the elapsed time, the output tokens and what the model is doing. Off restores the host's turn status."
     },
+    "chatAnimationsTitle": {
+      "zh": "聊天区动画效果",
+      "en": "Chat-area animations"
+    },
+    "chatAnimationsDesc": {
+      "zh": "对话区的动画合成一个开关。回答变长时画面跟着新出现的一行往下走，思考和工具输出收在可滚动的框里时也照样跟到底，跟上去是一段平滑的滚动，不是一下跳过去；模型思考时「思考」一行自动展开、结束收起，正在进行的步骤也同样开合，你自己点开或收起一行时高度是一段一段走完的；回答是一个字一个字淡入的，新到的字先很淡，再落到本色；程序内部执行的写入和编辑，行尾标出 +n -m，展开就是改动的行；发出消息时输入框浮起来，一边飞一边收成刚发出的那条气泡。关闭后这几项一起停，恢复系统原来的行为。设置页的「动画效果」选「减弱」时这些动作一并停下。",
+      "en": "The conversation area's animations in one switch. The view follows the newest line as an answer grows — gliding there, and catching up the same way inside a scrolling work log — instead of stopping just short of the bottom; the thinking row opens while the model reasons and folds back when it stops, a running step does the same, and a press rolls a height open or shut; new text fades in as it arrives, faint first and settling to its own colour; a write or edit run from inside a program is shown as a row carrying its +n -m count that opens into the changed lines; and the composer lifts into the message bubble on send. Off stops all of them and the host's own behaviour returns. With Animation set to Reduced they all stand still."
+    },
+    "caretTitle": {
+      "zh": "输入框插入符动效",
+      "en": "Composer caret motion"
+    },
+    "caretDesc": {
+      "zh": "输入框里的光标由插件绘制，移动时滑过去，而不是直接跳过去；「只在移动时」只在方向键、点击这类移动上滑，打字时光标瞬时到位。",
+      "en": "The composer's caret is drawn by the plugin and glides between positions instead of jumping. Explicit moves glides only on an arrow key or a click, and lands instantly while typing."
+    },
+    "caretTyping": {
+      "zh": "每一格",
+      "en": "Every move"
+    },
+    "caretMove": {
+      "zh": "只在移动时",
+      "en": "Explicit moves"
+    },
+    "caretOff": {
+      "zh": "关闭",
+      "en": "Off"
+    },
+    "chatUxManaged": {
+      "zh": "该选项由 dsh-chat-ux 管理",
+      "en": "Managed by dsh-chat-ux"
+    },
     "viewTabsTitle": {
       "zh": "对话 / 轨迹标签条",
       "en": "Chat / Trajectory tabs"
