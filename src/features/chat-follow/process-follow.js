@@ -14,12 +14,14 @@
      *
      * Together they leave the position 20 to 50 px off the end — exactly the
      * last two lines. Nothing here changes the host's own state: past
-     * CATCH_UP_GAP_PX the catch-up writes the body's scrollTop itself, and
-     * inside that threshold it leaves the host's smooth scroll alone, which is
-     * the pleasant one while it keeps up. The reader scrolling inside a body
-     * hands that body over until he comes back to its end.
+     * CATCH_UP_GAP_PX the catch-up walks the body's scrollTop to its end on a
+     * curve (scroll-ease.js, so the text above the last line is pushed up
+     * smoothly rather than in a jump), and inside that threshold it leaves the
+     * host's smooth scroll alone, which is the pleasant one while it keeps up.
+     * The reader scrolling inside a body hands that body over until he comes
+     * back to its end.
      *
-     * The catch-up and the host's own follow do not fight: writing scrollTop
+     * The catch-up and the host's own follow do not fight: moving scrollTop
      * runs its onScroll, and it reads a position at the end as the reader
      * reaching the end — which lights its follow up again and drops the
      * animation target that was stuck.
@@ -55,6 +57,8 @@
       const takenOver = new WeakSet()
       /** The bodies handed to the observer, each with the content layer it currently has. */
       const watched = new Map()
+      /** Set by the teardown, so an ease in flight stops with the feature. */
+      let stopped = false
 
       /** Whether this body is ours to follow at all. */
       const followable = (body) => {
@@ -69,13 +73,22 @@
       /** How far this body still is from its own end. */
       const gapOf = (body) => body.scrollHeight - body.clientHeight - body.scrollTop
 
-      /** Past the threshold, put the body's position at its end directly. */
+      /** Past the threshold, walk the body's position to its end on a curve. */
       const catchUp = (body) => {
         if (!readEnabled()) return
         if (takenOver.has(body)) return
         if (!followable(body)) return
         if (gapOf(body) <= CATCH_UP_GAP_PX) return
-        body.scrollTop = body.scrollHeight
+        // Written outright, the catch-up lands as a jump of forty-odd pixels
+        // several times a second while text streams, which reads as the
+        // paragraph above the last line snapping upward; the position is eased
+        // there instead (scroll-ease.js). The reader's animation choice still
+        // means "no animation", so reduced motion keeps the direct write.
+        if (motionReduced()) {
+          body.scrollTop = body.scrollHeight
+          return
+        }
+        easeScrollToEnd(body, () => readEnabled() && !stopped && !takenOver.has(body) && followable(body))
       }
 
       /**
@@ -149,6 +162,9 @@
           takenOver.delete(body)
           observer.unobserve(body)
           if (content !== null) observer.unobserve(content)
+          // A body leaving the page takes its ease with it; the loop would drop
+          // it anyway (it is no longer connected), and this is the tidier exit.
+          stopScrollEase(body)
         }
       }
 
@@ -158,9 +174,12 @@
       sync()
 
       return () => {
+        stopped = true
         window.clearInterval(timer)
         observer.disconnect()
         window.removeEventListener('scroll', noteScroll, true)
         for (const type of PROCESS_INTENT_TYPES) window.removeEventListener(type, noteIntent, true)
+        for (const body of watched.keys()) stopScrollEase(body)
+        watched.clear()
       }
     }

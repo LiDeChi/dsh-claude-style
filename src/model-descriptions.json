@@ -268,8 +268,8 @@
     },
     "chatFollowTitle": { "zh": "聊天区跟随", "en": "Chat-area follow" },
     "chatFollowDesc": {
-      "zh": "回答变长时画面跟着新出现的一行往下走，不会停在离底部差一点的地方；思考和工具输出收在可滚动的框里时，也照样跟到底。关闭后保持系统原来的滚动方式。",
-      "en": "Keeps the conversation following its newest line as an answer grows, instead of stopping just short of the bottom, and catches up the same way inside a scrolling work log. Off keeps the host's own scrolling."
+      "zh": "回答变长时画面跟着新出现的一行往下走，不会停在离底部差一点的地方；思考和工具输出收在可滚动的框里时，也照样跟到底。跟上去是一段平滑的滚动，不是一下跳过去。关闭后保持系统原来的滚动方式。",
+      "en": "Keeps the conversation following its newest line as an answer grows, instead of stopping just short of the bottom, and catches up the same way inside a scrolling work log. It glides there rather than jumping. Off keeps the host's own scrolling."
     },
     "autoFoldTitle": { "zh": "思考与过程自动开合", "en": "Automatic folding" },
     "autoFoldDesc": {

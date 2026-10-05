@@ -48,7 +48,7 @@
           controls.row(
             'chatFollow',
             settingsCopy('chatFollowTitle', 'Chat-area follow'),
-            desc('chatFollowDesc', 'Keeps the conversation following its newest line as an answer grows, instead of stopping just short of the bottom, and catches up the same way inside a scrolling work log. Off keeps the host\'s own scrolling.'),
+            desc('chatFollowDesc', 'Keeps the conversation following its newest line as an answer grows, instead of stopping just short of the bottom, and catches up the same way inside a scrolling work log. It glides there rather than jumping. Off keeps the host\'s own scrolling.'),
             peerToggle(prefs.enhancedFollow, value => { write({ enhancedFollow: value }) }),
           ),
           controls.row(

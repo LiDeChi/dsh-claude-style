@@ -667,11 +667,27 @@ const CASES = {
     check('the follow feature marks the document, and only a capped process body is clipped to one axis',
       follow.marked === true && follow.overflowX === 'hidden' && follow.expandedOverflowX === 'auto',
       JSON.stringify(follow))
+    // A browser clamps a scroll position a few pixels inside
+    // `scrollHeight - clientHeight` when a child's own overflow or a scrollbar
+    // rounds it, so "at the end" means "inside that clamp", and the point of the
+    // check is that it got there by walking.
+    const AT_END_PX = 6
     check('a structural moment hands the scroll back: the position was 60px off the end and lands at it',
-      follow.before === 60 && follow.after === 0, JSON.stringify({ before: follow.before, after: follow.after }))
+      follow.before === 60 && follow.after <= AT_END_PX && follow.after < follow.before,
+      JSON.stringify({ before: follow.before, after: follow.after }))
     check('a reader who scrolled away himself is left where he is',
       follow.readerBefore === 60 && follow.readerAfter === 60,
       JSON.stringify({ before: follow.readerBefore, after: follow.readerAfter }))
+    // The catch-up is a curve, not a jump: a frame later the capped body is
+    // still well short of its end, part way there by a tenth of a second, and
+    // held at the end afterwards (scroll-ease.js).
+    check('the capped body walks to its end instead of jumping: short a frame later, part way at a tenth of a second, at the end afterwards',
+      follow.catchUpEarly > 200 && follow.catchUpMid < follow.catchUpEarly && follow.catchUpMid > 0 &&
+        follow.catchUpDone <= AT_END_PX && follow.catchUpLate <= AT_END_PX,
+      JSON.stringify({
+        early: follow.catchUpEarly, mid: follow.catchUpMid,
+        done: follow.catchUpDone, late: follow.catchUpLate,
+      }))
   },
   caret(r) {
     check('apply() completes', r.applyError === null, r.applyError)

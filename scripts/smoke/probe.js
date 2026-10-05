@@ -1298,6 +1298,27 @@
       r.chatFollow.readerBefore = endGap()
       await structuralMoment()
       r.chatFollow.readerAfter = endGap()
+      // The capped body's catch-up is walked in on a curve, not written in one
+      // frame (scroll-ease.js): grow the content well past the catch-up
+      // threshold and sample what is left to go at three moments.
+      if (cappedBody !== null) {
+        var cappedContent = cappedBody.querySelector('[data-step-process-content]')
+        var bodyGap = function () {
+          return Math.round(cappedBody.scrollHeight - cappedBody.clientHeight - cappedBody.scrollTop)
+        }
+        cappedBody.scrollTop = 0
+        await sleep(80)
+        if (cappedContent !== null) cappedContent.style.height = '900px'
+        await sleep(25)
+        r.chatFollow.catchUpEarly = bodyGap()
+        await sleep(110)
+        r.chatFollow.catchUpMid = bodyGap()
+        await sleep(400)
+        r.chatFollow.catchUpDone = bodyGap()
+        await sleep(500)
+        // Held at the end: the ease ended there rather than being left running.
+        r.chatFollow.catchUpLate = bodyGap()
+      }
     }
     // The ported caret motion (src/features/caret/): the focused composer
     // surface gets a drawn caret and the native one gives way; switching the

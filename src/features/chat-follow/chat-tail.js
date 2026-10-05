@@ -15,11 +15,13 @@
      * lights the follow up again and reaches the end at once. Both ways are
      * used here, in this order:
      *
-     *   pin     scrollTop = scrollHeight (the browser clamps to the end). Any
-     *           displacement at all makes the host's own onScroll take the
-     *           "reader reached the end" branch — which does not ask whether
-     *           the follow is on — so it lights the follow up and clears the
-     *           window. With the position already at the end nothing changes.
+     *   pin     the position is walked to the end on a curve (scroll-ease.js),
+     *           so the text above the last line is pushed up smoothly rather
+     *           than snapping. Any displacement at all makes the host's own
+     *           onScroll take the "reader reached the end" branch — which does
+     *           not ask whether the follow is on — so it lights the follow up
+     *           and clears the window. With the position already at the end
+     *           nothing changes.
      *   click   no displacement means no scroll event, so the pin is a no-op.
      *           That is the start of an execution, when the content has not
      *           grown a scrollbar yet: the end is 0 and the position is 0, and
@@ -72,8 +74,12 @@
       // Put the position where the reader should be first. This also covers the
       // "follow is on, it just fell behind" case: the host reads the move as the
       // reader reaching the end, lights the follow up and clears its window.
+      // Walked in on a curve rather than written outright, so the text above the
+      // last line is pushed up smoothly instead of snapping (scroll-ease.js);
+      // the reader's animation choice still means "no animation".
       if (scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop > 0.5) {
-        scroller.scrollTop = scroller.scrollHeight
+        if (motionReduced()) scroller.scrollTop = scroller.scrollHeight
+        else easeScrollToEnd(scroller, stillWanted)
       }
       let rounds = 0
       const look = () => {
@@ -82,6 +88,13 @@
           return
         }
         rounds += 1
+        // The walk comes first and the button only after it: clicking mid-walk
+        // would drop the eased position for the host's own instant jump, which
+        // is the jump this hand-back exists to avoid.
+        if (isScrollEasing(scroller)) {
+          window.setTimeout(look, FOLLOW_LOOK_INTERVAL_MS)
+          return
+        }
         // A pinned position does not mean the follow is back: the settlement may
         // switch it off a beat later, and after that only the button brings it back.
         if (document.querySelector(FOLLOWING_TAIL_SELECTOR) === null) {
@@ -94,6 +107,10 @@
             ? null
             : root.nextElementSibling.querySelector('button')
           if (button !== null) {
+            // The button's own followTail() reaches the end without a scroll
+            // event, so the ease in flight is handed back rather than left to
+            // fight it for the position.
+            stopScrollEase(scroller)
             button.click()
             if (onSettled !== null) onSettled()
             return

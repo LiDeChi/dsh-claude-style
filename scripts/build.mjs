@@ -128,6 +128,7 @@ const FRAGMENTS = [
   'features/search/search.js',
   'features/turn-status/turn-status.js',
   'features/chat-follow/reader-intent.js',
+  'features/chat-follow/scroll-ease.js',
   'features/chat-follow/chat-tail.js',
   'features/chat-follow/process-follow.js',
   'features/chat-follow/chat-follow.js',
