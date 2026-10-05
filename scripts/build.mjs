@@ -35,9 +35,15 @@
 import { createHash } from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
+import { pathToFileURL } from 'node:url'
 import vm from 'node:vm'
 
 const ROOT = path.resolve(import.meta.dirname, '..')
+/**
+ * The host half's preference table (host/settings.js): the browser half's
+ * PREF_DEFAULTS and src/entry.js's feature switches are both held to it.
+ */
+const { PREFS_DEFAULT } = await import(pathToFileURL(path.join(ROOT, 'host', 'settings.js')).href)
 const SRC = path.join(ROOT, 'src')
 const ASSETS = path.join(SRC, 'assets')
 /** Brand marks inlined as CSS data URIs. */
@@ -208,19 +214,16 @@ const FOOTER = `  },
 `
 
 /**
- * Evaluate src/constants.js once (pure, DOM-free) and hand back one namespace:
- * the %%TOKEN%% values, the two sheet tables and the names the host half
- * mirrors. The file is written for both halves — the bundle inlines it and
- * host/routes.js reads it as text — so nothing imports it directly.
+ * Evaluate src/constants.js once (pure, DOM-free): `tokens` are the %%TOKEN%%
+ * values, beside them the two sheet tables and the preference defaults the
+ * build checks. The file is written for both halves — the bundle inlines it
+ * and host/routes.js reads it as text — so nothing imports it directly.
  */
-let constantsNamespace = null
-function constants() {
-  if (constantsNamespace !== null) return constantsNamespace
-  const source = fs.readFileSync(path.join(SRC, 'constants.js'), 'utf8')
-  constantsNamespace = new Function(`
-    ${source}
-    return {
-      SANS, SERIF, PROSE, MONO, BRAND_ATTR, BRAND_CLAUDE, BRAND_DEEPSEEK, MOTION_ATTR, MOTION_REDUCED, FOOTER_ATTR, COMPOSER_ATTR, PERMISSIONS_ATTR, ACCOUNT_MENU_ATTR, ACCOUNT_ARMED_ATTR, ACCOUNT_READY_ATTR, HERO_MENU_ATTR, SETTINGS_SCROLLER_ATTR,
+const CONSTANTS = new Function(`
+  ${fs.readFileSync(path.join(SRC, 'constants.js'), 'utf8')}
+  return {
+    tokens: {
+      SANS, SERIF, PROSE, MONO, BRAND_ATTR, BRAND_CLAUDE, BRAND_DEEPSEEK, MOTION_ATTR, MOTION_REDUCED, FOOTER_ATTR, COMPOSER_ATTR, PERMISSIONS_ATTR, SESSION_STATS_ATTR, ACCOUNT_MENU_ATTR, ACCOUNT_ARMED_ATTR, ACCOUNT_READY_ATTR, HERO_MENU_ATTR, SETTINGS_SCROLLER_ATTR,
       // "this brand is drawn by the skin": of the two brands, DeepSeek keeps the
       // host's own brand area, so the shared rules that hide the host's mark and
       // paint the ::before are gated on the Claude brand rather than on
@@ -234,49 +237,12 @@ function constants() {
       TYPEFACE_CLAUDE: '[' + TYPEFACE_ATTR + '="' + TYPEFACE_CLAUDE + '"]',
       TYPEFACE_HOST: '[' + TYPEFACE_ATTR + '="' + TYPEFACE_HOST + '"]',
       CLAUDE_WORD_WIDTH: (18 * CLAUDE_WORD_ASPECT).toFixed(1),
-      CRAB_SHEETS,
-      DEEPY_SHEETS,
-    }
-  `)()
-  return constantsNamespace
-}
-
-/** The %%TOKEN%% values, read off the one constants namespace. */
-function loadTokens() {
-  const ns = constants()
-  return {
-    SANS: ns.SANS,
-    SERIF: ns.SERIF,
-    PROSE: ns.PROSE,
-    MONO: ns.MONO,
-    BRAND_ATTR: ns.BRAND_ATTR,
-    BRAND_CLAUDE: ns.BRAND_CLAUDE,
-    BRAND_DEEPSEEK: ns.BRAND_DEEPSEEK,
-    MOTION_ATTR: ns.MOTION_ATTR,
-    MOTION_REDUCED: ns.MOTION_REDUCED,
-    FOOTER_ATTR: ns.FOOTER_ATTR,
-    COMPOSER_ATTR: ns.COMPOSER_ATTR,
-    PERMISSIONS_ATTR: ns.PERMISSIONS_ATTR,
-    ACCOUNT_MENU_ATTR: ns.ACCOUNT_MENU_ATTR,
-    ACCOUNT_ARMED_ATTR: ns.ACCOUNT_ARMED_ATTR,
-    ACCOUNT_READY_ATTR: ns.ACCOUNT_READY_ATTR,
-    HERO_MENU_ATTR: ns.HERO_MENU_ATTR,
-    SETTINGS_SCROLLER_ATTR: ns.SETTINGS_SCROLLER_ATTR,
-    // "this brand is drawn by the skin": of the two brands, DeepSeek keeps the
-    // host's own brand area, so the shared rules that hide the host's mark and
-    // paint the ::before are gated on the Claude brand rather than on
-    // :not(deepseek), which would have them paint over the host's whale.
-    BRAND_ACTIVE: ns.BRAND_ACTIVE,
-    // The colour and type gates are already the full attribute selectors in
-    // the namespace; deriving them again here would nest the selector in its
-    // own value, because the namespace's raw constants share these names.
-    PALETTE_CLAUDE: ns.PALETTE_CLAUDE,
-    PALETTE_HOST: ns.PALETTE_HOST,
-    TYPEFACE_CLAUDE: ns.TYPEFACE_CLAUDE,
-    TYPEFACE_HOST: ns.TYPEFACE_HOST,
-    CLAUDE_WORD_WIDTH: ns.CLAUDE_WORD_WIDTH,
+    },
+    CRAB_SHEETS,
+    DEEPY_SHEETS,
+    PREF_DEFAULTS,
   }
-}
+`)()
 
 /** Marker delimiting the region of a stylesheet the composer preference gates. */
 const COMPOSER_GATE_MARKER = '/* @composer-gate */'
@@ -338,20 +304,11 @@ function gateComposerScope(file, text) {
   return head + gated
 }
 
-/**
- * Refuse a `:has()` that is not in its selector's last compound.
- *
- * `A:has(B) C` (and `body:not(:has(B)) C`) makes the browser re-match every
- * descendant of every A on each DOM change anywhere below it: measured at
- * 7–13ms of style recalculation per changed frame for a single such rule on a
- * conversation page, where the whole stylesheet without them costs 1.6ms. In
- * the last compound (`A:has(B)`, `A :has(B)`) it costs a fraction of a
- * millisecond. What such a rule needs is a mark the skin's pass writes — the
- * view tabs, the draft state — or a selector that reads the state going down.
- *
- * @param file - stylesheet name, for diagnostics.
- * @param text - stylesheet source (LF-normalised).
- */
+/** A stylesheet with its comments blanked in place, so offsets still give the right line. */
+function blankComments(text) {
+  return text.replace(/\/\*[\s\S]*?\*\//g, (comment) => comment.replace(/[^\n]/g, ' '))
+}
+
 /** A selector list's members: split at the commas outside any `(` / `[`. */
 function splitSelectorList(list) {
   const parts = []
@@ -382,8 +339,7 @@ function splitSelectorList(list) {
  * %%PALETTE_HOST%% / %%TYPEFACE_HOST%% rules alias, for checkTokenAliases.
  */
 function checkTokenGates(file, text, names) {
-  // Comments blanked in place, so offsets still give the right line.
-  const source = text.replace(/\/\*[\s\S]*?\*\//g, (comment) => comment.replace(/[^\n]/g, ' '))
+  const source = blankComments(text)
   const declaration = /(?<![\w(-])(--[A-Za-z0-9-]+)\s*:/g
   for (const match of source.matchAll(declaration)) {
     const name = match[1]
@@ -412,9 +368,22 @@ function checkTokenAliases(names) {
   }
 }
 
+/**
+ * Refuse a `:has()` that is not in its selector's last compound.
+ *
+ * `A:has(B) C` (and `body:not(:has(B)) C`) makes the browser re-match every
+ * descendant of every A on each DOM change anywhere below it: measured at
+ * 7–13ms of style recalculation per changed frame for a single such rule on a
+ * conversation page, where the whole stylesheet without them costs 1.6ms. In
+ * the last compound (`A:has(B)`, `A :has(B)`) it costs a fraction of a
+ * millisecond. What such a rule needs is a mark the skin's pass writes — the
+ * view tabs, the draft state — or a selector that reads the state going down.
+ *
+ * @param file - stylesheet name, for diagnostics.
+ * @param text - stylesheet source (LF-normalised).
+ */
 function checkHasPlacement(file, text) {
-  // Comments blanked in place, so offsets still give the right line.
-  const source = text.replace(/\/\*[\s\S]*?\*\//g, (comment) => comment.replace(/[^\n]/g, ' '))
+  const source = blankComments(text)
   let from = 0
   for (;;) {
     const at = source.indexOf(':has(', from)
@@ -470,88 +439,89 @@ function loadSvgAssets() {
   return out
 }
 
-/** The file names a crab sheet may have: `<animation>.png` and its `<animation>-ink.png` mask. */
-const CRAB_FILE = /^[a-z]+(?:-[a-z]+)*\.png$/
+/**
+ * The file name a mascot sheet may have. The host half serves Deepy's sheets
+ * under exactly the names this shape allows (host/routes.js, DEEPY_FILE), so a
+ * name outside it would be copied and never served.
+ */
+const SHEET_FILE = /^[a-z]+(?:-[a-z]+)*\.png$/
+
+/**
+ * Hold one mascot's sheet directory to its animation table in src/constants.js.
+ *
+ * Each entry needs its files and a well-formed row — a frame count, a crop box
+ * inside the character's grid, a still frame the sheet holds — and a file no
+ * entry names is refused, so the package never ships a sheet the mascot cannot
+ * play or an entry that would draw nothing.
+ *
+ * @param table - the table's name, for diagnostics.
+ * @param sheets - animation → `{ frames, box, still }`.
+ * @param grid - `[width, height]` of the character's grid.
+ * @param dir - the sheet directory.
+ * @param filesOf - animation → the file names its entry needs.
+ */
+function checkSheets(table, sheets, grid, dir, filesOf) {
+  const where = path.relative(ROOT, dir).replace(/\\/g, '/')
+  const wanted = new Set(Object.keys(sheets).flatMap(filesOf))
+  const files = fs.readdirSync(dir)
+  for (const file of files) {
+    if (!SHEET_FILE.test(file) || !wanted.has(file)) throw new Error(`build: ${where}/${file} has no entry in ${table}`)
+  }
+  for (const [name, sheet] of Object.entries(sheets)) {
+    const [x, y, w, h] = Array.isArray(sheet.box) ? sheet.box : []
+    const whole = [sheet.frames, sheet.still, x, y, w, h].every(Number.isInteger)
+    if (!whole || sheet.frames < 1 || sheet.still < 0 || sheet.still >= sheet.frames || x < 0 || y < 0 || w < 1 || h < 1 || x + w > grid[0] || y + h > grid[1]) {
+      throw new Error(`build: ${table}["${name}"] needs whole frames, still < frames and a box inside the ${grid[0]}×${grid[1]} grid`)
+    }
+    for (const file of filesOf(name)) {
+      if (!files.includes(file)) throw new Error(`build: ${table}["${name}"] has no ${file} in ${where}/`)
+    }
+  }
+}
 
 /**
  * The composer crab's sheets, inlined into the bundle as CRAB_SHEET_URLS.
  *
  * Drawn by scripts/draw-crab.py into src/assets/mascot/crab/: per animation a
  * sheet in the crab's colours and an ink mask, eight frames to a row, one
- * pixel a cell. The table in src/constants.js (CRAB_SHEETS) is the list: each
- * entry needs both sheets and a well-formed row — a frame count, a crop box
- * inside the 52×36 grid, a still frame the sheet holds — and a file no entry
- * names is refused. Together they are a few dozen kilobytes, so they ride the
- * bundle as data URIs and every animation is ready the moment it is wanted.
+ * pixel a cell, on a 52×36 grid. Together they are a few dozen kilobytes, so
+ * they ride the bundle as data URIs and every animation is ready the moment
+ * it is wanted.
  *
  * @returns animation → { body, ink } data URIs.
  */
 function loadCrabSheets() {
-  const sheets = constants().CRAB_SHEETS
-  const names = Object.keys(sheets)
-  const files = fs.readdirSync(CRAB_ASSETS)
-  for (const file of files) {
-    const name = file.replace(/(-ink)?\.png$/, '')
-    if (!CRAB_FILE.test(file) || !names.includes(name)) throw new Error(`build: src/assets/mascot/crab/${file} has no entry in CRAB_SHEETS`)
-  }
+  const sheets = CONSTANTS.CRAB_SHEETS
+  checkSheets('CRAB_SHEETS', sheets, [52, 36], CRAB_ASSETS, (name) => [`${name}.png`, `${name}-ink.png`])
+  const read = (file) => 'data:image/png;base64,' + fs.readFileSync(path.join(CRAB_ASSETS, file)).toString('base64')
   const out = {}
-  for (const name of names) {
-    const sheet = sheets[name]
-    const [x, y, w, h] = Array.isArray(sheet.box) ? sheet.box : []
-    const whole = [sheet.frames, sheet.still, x, y, w, h].every(Number.isInteger)
-    if (!whole || sheet.frames < 1 || sheet.still < 0 || sheet.still >= sheet.frames || x < 0 || y < 0 || w < 1 || h < 1 || x + w > 52 || y + h > 36) {
-      throw new Error(`build: CRAB_SHEETS["${name}"] needs whole frames, still < frames and a box inside the 52×36 grid`)
-    }
-    const read = (file) => {
-      if (!files.includes(file)) throw new Error(`build: CRAB_SHEETS["${name}"] has no ${file} in src/assets/mascot/crab/`)
-      return 'data:image/png;base64,' + fs.readFileSync(path.join(CRAB_ASSETS, file)).toString('base64')
-    }
-    out[name] = { body: read(`${name}.png`), ink: read(`${name}-ink.png`) }
-  }
+  for (const name of Object.keys(sheets)) out[name] = { body: read(`${name}.png`), ink: read(`${name}-ink.png`) }
   return out
 }
 
 /**
- * The file name a Deepy sheet may have: the host half serves exactly the names
- * this shape allows (host/routes.js, DEEPY_FILE), so a name outside it would be
- * copied and never served.
- */
-const DEEPY_FILE = /^[a-z]+(?:-[a-z]+)*\.png$/
-
-/**
- * Check Deepy's sheets before lib/ is touched.
+ * Check Deepy's sheets before lib/ is touched, and stamp each one.
  *
- * The animation table in src/constants.js (DEEPY_SHEETS) is the list. Each
- * entry needs its sheet and a well-formed row — a frame count, a crop box
- * inside the 52×52 grid, a still frame the sheet holds — and a sheet no entry
- * names is refused, so the package never ships a sheet the whale cannot play
- * or an entry that would draw nothing. The sheets are too large to inline
- * (about 0.4 MB together) and the browser only fetches the ones it plays, so
- * they are copied; every check that can fail runs here, while nothing has been
- * written yet.
+ * Deepy is drawn on a 52×52 grid. The sheets are too large to inline (about
+ * 0.4 MB together) and the browser only fetches the ones it plays, so they are
+ * copied; every check that can fail runs here, while nothing has been written
+ * yet. The stamps are emitted into the bundle as DEEPY_STAMPS: the browser
+ * half keys its generated vector cache on the sheet's own stamp, so a sheet is
+ * re-converted only when its own pixels change.
  *
- * @returns the sheet names in table order and their total size.
+ * @returns the sheet names in table order, their total size and their content stamps.
  */
 function planDeepySheets() {
-  const sheets = constants().DEEPY_SHEETS
-  const names = Object.keys(sheets)
-  const files = fs.readdirSync(DEEPY_ASSETS)
-  for (const file of files) {
-    if (!DEEPY_FILE.test(file)) throw new Error(`build: src/assets/mascot/deepy/${file} is not a sheet name the host half serves`)
-    if (!names.includes(file.slice(0, -4))) throw new Error(`build: src/assets/mascot/deepy/${file} has no entry in DEEPY_SHEETS`)
-  }
-  for (const name of names) {
-    const sheet = sheets[name]
-    const [x, y, w, h] = Array.isArray(sheet.box) ? sheet.box : []
-    const whole = [sheet.frames, sheet.still, x, y, w, h].every(Number.isInteger)
-    if (!whole || sheet.frames < 1 || sheet.still < 0 || sheet.still >= sheet.frames || x < 0 || y < 0 || w < 1 || h < 1 || x + w > 52 || y + h > 52) {
-      throw new Error(`build: DEEPY_SHEETS["${name}"] needs whole frames, still < frames and a box inside the 52×52 grid`)
-    }
-    if (!files.includes(`${name}.png`)) throw new Error(`build: DEEPY_SHEETS["${name}"] has no sheet in src/assets/mascot/deepy/`)
-  }
+  const names = Object.keys(CONSTANTS.DEEPY_SHEETS)
+  checkSheets('DEEPY_SHEETS', CONSTANTS.DEEPY_SHEETS, [52, 52], DEEPY_ASSETS, (name) => [`${name}.png`])
   let bytes = 0
-  for (const name of names) bytes += fs.statSync(path.join(DEEPY_ASSETS, `${name}.png`)).size
-  return { names, bytes }
+  const stamps = {}
+  for (const name of names) {
+    const sheet = fs.readFileSync(path.join(DEEPY_ASSETS, `${name}.png`))
+    bytes += sheet.byteLength
+    stamps[name] = createHash('sha256').update(sheet).digest('hex').slice(0, 12)
+  }
+  return { names, bytes, stamps }
 }
 
 /** Copy the planned sheets into lib/deepy/, replacing whatever was there. */
@@ -561,23 +531,6 @@ function writeDeepySheets(names) {
   for (const name of names) {
     fs.copyFileSync(path.join(DEEPY_ASSETS, `${name}.png`), path.join(DEEPY_OUT, `${name}.png`))
   }
-}
-
-/**
- * A content stamp per Deepy sheet, emitted into the bundle as DEEPY_STAMPS.
- * The browser half keys its generated vector cache on the sheet's own stamp,
- * so a sheet is re-converted only when its own pixels change — a build that
- * touches no sheet leaves every cached vector valid.
- */
-function stampDeepySheets() {
-  const sheets = constants().DEEPY_SHEETS
-  const stamps = {}
-  for (const name of Object.keys(sheets)) {
-    const file = path.join(DEEPY_ASSETS, `${name}.png`)
-    if (!fs.existsSync(file)) throw new Error(`build: DEEPY_SHEETS["${name}"] has no sheet in src/assets/mascot/deepy/`)
-    stamps[name] = createHash('sha256').update(fs.readFileSync(file)).digest('hex').slice(0, 12)
-  }
-  return stamps
 }
 
 /**
@@ -753,23 +706,13 @@ const FEATURE_MAINS = {
 const NON_FEATURE_INSTALLS = ['scheduler']
 
 /**
- * Hold src/entry.js's FEATURES table and the src/features/ directories to the
- * pairing above: an install this table does not name, a table entry naming a
- * fragment FRAGMENTS does not list, and a feature directory no id covers all
- * fail the build.
- */
-/**
  * Every FEATURES entry answers whether the reader can switch it off: exactly
  * one of `pref: '<preference key>'` or `ungated: '<reason>'`. The preference
- * keys are host/settings.js's PREFS_DEFAULT, the one table both halves mirror.
- * An entry with neither, with both, or naming a key the table lacks fails the
- * build, so a new feature cannot ship without deciding.
+ * keys are host/settings.js's PREFS_DEFAULT. An entry with neither, with both,
+ * or naming a key the table lacks fails the build, so a new feature cannot
+ * ship without deciding.
  */
 function checkFeatureSwitches(entry) {
-  const settings = fs.readFileSync(path.join(ROOT, 'host', 'settings.js'), 'utf8')
-  const table = settings.match(/const PREFS_DEFAULT = Object\.freeze\(\{([\s\S]*?)\n\}\)/)
-  if (table === null) throw new Error('build: host/settings.js has no PREFS_DEFAULT table')
-  const keys = new Set([...table[1].matchAll(/^\s+([A-Za-z][A-Za-z0-9]*):/gm)].map((match) => match[1]))
   const block = entry.match(/const FEATURES = \[([\s\S]*?)\n\s*\]\n/)
   if (block === null) throw new Error('build: src/entry.js has no FEATURES table')
   for (const line of block[1].split('\n')) {
@@ -778,10 +721,16 @@ function checkFeatureSwitches(entry) {
     const pref = line.match(/\bpref: '([A-Za-z][A-Za-z0-9]*)'/)
     const ungated = /\bungated: '[^']+'/.test(line)
     if ((pref === null) === !ungated) throw new Error(`build: FEATURES entry "${name[1]}" must declare exactly one of pref or ungated`)
-    if (pref !== null && !keys.has(pref[1])) throw new Error(`build: FEATURES entry "${name[1]}" names pref "${pref[1]}", which host/settings.js PREFS_DEFAULT does not carry`)
+    if (pref !== null && !(pref[1] in PREFS_DEFAULT)) throw new Error(`build: FEATURES entry "${name[1]}" names pref "${pref[1]}", which host/settings.js PREFS_DEFAULT does not carry`)
   }
 }
 
+/**
+ * Hold src/entry.js's FEATURES table and the src/features/ directories to the
+ * pairing above: an install this table does not name, a table entry naming a
+ * fragment FRAGMENTS does not list, and a feature directory no id covers all
+ * fail the build.
+ */
 function checkFeatureRegistry() {
   for (const [id, file] of Object.entries(FEATURE_MAINS)) {
     if (!FRAGMENTS.includes(file)) throw new Error(`build: feature "${id}" names ${file}, which FRAGMENTS does not list`)
@@ -805,10 +754,27 @@ function checkFeatureRegistry() {
   }
 }
 
+/**
+ * Hold the browser half's preference defaults (src/constants.js PREF_DEFAULTS)
+ * to the host half's PREFS_DEFAULT: the same keys with the same values, so the
+ * frames before the settings form answers show what the form will hold.
+ */
+function checkPrefDefaults() {
+  const browser = CONSTANTS.PREF_DEFAULTS
+  for (const key of new Set([...Object.keys(browser), ...Object.keys(PREFS_DEFAULT)])) {
+    if (!(key in browser)) throw new Error(`build: src/constants.js PREF_DEFAULTS lacks "${key}", which host/settings.js PREFS_DEFAULT carries`)
+    if (!(key in PREFS_DEFAULT)) throw new Error(`build: host/settings.js PREFS_DEFAULT lacks "${key}", which src/constants.js PREF_DEFAULTS carries`)
+    if (JSON.stringify(browser[key]) !== JSON.stringify(PREFS_DEFAULT[key])) {
+      throw new Error(`build: preference "${key}" defaults to ${JSON.stringify(browser[key])} in src/constants.js but ${JSON.stringify(PREFS_DEFAULT[key])} in host/settings.js`)
+    }
+  }
+}
+
 function main() {
   checkListed()
   checkFeatureRegistry()
-  const tokens = { ...loadTokens(), ...loadSvgAssets() }
+  checkPrefDefaults()
+  const tokens = { ...CONSTANTS.tokens, ...loadSvgAssets() }
   const combines = loadCombines()
 
   const tokenNames = { claude: new Set(), host: new Set() }
@@ -875,12 +841,13 @@ function main() {
   ].join('\n')
 
   // Deepy sheet stamps: content hashes of the sheets, for the browser half's
-  // vector cache keys (stampDeepySheets).
+  // vector cache keys (planDeepySheets).
+  const deepy = planDeepySheets()
   const deepyStampDecl = [
     '    // ============================================================================',
     '    // Deepy 帧图内容戳（由 scripts/build.mjs 按帧图字节生成） (Deepy sheet stamps)',
     '    // ============================================================================',
-    `    var DEEPY_STAMPS = ${JSON.stringify(stampDeepySheets())}`,
+    `    var DEEPY_STAMPS = ${JSON.stringify(deepy.stamps)}`,
   ].join('\n')
 
   // The crab's sheets, inlined (loadCrabSheets).
@@ -905,15 +872,14 @@ function main() {
   const buildId = createHash('sha256').update(draft).digest('hex').slice(0, 12)
   const bundle = draft.replace(BUILD_ID_SLOT, buildId)
 
-  // Syntax gate: the bundle must parse before it is written.
+  // Syntax gate: the bundle must parse before it is written. The failing
+  // bundle is kept in .debug/ so the line the parser names can be read.
   try {
     new vm.Script(bundle, { filename: 'lib/client.js' })
   } catch (error) {
     fs.mkdirSync(path.join(ROOT, '.debug'), { recursive: true })
     fs.writeFileSync(path.join(ROOT, '.debug', 'failed-bundle.js'), bundle)
-    console.error('build: generated bundle failed to parse:', error.message)
-    console.error('build: failing bundle written to .debug/failed-bundle.js')
-    process.exit(1)
+    throw new Error(`build: generated bundle failed to parse (written to .debug/failed-bundle.js): ${error.message}`)
   }
 
   // Everything is validated before anything is written: a refusal anywhere in
@@ -925,7 +891,6 @@ function main() {
   const iconSource = path.join(BRAND_ASSETS, ICON_SOURCE)
   const iconTarget = path.join(LIB, ICON_FILE)
   if (!fs.existsSync(iconSource)) throw new Error(`build: src/assets/brand/${ICON_SOURCE} is missing`)
-  const deepy = planDeepySheets()
 
   fs.writeFileSync(OUT, bundle)
   const lines = bundle.split('\n').length

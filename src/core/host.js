@@ -230,7 +230,7 @@
      * @returns the winning name, without the `User` default.
      */
     function resolveDisplayName() {
-      const custom = readPrefs().username || readFallbackUsername()
+      const custom = readPrefs().username
       if (custom) return custom
       if (accountName) return accountName
       if (hdslName) return hdslName

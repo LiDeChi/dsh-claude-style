@@ -52,7 +52,7 @@
 ## Commands
 
 ```sh
-npm run build            # src/ → lib/client.js; checks listed files, %%TOKEN%%, composer gate, :has() placement, syntax, model copy; prints the build id
+npm run build            # src/ → lib/client.js; checks listed files, %%TOKEN%%, composer gate, :has() placement, preference defaults across both halves, syntax, model copy; prints the build id
 npm run smoke            # lib/ against a stand-in host: private-route fences; in headless Chrome: startup, 0 idle passes, no markup injection, Enter stays with the host, feature isolation, no uncaught errors, clean teardown
 node scripts/probe.cjs --token <launch-token>          # composer invariants against a running `dsh web`
 node scripts/probe-timing.cjs --token <launch-token>   # itemized timing: startup, model catalog readiness, open latency, heap

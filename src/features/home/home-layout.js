@@ -33,7 +33,7 @@
       /** The host's list slot between the hero greeting and the composer card. */
       const DOCK_SLOT = 'conversation.input.dock'
 
-      let layout = DEFAULT_HOME_LAYOUT
+      let layout = PREF_DEFAULTS.homeLayout
       /** Whether the last pass saw the new-conversation hero, as of that reading. */
       let lastHero = false
       /**

@@ -194,7 +194,6 @@
     const BRAND_DEEPSEEK = 'deepseek'
     /** What earlier builds stored for the DeepSeek choice, when it was labelled "Off". */
     const BRAND_DEEPSEEK_LEGACY = 'off'
-    const DEFAULT_BRAND = BRAND_CLAUDE
     /** The document attribute the stylesheet switches on. */
     const BRAND_ATTR = 'data-dsh-claude-brand'
 
@@ -212,7 +211,6 @@
     const MOTION_REDUCED = 'reduced'
     const MOTION_FULL = 'full'
     const MOTION_MODES = [MOTION_SYSTEM, MOTION_REDUCED, MOTION_FULL]
-    const DEFAULT_MOTION = MOTION_SYSTEM
     const MOTION_ATTR = 'data-dsh-claude-motion'
 
     /**
@@ -226,12 +224,10 @@
     const PALETTE_CLAUDE = 'claude'
     const PALETTE_HOST = 'host'
     const PALETTES = [PALETTE_CLAUDE, PALETTE_HOST]
-    const DEFAULT_PALETTE = PALETTE_CLAUDE
     const PALETTE_ATTR = 'data-dsh-claude-palette'
     const TYPEFACE_CLAUDE = 'claude'
     const TYPEFACE_HOST = 'host'
     const TYPEFACES = [TYPEFACE_CLAUDE, TYPEFACE_HOST]
-    const DEFAULT_TYPEFACE = TYPEFACE_CLAUDE
     const TYPEFACE_ATTR = 'data-dsh-claude-typeface'
 
     /**
@@ -248,12 +244,10 @@
     const MASCOT_DEEPY = 'deepy'
     const MASCOT_OFF = 'off'
     const MASCOTS = [MASCOT_BRAND, MASCOT_CRAB, MASCOT_DEEPY, MASCOT_OFF]
-    const DEFAULT_MASCOT = MASCOT_BRAND
     const MASCOT_ATTR = 'data-dsh-claude-mascot'
     const MASCOT_SCOPE_HOME = 'home'
     const MASCOT_SCOPE_ALL = 'all'
     const MASCOT_SCOPES = [MASCOT_SCOPE_HOME, MASCOT_SCOPE_ALL]
-    const DEFAULT_MASCOT_SCOPE = MASCOT_SCOPE_ALL
 
     /**
      * Feature switches: one boolean preference per feature that replaces or
@@ -356,17 +350,29 @@
     const BAN_LOCALE_EN = 'en'
     const BAN_LOCALE_ZH = 'zh'
     const BAN_LOCALES = [BAN_LOCALE_EN, BAN_LOCALE_ZH]
-    const DEFAULT_BAN_LOCALE = BAN_LOCALE_EN
     /** Present while the composer restyle applies to the page currently shown. */
     const COMPOSER_ATTR = 'data-dsh-claude-composer-active'
     /**
+     * Present while the composer restyle applies and a conversation tab other
+     * than the chat is up: the composer is chat-view-only, so the stylesheet
+     * drops the whole bottom area (src/features/composer/composer.js).
+     */
+    const COMPOSER_HIDDEN_ATTR = 'data-dsh-claude-composer-hidden'
+    /**
      * Present while the permission control is installed. The composer restyle
-     * hides the host's access-mode button and its statistics dialogs because
-     * this feature replaces them, and those rules also require this attribute:
-     * a permission control that is switched off hands them back while the rest
-     * of the composer restyle keeps running.
+     * hides the host's access-mode button because this feature replaces it,
+     * and that rule also requires this attribute: a permission control that is
+     * switched off hands the button back while the rest of the composer
+     * restyle keeps running.
      */
     const PERMISSIONS_ATTR = 'data-dsh-claude-permissions'
+    /**
+     * Present while the context statistics are installed
+     * (src/features/context-stats/context-stats.js). The host's two stat
+     * dialogs are hidden only under it: their numbers are read into the
+     * context popover instead, and switched off the feature hands them back.
+     */
+    const SESSION_STATS_ATTR = 'data-dsh-claude-session-stats'
     /**
      * Stamped on the host's own account menu card while it is open (Desktop
      * 0.1.7+). That card is the host's shared Menu portal and its class names
@@ -463,9 +469,9 @@
     const HOME_LAYOUT_CLASSIC = 'classic'
     const HOME_LAYOUT_STUDIO = 'studio'
     const HOME_LAYOUTS = [HOME_LAYOUT_CLASSIC, HOME_LAYOUT_STUDIO]
-    const DEFAULT_HOME_LAYOUT = HOME_LAYOUT_STUDIO
     /** Composer surfaces the restyle may cover, in settings order. */
-    const COMPOSER_SCOPES = ['off', 'hero', 'conversation', 'all']
+    const COMPOSER_SCOPE_ALL = 'all'
+    const COMPOSER_SCOPES = ['off', 'hero', 'conversation', COMPOSER_SCOPE_ALL]
     /**
      * How eagerly the skin's popovers open on hover: `off` is click-only,
      * `account` auto-opens the sidebar account popover alone, and `all` adds the
@@ -475,7 +481,42 @@
     const AUTO_POPOVER_ACCOUNT = 'account'
     const AUTO_POPOVER_ALL = 'all'
     const AUTO_POPOVER_SCOPES = [AUTO_POPOVER_OFF, AUTO_POPOVER_ACCOUNT, AUTO_POPOVER_ALL]
-    const DEFAULT_AUTO_POPOVER = AUTO_POPOVER_ALL
+
+    /**
+     * Every preference and its default: the shipped behaviour, and what holds
+     * until the settings form answers. scripts/build.mjs holds this table to
+     * host/settings.js's PREFS_DEFAULT, key for key and value for value. A
+     * boolean preference is on unless stored as an explicit `false`.
+     */
+    const PREF_DEFAULTS = {
+      brand: BRAND_CLAUDE,
+      motion: MOTION_SYSTEM,
+      collapseFooter: true,
+      autoPopover: AUTO_POPOVER_ALL,
+      composerScope: COMPOSER_SCOPE_ALL,
+      modelPicker: true,
+      quickProviders: [],
+      username: '',
+      banLocale: BAN_LOCALE_EN,
+      homeLayout: HOME_LAYOUT_STUDIO,
+      palette: PALETTE_CLAUDE,
+      typeface: TYPEFACE_CLAUDE,
+      mascot: MASCOT_BRAND,
+      mascotScope: MASCOT_SCOPE_ALL,
+      ...FEATURE_PREF_DEFAULTS,
+    }
+
+    /** The preferences whose value is one of a fixed set; any other stored value reads as the default. */
+    const PREF_CHOICES = {
+      motion: MOTION_MODES,
+      composerScope: COMPOSER_SCOPES,
+      banLocale: BAN_LOCALES,
+      homeLayout: HOME_LAYOUTS,
+      palette: PALETTES,
+      typeface: TYPEFACES,
+      mascot: MASCOTS,
+      mascotScope: MASCOT_SCOPES,
+    }
     /** Route that resolves the name this instance runs as, once; never polled. */
     const USERNAME_ROUTE = '/dsh-claude-style/username'
     /** Route that forwards the HDSL launcher's account contract; never polled. */

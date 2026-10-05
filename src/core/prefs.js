@@ -9,66 +9,10 @@
      *
      * Every value is mirrored onto the document as an attribute, so the
      * stylesheet — not this module — decides what a preference means visually.
-     * Until the first read settles (and if it fails) the defaults below hold,
-     * which is exactly the shipped behaviour.
+     * Until the first read settles (and if it fails) PREF_DEFAULTS holds, which
+     * is exactly the shipped behaviour.
      */
-    /**
-     * Browser-local fallback for the account-hold page's language.
-     *
-     * Same contract as the username fallback below, and needed for the same
-     * reason: this bundle reloads with the page, but the host half is imported
-     * once when the app boots, so a running host half can predate the field.
-     * Without the fallback the choice SILENTLY REVERTS — the old host half has
-     * no `banLocale` in its accepted-key list, drops the unknown key, and
-     * answers the write with its unchanged value, so the segment flips back
-     * with nothing to explain it.
-     */
-    const BAN_LOCALE_STORAGE_KEY = 'dsh-claude-style.banLocale'
-    let fallbackBanLocale = readStoredBanLocale()
-
-    function readStoredBanLocale() {
-      const stored = localStorage.getItem(BAN_LOCALE_STORAGE_KEY) || ''
-      return !BAN_LOCALES.includes(stored) ? '' : stored
-    }
-
-    /** Persist (or clear) the local language choice; anything else is refused. */
-    function setFallbackBanLocale(value) {
-      fallbackBanLocale = !BAN_LOCALES.includes(value) ? '' : value
-      if (fallbackBanLocale) localStorage.setItem(BAN_LOCALE_STORAGE_KEY, fallbackBanLocale)
-      else localStorage.removeItem(BAN_LOCALE_STORAGE_KEY)
-    }
-
-    /**
-     * The language the account-hold page is written in.
-     *
-     * The local fallback outranks the host value while it exists: it is only
-     * ever set when the host refused the write, and `savePrefs` clears it the
-     * moment the host confirms the same value — so a stale host half cannot
-     * revert the choice, and a reloaded one takes over on its own.
-     */
-    function resolveBanLocale(hostValue) {
-      if (fallbackBanLocale) return fallbackBanLocale
-      return !BAN_LOCALES.includes(hostValue) ? DEFAULT_BAN_LOCALE : hostValue
-    }
-
-    let prefs = {
-      brand: DEFAULT_BRAND,
-      motion: DEFAULT_MOTION,
-      collapseFooter: true,
-      autoPopover: DEFAULT_AUTO_POPOVER,
-      composerScope: 'all',
-      modelPicker: true,
-      quickProviders: [],
-      username: '',
-      banLocale: fallbackBanLocale || DEFAULT_BAN_LOCALE,
-      homeLayout: DEFAULT_HOME_LAYOUT,
-      palette: DEFAULT_PALETTE,
-      typeface: DEFAULT_TYPEFACE,
-      mascot: DEFAULT_MASCOT,
-      mascotScope: DEFAULT_MASCOT_SCOPE,
-      ...FEATURE_PREF_DEFAULTS,
-    }
-    let prefsAvailable = false
+    let prefs = normalizePrefs({})
     const prefsListeners = []
 
     /**
@@ -157,15 +101,7 @@
       if (typeof form?.getSnapshot !== 'function') return false
       prefsForm = form
       // A form without a subscribe face leaves the reads on demand.
-      if (typeof form.subscribe === 'function') {
-        prefsFormUnsubscribe = form.subscribe(() => {
-          const value = readFormValue()
-          if (value === null) return
-          prefsAvailable = true
-          adoptPrefs(normalizePrefs(value))
-          replayPendingBanLocale(value)
-        })
-      }
+      if (typeof form.subscribe === 'function') prefsFormUnsubscribe = form.subscribe(loadPrefs)
       return true
     }
 
@@ -173,10 +109,8 @@
      * Watch the served-namespace directory until this plugin's namespace lands.
      *
      * The directory is a wire read: on a cold page it can answer after this
-     * plugin has applied. A one-shot decision at apply time then left the store
-     * unbound for the rest of the session, and the settings page reported the
-     * store unavailable on the first change. The mirror is subscribed and asked
-     * for its first read, so the form binds whenever the answer arrives.
+     * plugin has applied, so the mirror is subscribed and asked for its first
+     * read, and the form binds whenever the answer arrives.
      *
      * @param forms - the `configForms` service.
      * @param ctx - the owning context, for the namespace candidates.
@@ -233,27 +167,6 @@
     }
 
     /**
-     * Browser-local fallback for the custom username.
-     *
-     * The host settings namespace is the authoritative store, but a running
-     * host half may predate the `username` field. Persisting the value here
-     * keeps the setting usable until the host is reloaded, and the host value
-     * always wins once it carries a non-empty username.
-     */
-    const USERNAME_STORAGE_KEY = 'dsh-claude-style.username'
-    let fallbackUsername = localStorage.getItem(USERNAME_STORAGE_KEY) || ''
-
-    function readFallbackUsername() {
-      return fallbackUsername
-    }
-
-    function setFallbackUsername(value) {
-      fallbackUsername = value
-      if (value) localStorage.setItem(USERNAME_STORAGE_KEY, value)
-      else localStorage.removeItem(USERNAME_STORAGE_KEY)
-    }
-
-    /**
      * Runtime overrides that outrank the stored preferences. A feature that is
      * switched off after failing (src/entry.js) hands its surface back to the
      * host whatever the preference says: the footer takeover and the composer
@@ -302,8 +215,7 @@
       document.body.setAttribute(TYPEFACE_ATTR, next.typeface)
       document.body.setAttribute(MASCOT_ATTR, resolveMascot(next))
       writeMotionAttribute(next.motion)
-      if (next.collapseFooter && !footerTakeoverRetired) document.body.setAttribute(FOOTER_ATTR, '')
-      else document.body.removeAttribute(FOOTER_ATTR)
+      document.body.toggleAttribute(FOOTER_ATTR, next.collapseFooter && !footerTakeoverRetired)
       notifyAll(prefsListeners, next)
     }
 
@@ -351,22 +263,15 @@
     }
 
     /**
-     * Read the preferences once. A failure keeps the defaults and leaves the
-     * settings page to report that the store is unavailable.
-     *
-     * The form's subscription re-reads on every host change, so this call only
-     * covers the case where the values are ready before the subscription
-     * settles.
+     * Read the preferences from the form, once it carries values. The form's
+     * subscription calls this on every host change; the binding calls it for
+     * values that were ready before the subscription settled.
      */
     function loadPrefs() {
-      if (prefsForm === null) return
-      const formValue = readFormValue()
-      if (formValue === null) return
-      prefsAvailable = true
-      const formName = typeof formValue.username === 'string' ? formValue.username.trim() : ''
-      if (formName) setFallbackUsername('')
-      adoptPrefs(normalizePrefs(formValue))
-      replayPendingBanLocale(formValue)
+      const value = readFormValue()
+      if (value === null) return
+      adoptPrefs(normalizePrefs(value))
+      moveLocalPrefs(value)
     }
 
     /**
@@ -377,7 +282,7 @@
     function normalizeAutoPopover(value) {
       if (value === true) return AUTO_POPOVER_ALL
       if (value === false) return AUTO_POPOVER_OFF
-      return !AUTO_POPOVER_SCOPES.includes(value) ? DEFAULT_AUTO_POPOVER : value
+      return AUTO_POPOVER_SCOPES.includes(value) ? value : PREF_DEFAULTS.autoPopover
     }
 
     /**
@@ -422,71 +327,72 @@
       return current.brand === BRAND_DEEPSEEK ? MASCOT_DEEPY : MASCOT_CRAB
     }
 
-    /** Clamp the feature switches: anything but an explicit `false` keeps a feature on. */
-    function normalizeFeaturePrefs(section) {
+    /**
+     * Clamp one host value into the preference shape, field by field off
+     * PREF_DEFAULTS: a boolean stays on unless stored as `false`, a choice
+     * outside its set reads as its default, and the four fields with a shape
+     * of their own have their own clamps.
+     */
+    function normalizePrefs(value) {
+      const section = value && typeof value === 'object' ? value : {}
       const out = {}
-      for (const key in FEATURE_PREF_DEFAULTS) out[key] = section[key] !== false
+      for (const key in PREF_DEFAULTS) {
+        const fallback = PREF_DEFAULTS[key]
+        if (typeof fallback === 'boolean') out[key] = section[key] !== false
+        else if (key in PREF_CHOICES) out[key] = PREF_CHOICES[key].includes(section[key]) ? section[key] : fallback
+      }
+      out.brand = normalizeBrand(section.brand)
+      out.autoPopover = normalizeAutoPopover(section.autoPopover)
+      out.quickProviders = normalizeQuickProviders(section.quickProviders)
+      out.username = typeof section.username === 'string' ? section.username.trim().slice(0, USERNAME_MAX) : ''
       return out
     }
 
-    /** Clamp one host value into the preference shape (the host already did this). */
-    function normalizePrefs(value) {
-      const section = value && typeof value === 'object' ? value : {}
-      return {
-        ...normalizeFeaturePrefs(section),
-        palette: PALETTES.includes(section.palette) ? section.palette : DEFAULT_PALETTE,
-        typeface: TYPEFACES.includes(section.typeface) ? section.typeface : DEFAULT_TYPEFACE,
-        mascot: MASCOTS.includes(section.mascot) ? section.mascot : DEFAULT_MASCOT,
-        mascotScope: MASCOT_SCOPES.includes(section.mascotScope) ? section.mascotScope : DEFAULT_MASCOT_SCOPE,
-        brand: normalizeBrand(section.brand),
-        motion: MOTION_MODES.includes(section.motion) ? section.motion : DEFAULT_MOTION,
-        collapseFooter: section.collapseFooter !== false,
-        autoPopover: normalizeAutoPopover(section.autoPopover),
-        composerScope: !COMPOSER_SCOPES.includes(section.composerScope) ? 'all' : section.composerScope,
-        modelPicker: section.modelPicker !== false,
-        quickProviders: normalizeQuickProviders(section.quickProviders),
-        username: (typeof section.username === 'string' ? section.username.trim().slice(0, USERNAME_MAX) : '') || fallbackUsername,
-        banLocale: resolveBanLocale(section.banLocale),
-        homeLayout: !HOME_LAYOUTS.includes(section.homeLayout) ? DEFAULT_HOME_LAYOUT : section.homeLayout,
+    /**
+     * Values an earlier build kept in this browser's local storage, by
+     * preference: it stored them there while the running host half refused the
+     * field. The first time the form carries values, each one the form does not
+     * hold yet is written through the form; the local copy is dropped once the
+     * form holds a value of its own.
+     */
+    const LOCAL_PREF_KEYS = {
+      username: 'dsh-claude-style.username',
+      banLocale: 'dsh-claude-style.banLocale',
+    }
+    let localPrefsMoved = false
+
+    function moveLocalPrefs(formValue) {
+      if (localPrefsMoved) return
+      localPrefsMoved = true
+      for (const key in LOCAL_PREF_KEYS) {
+        const stored = localStorage.getItem(LOCAL_PREF_KEYS[key])
+        if (stored === null) continue
+        const held = formValue[key] !== undefined && formValue[key] !== PREF_DEFAULTS[key]
+        const unusable = stored === '' || stored === PREF_DEFAULTS[key] || (key in PREF_CHOICES && !PREF_CHOICES[key].includes(stored))
+        if (held || unusable) {
+          localStorage.removeItem(LOCAL_PREF_KEYS[key])
+          continue
+        }
+        savePrefs({ [key]: stored }).then(saved => {
+          if (saved !== null && saved[key] === stored) localStorage.removeItem(LOCAL_PREF_KEYS[key])
+        })
       }
     }
 
     /**
-     * Replay a language that was chosen while the running host half did not know
-     * the field yet.
-     *
-     * Once per load, and only while a local fallback exists: on a host half that
-     * still predates `banLocale` the write is dropped again (the fallback keeps
-     * the choice), and on a reloaded one it lands, `savePrefs` sees the host echo
-     * the value back and drops the fallback — so the setting migrates itself
-     * instead of having to be picked again after the app restarts.
-     */
-    let banLocaleReplayed = false
-    function replayPendingBanLocale(hostValue) {
-      if (banLocaleReplayed || !fallbackBanLocale) return
-      const hostLocale = hostValue && typeof hostValue.banLocale === 'string' ? hostValue.banLocale : ''
-      if (hostLocale === fallbackBanLocale) return
-      banLocaleReplayed = true
-      savePrefs({ banLocale: fallbackBanLocale })
-    }
-
-    /**
-     * Write a partial change through the official form.
+     * Write a partial preference change through the official form.
      *
      * One `set()` per field, chained: the controller owns the write queue and
      * takes its revision fence from the last settlement, so a burst of toggles
      * cannot interleave or lose a field. `set()` also validates the field path
-     * against the entry's Config before anything crosses the wire, which is why
-     * an unknown key is dropped here rather than sent.
+     * against the entry's Config before anything crosses the wire.
      *
      * @param patch - preference keys to change.
-     * @returns a promise for the resolved preferences, or null when refused.
+     * @returns a promise for the resolved preferences, or null when the form
+     *          does not carry values yet or refused the change.
      */
-    function savePrefsViaForm(patch) {
-      const keys = []
-      for (const key in patch) {
-        if (Object.prototype.hasOwnProperty.call(patch, key)) keys.push(key)
-      }
+    function savePrefs(patch) {
+      if (readFormValue() === null) return Promise.resolve(null)
       const step = name => accepted => {
         if (accepted === false) return false
         let pending
@@ -503,42 +409,11 @@
           : true
       }
       let run = Promise.resolve(true)
-      for (let i = 0; i < keys.length; i++) run = run.then(step(keys[i]))
+      for (const key of Object.keys(patch)) run = run.then(step(key))
       return run.then(accepted => {
-        if (accepted === false) {
-          // Refused (a stale revision, or a field this Config does not carry):
-          // re-read rather than guess.
-          loadPrefs()
-          return null
-        }
-        const value = readFormValue()
-        if (value !== null) {
-          prefsAvailable = true
-          if (typeof patch.username === 'string') {
-            const hostName = typeof value.username === 'string' ? value.username.trim() : ''
-            setFallbackUsername(hostName ? '' : patch.username)
-          }
-          // The host echoing the value back is the only proof it knows the
-          // field; anything else means the write did not land and the local
-          // fallback has to keep it.
-          if (typeof patch.banLocale === 'string') {
-            const hostLocale = typeof value.banLocale === 'string' ? value.banLocale : ''
-            setFallbackBanLocale(hostLocale === patch.banLocale ? '' : patch.banLocale)
-          }
-          adoptPrefs(normalizePrefs(value))
-        }
-        return prefs
+        // Refused (a stale revision, or a field this Config does not carry):
+        // re-read rather than guess.
+        loadPrefs()
+        return accepted === false ? null : prefs
       })
-    }
-
-    /**
-     * Write a partial preference change.
-     *
-     * @param patch - preference keys to change.
-     * @returns a promise for the resolved preferences, or null while the form
-     *          does not carry values yet.
-     */
-    function savePrefs(patch) {
-      if (prefsForm === null || readFormValue() === null) return Promise.resolve(null)
-      return savePrefsViaForm(patch)
     }

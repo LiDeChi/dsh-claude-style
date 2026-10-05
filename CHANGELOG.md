@@ -14,6 +14,10 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 - **拖入附件后，输入区工具栏打开的面板不再被附件区域遮住**：附件存在时，从输入区工具栏按钮打开的面板（模型选择、思考强度等）中间被上方那块附件区域盖住一大截，只在卡片上方和输入框下方各露出一条边，面板里的行点不到。现在这类面板完整显示。
 
+<h3 id="cn-unreleased">其他变更</h3>
+
+- **昵称与封号页语言只存在设置里**：早先在宿主半边不认这两个字段时存进浏览器本地的值，会在打开页面后写进插件设置，本地那份随后删除；此后两项与其他设置一样只保存在宿主的设置表单里。
+
 <h3 id="en-unreleased">Improvements</h3>
 
 - **The permission menu opens below the control when it does not fit above**: the permission control's card always unfolded upward, so in a short window its top edge ran off-screen and the first rows could not be clicked. It now opens below the control when the card does not fit above.
@@ -21,6 +25,10 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 <h3 id="en-unreleased">Bug Fixes</h3>
 
 - **A panel opened from the composer's toolbar is no longer covered by the attachment area**: with an attachment in the composer, a panel opened from a toolbar button — the model picker, the reasoning-effort slider — lost its middle to the attachment area above it and showed only a strip above the card and another below the input box, so none of its rows could be clicked. Such panels now draw in full.
+
+<h3 id="en-unreleased">Chores</h3>
+
+- **The nickname and the account-hold page's language live in the settings alone**: a value kept in the browser's local storage while the host half did not know these fields yet is written into the plugin settings when the page opens, and the local copy is removed afterwards; from then on both are saved in the host's settings form like every other setting.
 
 ## [0.10.5] - 2026-10-04
 

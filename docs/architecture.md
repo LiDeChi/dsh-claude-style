@@ -21,7 +21,7 @@
 ## D1. 零构建工具链：构建期逐字拼接成单文件
 
 - **决定**：`scripts/build.mjs` 按 `FRAGMENTS` / `STYLE_FILES` 的顺序把 `src/` 下的 JS 片段与样式表拼成 `lib/client.js`。所有片段共用一个工厂作用域：不写 import/export，顶层名字在整个产物里唯一；React 由构建头部经加载器 `require('react')` 取得，其他宿主包在用到它的功能里直接 `require`。片段用现代语法（`const` / `let`、箭头函数、可选链），基础缩进 4 空格。品牌 SVG、螃蟹的帧条 PNG 与厂商锁定标在构建时内联，字体、模型文案与小鲸鱼的帧图（D24，构建时复制到 `lib/deepy/`）走宿主半边的路由。
-- **构建检查**：`src/` 下每个 `.js` / `.css` 都在两份清单里；`%%TOKEN%%` 全部替换；输入框样式门控（D4）；`:has()` 位置（D9）；产物能被 `vm.Script` 解析；模型文案文档校验（D5）；小鲸鱼的帧图与 `DEEPY_SHEETS` 表一一对应、每行的帧数、裁切框与静止帧合法（D24）；`src/entry.js` 的 FEATURES 表与 `FEATURE_MAINS` 登记的功能主文件双向对上、`src/features/` 下每个目录都有安装项（`checkFeatureRegistry`）。产物写入构建编号（D19）。
+- **构建检查**：`src/` 下每个 `.js` / `.css` 都在两份清单里；`%%TOKEN%%` 全部替换；输入框样式门控（D4）；`:has()` 位置（D9）；产物能被 `vm.Script` 解析；模型文案文档校验（D5）；小鲸鱼的帧图与 `DEEPY_SHEETS` 表一一对应、每行的帧数、裁切框与静止帧合法（D24）；`src/entry.js` 的 FEATURES 表与 `FEATURE_MAINS` 登记的功能主文件双向对上、`src/features/` 下每个目录都有安装项（`checkFeatureRegistry`）；两个半边的偏好默认值逐键逐值相同（`checkPrefDefaults`，D10）。产物写入构建编号（D19）。
 - **理由**：DSH 的插件加载器没有相对 require，也没有资产 URL，打包器产出的分块与资产引用无处安放。加载器另有包内异步分包（`require.async('./client.<名字>.js')`），评估后不采用：产物 gzip 后约 288 KiB，首帧解析成本可忽略；大负载已按 D5 与 D24 在产物外按需加载（模型文案、帧图，字体走宿主路由）；改用分包要让构建发出带 `__ModuleLoader__.load` 注册的多个文件、让桩宿主扮分包加载，并把共享作用域的片段在分包边界上显式导出，而收益只是省下一次本来就快的解析；这条管线目前只有官方包在用，第三方插件包的分包资源没有公开契约（D2）。
 - **代价**：顶层名字共用一个作用域，靠命名约定避免冲突（D18）；没有按需裁剪，产物体积靠自律控制。
 - **重审条件**：加载器原生支持 ES module 相对导入与资产 URL；或引擎把插件包的异步分包写进公开契约，且产物 gzip 后超过约 1 MiB 时，重新评估分包。
@@ -92,6 +92,7 @@
 ## D10. 设置传输只走官方 Config 表单
 
 - **决定**：客户端只有 `configForms` 一条传输：绑定宿主实际提供的命名空间（候选依次为加载器入口 id、包名、`cordis.patch.yml` 插入的 id，以宿主的命名空间目录为准），读写都经表单控制器（值、写队列、修订号栅栏）。命名空间晚到时订阅目录，到达即绑定。宿主半边导出 `Config` 作为 schema：只有 `.volatile()` 字段进表单；schemastery 用顶层 await 加守卫导入，解析不到时 `Config` 为 `undefined`、皮肤照常加载——这是导入规定的唯一例外。设置席位注册为 `plugins.bundle.config`（键为包名）；宿主没有 `configForms` 时才注册整页的 `settings.section`。
+  - 字段只有一份声明：宿主半边 `host/settings.js` 的 `PREFS_DEFAULT` 生成 `Config`；浏览器半边 `src/constants.js` 的 `PREF_DEFAULTS`（默认值）与 `PREF_CHOICES`（取值集合）生成表单答复之前的初值与读到值时的规整。构建导入 `PREFS_DEFAULT`，与 `PREF_DEFAULTS` 逐键逐值核对（`checkPrefDefaults`）。偏好只存在宿主的表单里：早先存进浏览器本地存储的昵称与封号页语言，在表单第一次带值时写进表单，表单持有自己的值后删掉本地那份。
 - **代价**：`Config` 的顶层 await 让宿主半边晚一步求值（加载器本就等待导入，无实际影响）。
 - **重审条件**：宿主提供不依赖 `Config` 的设置注册方式，或 `configForms` 契约再变。
 
