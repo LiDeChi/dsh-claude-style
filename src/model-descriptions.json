@@ -299,10 +299,7 @@
     "caretTyping": { "zh": "每一格", "en": "Every move" },
     "caretMove": { "zh": "只在移动时", "en": "Explicit moves" },
     "caretOff": { "zh": "关闭", "en": "Off" },
-    "chatUxTakenOver": {
-      "zh": "本机装有 dsh-chat-ux，同样的效果由它提供，这个开关在它卸载之前保持关闭。",
-      "en": "dsh-chat-ux is installed on this machine: it provides this same effect, so the switch stays off until that plugin is removed."
-    },
+    "chatUxManaged": { "zh": "该选项由 dsh-chat-ux 管理", "en": "Managed by dsh-chat-ux" },
     "viewTabsTitle": { "zh": "对话 / 轨迹标签条", "en": "Chat / Trajectory tabs" },
     "viewTabsDesc": {
       "zh": "重绘对话区顶部的「对话 / 轨迹」标签条，标题那一行放得下时移上去。关闭后恢复系统的标签条。",

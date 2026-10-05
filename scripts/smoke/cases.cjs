@@ -823,11 +823,21 @@ const CASES = {
       JSON.stringify({ think: peer.thinkExpanded, group: peer.groupOpen }))
     const settings = peer.settings || {}
     const taken = ['chatFollow', 'autoFold', 'tokenFade', 'fileMutationRow', 'sendFlight', 'caretMotion']
-    check('the Conversation tab shows those six switches as off and refusing input, and says who took them over',
+    const answers = settings.answers || {}
+    // The reader's own answer stays on show (these defaults are on, the caret
+    // sits on Every move) while the control refuses input and the accent line
+    // names the plugin that owns the behaviour.
+    const showsOwnAnswer = (key) => {
+      const answer = answers[key]
+      return !!answer && (answer.on === true || answer.option === 'typing')
+    }
+    check('the Conversation tab greys those six controls out, keeps each one showing the reader\'s own answer, and names dsh-chat-ux in the accent line',
       settings.registered === true && taken.every(key => (settings.rows || []).includes(key)) &&
         taken.every(key => (settings.refusing || []).includes(key)) &&
+        taken.every(key => (settings.managed || []).includes(key)) &&
+        taken.every(showsOwnAnswer) &&
         (settings.texts || []).some(text => text.includes('dsh-chat-ux')),
-      JSON.stringify({ rows: settings.rows, refusing: settings.refusing }))
+      JSON.stringify({ rows: settings.rows, refusing: settings.refusing, managed: settings.managed, answers }))
     check('the rows the other plugin does not own keep answering',
       (settings.refusing || []).includes('turnStatus') === false && (settings.refusing || []).includes('viewTabs') === false,
       JSON.stringify(settings.refusing))

@@ -1757,8 +1757,8 @@
         groupOpen: !document.querySelector('[data-step-process-body]').hasAttribute('hidden'),
       }
       // The settings page, through the same React-tree walk the settings case
-      // uses: the Conversation tab's rows, which of them refuse input, and the
-      // note that says who took them over.
+      // uses: the Conversation tab's rows, which of them refuse input, which
+      // carry the line naming the owner, and what answer each control shows.
       var PeerSection = (window.__slotComponents || {})['claude-style']
       var peerWalk = function (node, visit) {
         if (node === null || node === undefined || typeof node !== 'object') return
@@ -1777,7 +1777,26 @@
         peerWalk(node, function (child) { if ((child.props || {}).disabled === true) found = true })
         return found
       }
-      r.peer.settings = { registered: typeof PeerSection === 'function', rows: [], refusing: [], texts: [] }
+      var peerManages = function (node) {
+        var found = false
+        peerWalk(node, function (child) {
+          var className = (child.props || {}).className
+          if (typeof className === 'string' && className.split(' ').indexOf('dsh-claude-settings-row-managed') >= 0) found = true
+        })
+        return found
+      }
+      // What the row's control shows: a switch's state, or the pressed option of
+      // a segmented control. The reader's own stored answer, not a forced off.
+      var peerAnswer = function (node) {
+        var answer = { on: false, option: null }
+        peerWalk(node, function (child) {
+          var props = child.props || {}
+          if (props['data-on'] === '') answer.on = true
+          if (props['aria-pressed'] === 'true') answer.option = props.key
+        })
+        return answer
+      }
+      r.peer.settings = { registered: typeof PeerSection === 'function', rows: [], refusing: [], managed: [], answers: {}, texts: [] }
       if (r.peer.settings.registered) {
         var peerReact = window.__react
         peerReact.rendering = true
@@ -1790,6 +1809,8 @@
           if (typeof props.className === 'string' && /(^| )dsh-claude-settings-row( |$)/.test(props.className)) {
             r.peer.settings.rows.push(props.key)
             if (peerDisabled(props.children)) r.peer.settings.refusing.push(props.key)
+            if (peerManages(props.children)) r.peer.settings.managed.push(props.key)
+            r.peer.settings.answers[props.key] = peerAnswer(props.children)
           }
         })
         peerTexts(peerTree, r.peer.settings.texts)

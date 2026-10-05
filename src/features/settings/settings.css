@@ -211,6 +211,21 @@ body[data-dsh-claude-style] .dsh-claude-settings-row-desc {
   color: var(--dsw-alias-label-tertiary);
 }
 
+/* A row whose behaviour another plugin owns right now: the control refuses input
+   and dims, while the row's own copy stays readable and a line in the accent
+   colour says who owns it. The reader's stored answer is what the control shows,
+   so it already tells what will happen once that plugin goes away. */
+body[data-dsh-claude-style] .dsh-claude-settings-row button:disabled {
+  cursor: not-allowed;
+  opacity: .45;
+}
+
+body[data-dsh-claude-style] .dsh-claude-settings-row-managed {
+  display: block;
+  margin-top: 2px;
+  color: var(--dsw-alias-state-business-primary);
+}
+
 body[data-dsh-claude-style] .dsh-claude-settings-error {
   font-size: 12px;
   line-height: 1.5;
