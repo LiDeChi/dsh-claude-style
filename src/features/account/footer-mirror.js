@@ -357,9 +357,6 @@
             if (entry.getAttribute('aria-haspopup') === 'menu') return
             if (entry.querySelector('[aria-haspopup="menu"]') !== null) return
             if (entry.querySelector('svg[viewBox="0 0 13.664 13.571"]') !== null) return
-            // Skip anything living in the host's account area — that is where
-            // the stray [→] in the drawer header came from.
-            if (typeof entry.closest === 'function' && entry.closest('[class*="account"]') !== null) return
             const trigger = findFooterTrigger(entry)
             const hasContent = (entry.textContent || '').trim() !== '' ||
                              entry.querySelector('svg, img, canvas') !== null
