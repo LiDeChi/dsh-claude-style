@@ -93,18 +93,20 @@
         }
       }
 
+      /** True while the tracked pointer sits within one card's box, with the same
+       *  8px band of desktop around it that covers the sliver of gap between the
+       *  two cards. */
+      function pointerInCardBox(card) {
+        if (pointer === null || card === null) return false
+        if (card.getAttribute('data-open') !== 'true') return false
+        const box = card.getBoundingClientRect()
+        return pointer.x >= box.left - 8 && pointer.x <= box.right + 8 &&
+               pointer.y >= box.top - 8 && pointer.y <= box.bottom + 8
+      }
+
       /** True while the pointer sits in either card, or in the gap between them. */
       function pointerInPicker() {
-        if (pointer === null) return false
-        const cards = [modelPop, modelSubPop]
-        for (let i = 0; i < cards.length; i++) {
-          const card = cards[i]
-          if (card === null || card.getAttribute('data-open') !== 'true') continue
-          const box = card.getBoundingClientRect()
-          if (pointer.x >= box.left - 8 && pointer.x <= box.right + 8 &&
-              pointer.y >= box.top - 8 && pointer.y <= box.bottom + 8) return true
-        }
-        return false
+        return pointerInCardBox(modelPop) || pointerInCardBox(modelSubPop)
       }
 
       /** Close on leave, but treat the gap between the two cards as still inside. */
@@ -394,12 +396,14 @@
             // Delayed, not immediate: the sub card sits BESIDE level 1, so a
             // pointer on its way from the cell to the sub crosses level 1's own
             // rows — folding on the spot made that journey impossible at any
-            // speed. Folding now waits out the same grace, and stands down if the
-            // pointer has meanwhile reached either card.
+            // speed. Folding now waits out the same grace, and stands down only
+            // when the pointer has meanwhile reached the sub card itself: the
+            // pointer still being on level 1 means it left the More-models cell,
+            // which is exactly when level 2 folds.
             if (subFoldTimer !== null) clearTimeout(subFoldTimer)
             subFoldTimer = setTimeout(() => {
               subFoldTimer = null
-              if (pointerInPicker()) return
+              if (pointerInCardBox(modelSubPop)) return
               if (modelSubPop !== null) setMenuPopoverOpen(modelSubPop, false)
             }, MODEL_CLOSE_DELAY)
           })
