@@ -151,7 +151,7 @@
         const heroCard = ui.composer ? ui.composer.heroCard() : null
         if (heroCard !== null) return { element: heroCard, session: null, place: 'card' }
         if (!conversation) return null
-        if (document.body.hasAttribute('data-dsh-claude-composer-hidden')) return null
+        if (document.body.hasAttribute(COMPOSER_HIDDEN_ATTR)) return null
         const content = findConversationSession()
         const seat = content === null ? null : content.querySelector('[data-composer-seat]')
         if (seat === null) return null

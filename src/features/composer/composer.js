@@ -48,53 +48,51 @@
        */
       function syncVariant(cards) {
         const value = hero && !studioHome ? 'hero' : 'inline'
-        const syncedStacks = []
-        for (let c = 0; c < cards.length; c++) {
-          const card = cards[c]
-          if (card.getAttribute('data-composer-variant') !== value) card.setAttribute('data-composer-variant', value)
+        const stacks = new Set()
+        for (const card of cards) {
+          setAttributeIfChanged(card, 'data-composer-variant', value)
           const stack = card.closest(COMPOSER_STACK)
-          if (stack !== null && !syncedStacks.includes(stack)) {
-            if (stack.getAttribute('data-composer-variant') !== value) {
-              stack.setAttribute('data-composer-variant', value)
-            }
-            syncedStacks.push(stack)
-          }
+          if (stack !== null) stacks.add(stack)
         }
+        for (const stack of stacks) setAttributeIfChanged(stack, 'data-composer-variant', value)
       }
 
-      /** The input rail inside a card: the attachment shell and its scrolling inner rail. */
+      /**
+       * The attachment rails inside a card (ui-attachment): the shell rail and
+       * its scrolling inner rail, both `_rail`.
+       */
       const ATTACHMENT_RAIL = '[class*="_rail"]'
-      /** Anything in a card that means it carries attachments. */
-      const ATTACHMENT_PRESENT = `[class*="imageItem"], [class*="thumbnail"], [class*="FileCard"], ${ATTACHMENT_RAIL} :is([class*="_item"], img, [class*="_card"])`
+      /**
+       * Anything in a card that means it carries attachments: an image tile
+       * (`_imageItem`, `_thumbnail`), or any item, image or file card
+       * (FileCard's `_card`) on a rail.
+       */
+      const ATTACHMENT_PRESENT = `[class*="_imageItem"], [class*="_thumbnail"], ${ATTACHMENT_RAIL} :is([class*="_item"], img, [class*="_card"])`
       /**
        * The attachment tiles the stylesheet reshapes into thumbnails. They are
        * found here once per pass and marked, so the rules read one attribute
        * instead of re-running this list, with its structural :has(img), on
        * every DOM change.
        */
-      const ATTACHMENT_TILES = `${ATTACHMENT_RAIL} :is([class*="imageItem"], [class*="thumbnail"], [class*="FileCard"], [class*="_item"]:has(img), [class*="_card"]:has(img), [class*="attachment"]:has(img))`
+      const ATTACHMENT_TILES = `${ATTACHMENT_RAIL} :is([class*="_imageItem"], [class*="_thumbnail"], [class*="_item"]:has(img), [class*="_card"]:has(img))`
       const ATTACHMENT_TILE_ATTR = 'data-dsh-claude-attachment'
 
       /** Mark the cards that carry attachments, and the tiles inside them. */
       function syncAttachments(cards) {
-        const tiles = []
-        for (let ci = 0; ci < cards.length; ci++) {
-          const card = cards[ci]
-          if (active && card.querySelector(ATTACHMENT_PRESENT) !== null) {
-            if (card.getAttribute('data-has-attachments') !== 'true') card.setAttribute('data-has-attachments', 'true')
-            const found = card.querySelectorAll(ATTACHMENT_TILES)
-            for (let t = 0; t < found.length; t++) tiles.push(found[t])
-          } else if (card.hasAttribute('data-has-attachments')) {
+        const tiles = new Set()
+        for (const card of cards) {
+          const carries = active && card.querySelector(ATTACHMENT_PRESENT) !== null
+          if (carries) {
+            setAttributeIfChanged(card, 'data-has-attachments', 'true')
+            for (const tile of card.querySelectorAll(ATTACHMENT_TILES)) tiles.add(tile)
+          } else {
             card.removeAttribute('data-has-attachments')
           }
         }
-        const marked = document.querySelectorAll(`[${ATTACHMENT_TILE_ATTR}]`)
-        for (let m = 0; m < marked.length; m++) {
-          if (!tiles.includes(marked[m])) marked[m].removeAttribute(ATTACHMENT_TILE_ATTR)
+        for (const marked of document.querySelectorAll(`[${ATTACHMENT_TILE_ATTR}]`)) {
+          if (!tiles.has(marked)) marked.removeAttribute(ATTACHMENT_TILE_ATTR)
         }
-        for (let n = 0; n < tiles.length; n++) {
-          if (!tiles[n].hasAttribute(ATTACHMENT_TILE_ATTR)) tiles[n].setAttribute(ATTACHMENT_TILE_ATTR, '')
-        }
+        for (const tile of tiles) tile.toggleAttribute(ATTACHMENT_TILE_ATTR, true)
       }
 
       const CONTROL_ATTR = 'data-dsh-claude-control'
@@ -144,16 +142,17 @@
         return card.nextElementSibling
       }
 
-      /** The meter the host parks in that dock, or null when it is not there. */
+      /**
+       * The meter the host parks in that dock, or null when it is not there.
+       * Its trigger is told apart by its glyph (ui-conversation ContextMeter):
+       * the dialog trigger that draws a ring of `<circle>`s; the stats pills
+       * draw none.
+       */
       function dockedContextMeter(dock) {
         if (dock === null) return null
-        const triggers = dock.querySelectorAll('button[aria-haspopup="dialog"]')
-        for (let i = 0; i < triggers.length; i++) {
-          // The meter's trigger IS the occupancy reading ("42%") and no stats
-          // pill ever is, so the label alone identifies it without a class name
-          // (the host hashes those per build).
-          if (!/^\d{1,3}%$/.test((triggers[i].textContent || '').trim())) continue
-          let node = triggers[i]
+        for (const trigger of dock.querySelectorAll('button[aria-haspopup="dialog"]')) {
+          if (trigger.querySelector(':scope > svg > circle') === null) continue
+          let node = trigger
           while (node.parentElement !== null && node.parentElement !== dock) node = node.parentElement
           return node
         }
@@ -242,22 +241,11 @@
        * single view) means the chat surface is all there is.
        */
       function syncChatTabComposer() {
-        if (!active) {
-          document.body.removeAttribute('data-dsh-claude-composer-hidden')
-          return
-        }
-        let chatActive = true
-        const seat = document.querySelector('[data-composer-seat]')
-        const root = seat && seat.closest ? seat.closest('[data-phase]') : null
-        if (root) {
-          const list = root.querySelector('[role="tablist"]')
-          if (list) {
-            const first = list.querySelector('[role="tab"]')
-            if (first) chatActive = first.getAttribute('aria-selected') === 'true'
-          }
-        }
-        if (chatActive) document.body.removeAttribute('data-dsh-claude-composer-hidden')
-        else document.body.setAttribute('data-dsh-claude-composer-hidden', '')
+        const root = closestFrom(document.querySelector('[data-composer-seat]'), '[data-phase]')
+        const list = root === null ? null : root.querySelector('[role="tablist"]')
+        const first = list === null ? null : list.querySelector('[role="tab"]')
+        const chatActive = first === null || first.getAttribute('aria-selected') === 'true'
+        document.body.toggleAttribute(COMPOSER_HIDDEN_ATTR, active && !chatActive)
       }
 
       function syncComposer() {
@@ -295,13 +283,11 @@
        * 150px of the end counts as at the end.
        */
       function followTranscript() {
-        const scroller = document.querySelector('[data-conversation-scroll], [class*="scrollBody"]')
-        if (scroller) {
-          const dist = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight
-          if (dist < 150) {
-            scroller.scrollTop = scroller.scrollHeight
-          }
-        }
+        // ui-conversation marks its transcript scroller with this attribute.
+        const scroller = document.querySelector('[data-conversation-scroll]')
+        if (scroller === null) return
+        const distance = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight
+        if (distance < 150) scroller.scrollTop = scroller.scrollHeight
       }
 
       ui.composer = {

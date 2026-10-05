@@ -521,9 +521,10 @@
       // again. Taking the room away here left the trigger under the ring until
       // the reading itself moved.
       r.context.roomBefore = document.body.style.getPropertyValue('--dsh-claude-meter-room')
-      var meterButton = statsMeter === null ? null : statsMeter.querySelector('button')
+      // The host rewrites the reading beside the ring (ContextMeter's `<span>`).
+      var meterReading = statsMeter === null ? null : statsMeter.querySelector('button > span')
       if (statsMeter !== null) statsMeter.style.display = 'none'
-      if (meterButton !== null) meterButton.textContent = meterButton.textContent === '43%' ? '44%' : '43%'
+      if (meterReading !== null) meterReading.textContent = meterReading.textContent === '43%' ? '44%' : '43%'
       statsCard.appendChild(document.createElement('span'))
       await sleep(400)
       if (statsMeter !== null) statsMeter.style.display = ''

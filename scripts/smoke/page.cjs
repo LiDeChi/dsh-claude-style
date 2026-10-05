@@ -52,11 +52,13 @@ function page(name) {
         '<span class="_a_anchor_1"><button type="button" class="_p_pill_1" aria-haspopup="dialog" aria-expanded="false" aria-label="105 tok · Cache hit 90%">' +
           '<svg viewBox="0 0 16 16" width="14" height="14"></svg><span class="_l_label_1">105 tok · Cache hit 90%</span></button></span>' +
       '</div>'
-  // The host's dock line: the stats row plus the context meter, whose trigger
-  // shows the occupancy reading (that reading is what identifies the meter —
-  // features/composer/composer.js reads the dock's own buttons by it).
+  // The host's dock line: the stats row plus the context meter (ui-conversation
+  // ContextMeter), whose trigger draws a ring of two circles beside the
+  // occupancy reading — that ring is what identifies the meter
+  // (features/composer/composer.js); the stats pills draw none.
   var dock = '<div class="_x_dock_1">' + stats +
-      '<span class="_m_meter_1"><button type="button" id="context-meter" class="_m_trigger_1" aria-haspopup="dialog" aria-expanded="false" aria-label="Context used 42%">42%</button></span>' +
+      '<span class="_m_meter_1"><button type="button" id="context-meter" class="_m_trigger_1" aria-haspopup="dialog" aria-expanded="false" aria-label="Context used 42%">' +
+        '<svg viewBox="0 0 14 14" width="14" height="14" aria-hidden="true"><circle cx="7" cy="7" r="5.5"></circle><circle cx="7" cy="7" r="5.5"></circle></svg><span>42%</span></button></span>' +
     '</div>'
   // The hero row's two pickers, only where the popovers case drives them: each is
   // its own host menu, opened and closed by pressing its own trigger.
