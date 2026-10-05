@@ -146,8 +146,11 @@
       function openModelSub() {
         cancelCloseModel()
         renderModelSub()
-        positionModelPopovers()
+        // Open BEFORE placing: the placement pass reads the sub card only while
+        // it is marked open, so positioning first would skip it and leave the
+        // card at its previous position — every open has to place it fresh.
         if (modelSubPop) setMenuPopoverOpen(modelSubPop, true)
+        positionModelPopovers()
       }
 
       function pickModel(provider, modelId) {
