@@ -37,7 +37,7 @@
  * start costs one directory walk plus one stat per session and re-reads only
  * the logs that changed.
  */
-import { mkdirSync, readFileSync, readdirSync, renameSync, statSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, statSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { harnessPath } from './harness-home.js'
 
@@ -241,13 +241,7 @@ function daysFromObject(raw) {
 /** The newest generation of a session directory's log, with its fingerprint. */
 function newestLog(dir) {
   let best = null
-  let entries
-  try {
-    entries = readdirSync(dir, { withFileTypes: true })
-  } catch {
-    return null
-  }
-  for (const entry of entries) {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
     if (!entry.isFile()) continue
     const match = SESSION_LOG.exec(entry.name)
     if (match === null) continue
@@ -260,33 +254,20 @@ function newestLog(dir) {
   }
   if (best === null) return null
   const path = join(dir, best.name)
-  let stat
-  try {
-    stat = statSync(path)
-  } catch {
-    return null
-  }
+  const stat = statSync(path)
   return { path, size: stat.size, mtimeMs: stat.mtimeMs }
 }
 
-/** Every stored session: id, newest log, and that log's fingerprint. */
+/**
+ * Every stored session: id, newest log, and that log's fingerprint. A harness
+ * home that has never stored a session has no sessions root yet.
+ */
 function listSessionLogs(root) {
   const out = []
-  let projects
-  try {
-    projects = readdirSync(root, { withFileTypes: true })
-  } catch {
-    return out
-  }
-  for (const project of projects) {
+  if (!existsSync(root)) return out
+  for (const project of readdirSync(root, { withFileTypes: true })) {
     if (!project.isDirectory()) continue
-    let sessions
-    try {
-      sessions = readdirSync(join(root, project.name), { withFileTypes: true })
-    } catch {
-      continue
-    }
-    for (const session of sessions) {
+    for (const session of readdirSync(join(root, project.name), { withFileTypes: true })) {
       if (!session.isDirectory()) continue
       const log = newestLog(join(root, project.name, session.name))
       if (log === null) continue
@@ -313,16 +294,17 @@ export function createUsage(ctx) {
   let disposed = false
 
   function readLedger() {
-    let raw
-    try {
-      raw = readFileSync(join(home(), 'storages', 'cost-meter', 'ledger.json'), 'utf8')
-    } catch {
-      return null
-    }
+    // The cost meter is another plugin: no ledger means it is not installed.
+    const file = join(home(), 'storages', 'cost-meter', 'ledger.json')
+    if (!existsSync(file)) return null
+    const raw = readFileSync(file, 'utf8')
     let parsed
     try {
       parsed = JSON.parse(raw)
     } catch {
+      // Another plugin's file, read without any coordination with its writer:
+      // a write in progress reads as no ledger, and the local fold answers
+      // (docs/architecture.md D12).
       return null
     }
     if (parsed === null || typeof parsed !== 'object') return null
@@ -377,16 +359,15 @@ export function createUsage(ctx) {
   }
 
   function readCache() {
-    let raw
-    try {
-      raw = readFileSync(cacheFile(), 'utf8')
-    } catch {
-      return new Map()
-    }
+    if (!existsSync(cacheFile())) return new Map()
     let parsed
     try {
-      parsed = JSON.parse(raw)
-    } catch {
+      parsed = JSON.parse(readFileSync(cacheFile(), 'utf8'))
+    } catch (error) {
+      // The cache only saves work: a file that does not parse is reported, the
+      // pass folds every session again and writes a whole new file over it
+      // (docs/architecture.md D12).
+      ctx.logger?.warn?.(`dsh-claude-style: usage cache unreadable, folding again: ${error.message}`)
       return new Map()
     }
     if (parsed === null || typeof parsed !== 'object' || parsed.version !== CACHE_VERSION) return new Map()
@@ -412,7 +393,11 @@ export function createUsage(ctx) {
       mkdirSync(dirname(path), { recursive: true })
       writeFileSync(temp, JSON.stringify(document), 'utf8')
       renameSync(temp, path)
-    } catch { /* an unwritable cache only costs the next cold pass */ }
+    } catch (error) {
+      // The cache only saves work: a write that fails is reported, and the
+      // roll-up this pass computed is still served (docs/architecture.md D12).
+      ctx.logger?.warn?.(`dsh-claude-style: usage cache not written: ${error.message}`)
+    }
   }
 
   /** Sum the per-session day maps into one, tracking distinct sessions per day. */
@@ -520,10 +505,12 @@ export function createUsage(ctx) {
     let snapshot
     try {
       snapshot = await query.readSession(sessionId)
-    } catch {
-      // A log the reader cannot parse (corrupt tail, torn write) is the same
-      // failure as a refusal: the session is skipped and retried on the next
-      // pass, it never fails the whole fold.
+    } catch (error) {
+      // The query service throws these two to say a stored log is unreadable
+      // or went away between the listing and the read: that session is
+      // skipped and retried on the next pass (docs/architecture.md D12).
+      if (error?.code !== 'SESSION_QUERY_CORRUPT_SESSION' && error?.code !== 'SESSION_QUERY_SESSION_NOT_FOUND') throw error
+      ctx.logger?.warn?.(`dsh-claude-style: session ${sessionId} left out of the usage roll-up: ${error.message}`)
       return null
     }
     const events = snapshot?.events

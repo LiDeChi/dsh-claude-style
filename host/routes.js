@@ -4,11 +4,10 @@
  * These are the surfaces D11 describes — the model copy document, the webfonts,
  * the OS user, the HDSL account, Deepy's sheets, session deletion and the usage
  * and search roll-ups — each registered on the host's web server under this
- * plugin's route prefix. Registration is defensive: a host without a web server
- * must still activate the skin, so every route is registered in its own try and
- * a refusal only warns.
+ * plugin's route prefix. Every route is registered on its own: one path the web
+ * server refuses is reported, and the other routes still register.
  */
-import { readFileSync, readdirSync, rmSync, statSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs'
 import { userInfo } from 'node:os'
 import { dirname, join, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -122,29 +121,21 @@ const DELETE_BODY_MAX = 4096
  * @returns 401 / 403, or undefined when the request may proceed.
  */
 function refusalOf(ctx, req) {
-  try {
-    const connection = ctx.get('connection')
-    if (typeof connection?.requestRejection === 'function') return connection.requestRejection(req)
-  } catch { /* no connection service: the local fence below */ }
+  const connection = ctx.get('connection')
+  if (typeof connection?.requestRejection === 'function') return connection.requestRejection(req)
   const host = req.headers.host
   if (host !== undefined) {
-    let name
-    try {
-      name = new URL(`http://${host}`).hostname
-    } catch {
-      return 403
-    }
+    // A Host header that is no host name at all is refused.
+    if (!URL.canParse(`http://${host}`)) return 403
+    const name = new URL(`http://${host}`).hostname
     if (name !== 'localhost' && name !== '[::1]' && !/^127\.\d+\.\d+\.\d+$/.test(name)) return 403
   }
   const site = req.headers['sec-fetch-site']
   if (site !== undefined && site !== 'same-origin' && site !== 'none') return 403
   const origin = req.headers.origin
   if (origin === undefined) return undefined
-  try {
-    return new URL(origin).host === host ? undefined : 403
-  } catch {
-    return 403
-  }
+  if (!URL.canParse(origin)) return 403
+  return new URL(origin).host === host ? undefined : 403
 }
 
 /** Send one JSON response. */
@@ -162,32 +153,24 @@ function sendJson(res, status, payload) {
  * Whether the host holds this session open right now.
  *
  * A live session's log is open and being appended to, so its directory must not
- * be removed under the writer. When the live set cannot be read, the answer is
- * "live": an unreadable set cannot authorize the deletion.
+ * be removed under the writer. A sessions service that offers no way to read
+ * its live set answers "live": an unreadable set cannot authorize the
+ * deletion. A read that throws fails the request (500), which refuses the
+ * deletion as well.
  */
 function sessionIsLive(ctx, sessionId) {
-  let sessions
-  try {
-    sessions = ctx.get('sessions')
-  } catch {
-    // The live set cannot be read: an unreadable set cannot authorize the deletion.
-    return true
-  }
+  const sessions = ctx.get('sessions')
   // A host with no sessions service holds nothing open.
   if (sessions === null || sessions === undefined) return false
-  try {
-    if (typeof sessions.get === 'function') {
-      const found = sessions.get(sessionId)
-      return found !== undefined && found !== null
+  if (typeof sessions.get === 'function') {
+    const found = sessions.get(sessionId)
+    return found !== undefined && found !== null
+  }
+  if (typeof sessions.list === 'function') {
+    const listed = sessions.list()
+    if (Array.isArray(listed)) {
+      return listed.some((item) => (typeof item === 'string' ? item : item?.id ?? item?.sessionId) === sessionId)
     }
-    if (typeof sessions.list === 'function') {
-      const listed = sessions.list()
-      if (Array.isArray(listed)) {
-        return listed.some((item) => (typeof item === 'string' ? item : item?.id ?? item?.sessionId) === sessionId)
-      }
-    }
-  } catch {
-    return true
   }
   return true
 }
@@ -254,6 +237,7 @@ async function deleteSession(ctx, req, res) {
   try {
     request = raw === null ? null : JSON.parse(raw)
   } catch {
+    // A body that is not JSON is the client's error: the id check below answers 400.
     request = null
   }
   const sessionId = request !== null && typeof request.sessionId === 'string' ? request.sessionId : ''
@@ -268,18 +252,11 @@ async function deleteSession(ctx, req, res) {
   const root = resolve(harnessPath(ctx, 'sessions'))
   let dir = null
   // The root listing is the storage's own answer, so a failure there is a
-  // fault and propagates to the route's 500 answer; a candidate that stats as
-  // absent is the OS's "not under this entry" — the expected state the scan
-  // moves past.
+  // fault and propagates to the route's 500 answer; a candidate that does not
+  // exist is "not under this entry", and the scan moves past it.
   for (const entry of readdirSync(root)) {
     const candidate = join(root, entry, sessionId)
-    let stat
-    try {
-      stat = statSync(candidate)
-    } catch {
-      continue
-    }
-    if (stat.isDirectory()) {
+    if (statSync(candidate, { throwIfNoEntry: false })?.isDirectory() === true) {
       dir = candidate
       break
     }
@@ -293,13 +270,8 @@ async function deleteSession(ctx, req, res) {
     sendJson(res, 403, { ok: false, error: 'session directory outside the sessions root' })
     return
   }
-  try {
-    rmSync(dir, { recursive: true, force: true })
-  } catch (error) {
-    // A storage fault answers 500 with the OS error — nothing is swallowed.
-    sendJson(res, 500, { ok: false, error: String(error?.message ?? error) })
-    return
-  }
+  // A storage fault propagates to the route's 500 answer, carrying the OS error.
+  rmSync(dir, { recursive: true, force: true })
   await unarchiveSession(ctx, sessionId)
   sendJson(res, 200, { ok: true, ghost: false })
 }
@@ -326,16 +298,16 @@ export function registerRoutes(ctx, scope) {
    * @param headers - content-type / cache-control pair for the payload.
    */
   const sendFile = (res, method, path, headers) => {
-    let body
-    try {
-      // Read per request: the files are small, and an in-place edit then
-      // shows up on reload without restarting the host.
-      body = readFileSync(path)
-    } catch {
+    // An optional font the user never dropped in, or a sheet name no build
+    // shipped, is absent: 404.
+    if (!existsSync(path)) {
       res.writeHead(404)
       res.end()
       return
     }
+    // Read per request: the files are small, and an in-place edit then shows
+    // up on reload without restarting the host.
+    const body = readFileSync(path)
     res.writeHead(200, {
       ...headers,
       'content-length': String(body.byteLength),
@@ -369,20 +341,22 @@ export function registerRoutes(ctx, scope) {
 
   scope.effect(() => {
     const disposers = []
-    const warn = (message) => ctx.logger?.warn?.(`dsh-claude-style: ${message}`)
+    const report = (message, error) => ctx.logger?.warn?.(`dsh-claude-style: ${message}: ${error?.message ?? error}`)
     const usage = createUsage(ctx)
     const hdsl = createHdslAccount(ctx)
     const sessionSearch = createSessionSearch(ctx)
 
     /**
-     * Register one route. A host without a web server must still activate the
-     * skin, so a refusal only warns.
+     * Register one route. The web server refuses a path another plugin already
+     * holds by throwing; that refusal is reported and the other routes still
+     * register, because a throw here would fail this fiber and drop the client
+     * bundle — the whole skin — with it (docs/architecture.md D12).
      */
     const register = (label, route) => {
       try {
         disposers.push(scope.webServer.register(route))
       } catch (error) {
-        warn(`${label} route unavailable: ${error?.message ?? error}`)
+        report(`${label} route unavailable`, error)
       }
     }
 
@@ -431,10 +405,7 @@ export function registerRoutes(ctx, scope) {
         // response and never polls. The exact route wins over the prefix above.
         if (methodRefused(req, res, ['GET', 'HEAD'])) return
         if (fenceRefused(req, res)) return
-        let username = ''
-        try {
-          username = userInfo().username || ''
-        } catch { /* no OS user: the browser falls back to 'User' */ }
+        const username = userInfo().username || ''
         const body = Buffer.from(JSON.stringify({ ok: true, username }))
         res.writeHead(200, {
           'content-type': 'application/json; charset=utf-8',
@@ -473,27 +444,21 @@ export function registerRoutes(ctx, scope) {
         // mark.
         if (methodRefused(req, res, ['GET', 'HEAD'])) return
         if (fenceRefused(req, res)) return
-        hdsl.read().then((profile) => {
-          let body = null
-          if (profile.skinFile !== null) {
-            try {
-              body = readFileSync(profile.skinFile)
-            } catch { /* the file was removed under the launcher */ }
-          }
-          if (body === null) {
+        // A failed read propagates to the web server, which logs it and answers.
+        return hdsl.read().then((profile) => {
+          // A file removed under the launcher is a 404 like no file at all.
+          if (typeof profile.skinFile !== 'string' || !existsSync(profile.skinFile)) {
             res.writeHead(404, { 'cache-control': 'no-store' })
             res.end()
             return
           }
+          const body = readFileSync(profile.skinFile)
           res.writeHead(200, {
             'content-type': 'image/png',
             'content-length': String(body.byteLength),
             'cache-control': 'no-cache',
           })
           res.end(req.method === 'HEAD' ? undefined : body)
-        }, () => {
-          res.writeHead(404, { 'cache-control': 'no-store' })
-          res.end()
         })
       },
     })
@@ -505,10 +470,10 @@ export function registerRoutes(ctx, scope) {
         // POST only: the browser half sends one id, and a GET must never
         // reach the filesystem.
         if (methodRefused(req, res, ['POST'])) return
+        // A fault anywhere in the deletion answers 500 with its message.
         void deleteSession(ctx, req, res).catch((error) => {
-          try {
-            sendJson(res, 500, { ok: false, error: String(error?.message ?? error) })
-          } catch { /* the response may already be gone */ }
+          if (res.headersSent) res.destroy()
+          else sendJson(res, 500, { ok: false, error: String(error?.message ?? error) })
         })
       },
     })
@@ -560,13 +525,15 @@ export function registerRoutes(ctx, scope) {
     })
 
     return () => {
-      try {
-        usage.dispose()
-      } catch { /* the service may already be gone */ }
+      usage.dispose()
+      // One route's disposer failing must not keep the others registered
+      // (docs/architecture.md D12); the failure is reported.
       for (const dispose of disposers) {
         try {
           dispose()
-        } catch { /* the route may already be gone */ }
+        } catch (error) {
+          report('route disposal failed', error)
+        }
       }
     }
   }, 'dsh-claude-style: host routes')

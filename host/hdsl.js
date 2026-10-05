@@ -46,20 +46,9 @@ export function createHdslAccount(ctx) {
   const read = () => {
     if (reading !== null) return reading
     reading = Promise.resolve().then(() => {
-      let env = null
-      try {
-        env = ctx.get(DSH_LAUNCH_ENVIRONMENT_KEY)
-      } catch {
-        env = null
-      }
-      if (env === null || env === undefined || typeof env.getFrom !== 'function') return { contract: false }
-      const value = (name) => {
-        try {
-          return env.getFrom(name, HDSL_LAYERS)?.value
-        } catch {
-          return undefined
-        }
-      }
+      const env = ctx.get(DSH_LAUNCH_ENVIRONMENT_KEY)
+      if (typeof env?.getFrom !== 'function') return { contract: false }
+      const value = (name) => env.getFrom(name, HDSL_LAYERS)?.value
       if (value('HDSL_ACCOUNT_CONTRACT') !== HDSL_CONTRACT) return { contract: false }
       const skinFile = value('HDSL_ACCOUNT_SKIN_FILE')
       const hasSkinImage = typeof skinFile === 'string' && skinFile !== ''
