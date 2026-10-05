@@ -113,12 +113,12 @@ body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant
 
 /* ---------- the host's stats row: hidden, its detail moved into the context popover ---------- */
 /* The host ships two pills here (turns and steps · tok/s, total tokens · cache
-   hits) with its own icons and spacing, and the skin used to fold them into one
-   sentence. That sentence is gone and the row is HIDDEN — not removed: the two
-   pills are the read's own click targets, and their detail dialogs are read out
-   of them (features/permissions/session-stats.js) into the popover the context
-   meter opens. One popover for everything about the session's numbers, and the
-   input row keeps only the meter at its right end. */
+   hits) with its own icons and spacing. The row is HIDDEN and stays in the
+   document: its structure still tells the detailed form from the compact one,
+   and the session's numbers are read from the host's projections
+   (features/context-stats/session-stats.js) into the popover the context meter
+   opens. One popover for everything about the session's numbers, and the input
+   row keeps only the meter at its right end. */
 body[data-dsh-claude-style] [data-composer-stats] {
   display: none !important;
 }
@@ -142,23 +142,22 @@ body[data-dsh-claude-style] [data-composer-card] [class*="_row"] .dsh-claude-mod
   color: var(--dsw-alias-label-secondary) !important;
 }
 
-/* The host renders two separate stat dialogs; hide them — their rows are read
-   into the context popover instead — for as long as the permission control,
-   which owns that read, is installed. */
-body[data-dsh-claude-style][%%PERMISSIONS_ATTR%%] [role="dialog"]:has([data-session-stats-details]),
-body[data-dsh-claude-style][%%PERMISSIONS_ATTR%%] [role="dialog"]:has([data-session-stats-usage]) {
+/* The host renders two separate stat dialogs; hide them — their numbers are
+   read into the context popover instead — for as long as the context
+   statistics, which own that read, are installed. */
+body[data-dsh-claude-style][%%SESSION_STATS_ATTR%%] [role="dialog"]:has([data-session-stats-details]),
+body[data-dsh-claude-style][%%SESSION_STATS_ATTR%%] [role="dialog"]:has([data-session-stats-usage]) {
   display: none !important;
 }
 
 /* ---------- session statistics inside the context popover ---------- */
 /* Skin-owned nodes appended to the host's own panel
-   (features/permissions/session-stats.js): the host's context rows above, the
+   (features/context-stats/session-stats.js): the host's context rows above, the
    session's numbers below, one hairline between them.
 
    The panel itself is the host's, and the host mounts it with no entrance of
-   its own — it used to pop while every card the skin builds faded in. The
-   feature stamps the panel, and it takes the cards' own short rise (the shared
-   keyframe), so hovering either control opens the same way. */
+   its own. The feature stamps the panel, and it takes the cards' own short
+   rise (the shared keyframe), so hovering either control opens the same way. */
 body[data-dsh-claude-style] [data-dsh-claude-context-panel] {
   animation: dsh-claude-popover-in 0.15s ease !important;
 }

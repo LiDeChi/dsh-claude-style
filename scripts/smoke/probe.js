@@ -907,7 +907,10 @@
       document.body.appendChild(switchHeader)
       var switchMarks = function () {
         return {
-          permissionsControl: document.querySelectorAll('.dsh-claude-perm-container').length + (document.body.hasAttribute('data-dsh-claude-permissions') ? 1 : 0),
+          // The permission control and the context statistics switch together.
+          permissionsControl: document.querySelectorAll('.dsh-claude-perm-container').length +
+            (document.body.hasAttribute('data-dsh-claude-permissions') ? 1 : 0) +
+            (document.body.hasAttribute('data-dsh-claude-session-stats') ? 1 : 0),
           workspaceView: document.querySelectorAll('.dsh-claude-ws-segments').length,
           sidebarSearch: document.querySelectorAll('[data-dsh-claude-search-row], .dsh-claude-search-trigger').length,
           turnStatus: document.querySelectorAll('[data-dsh-claude-turn-status], [style*="--dsh-claude-turn-order"]').length,

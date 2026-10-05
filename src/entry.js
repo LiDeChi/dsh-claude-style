@@ -181,6 +181,7 @@
         { name: 'mascot', pref: 'mascot', install() { return installMascot(ctx, ui) } }, // 工作台首页输入卡片上沿的像素螃蟹：点它、指针离开它时（也会偶尔自己）钓一次鱼；DeepSeek 品牌下换成小鲸鱼 Deepy，首页与对话页都在，随智能体的工作状态换动画
         { name: 'copy', ungated: '提示语跟随输入框改造的范围，问候语跟随首页版面', install() { return installCopy(ctx, ui) } },
         { name: 'permissions', pref: 'permissionsControl', install() { return installPermissions(ctx, ui) } },
+        { name: 'contextStats', pref: 'permissionsControl', install() { return installContextStats(ctx, ui) } }, // 会话数字收进上下文弹层，随权限控件一起开关：宿主的两个统计对话框由它接管
         { name: 'model', pref: 'modelPicker', install() { return installModelPicker(ctx, ui) } },
         { name: 'effort', pref: 'modelPicker', install() { return installEffortPicker(ctx, ui) } }, // 工作强度滑杆随模型选择器：宿主的工作强度在宿主自己的模型菜单里
         { name: 'heroMenu', ungated: '跟随输入框改造的首页范围', install() { return installHeroMenu(ctx, ui) } }, // hero 行的目录/预设弹层：打标记给样式表用

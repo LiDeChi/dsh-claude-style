@@ -799,7 +799,7 @@
   // the host portals it to <body>. Its rows are a <dl> like the stats dialogs',
   // so the skin tells the three apart by their markers (the stats dialogs carry
   // data-session-stats-*, this one carries neither) — see
-  // features/permissions/session-stats.js contextPanel().
+  // features/context-stats/session-stats.js contextPanel().
   var meterTrigger = document.getElementById('context-meter')
   var contextPanel = null
   if (meterTrigger !== null) {

@@ -305,7 +305,7 @@ Its horizontal place is the one thing the skin takes over. ui-chat hangs the
 panel from the anchor's LEFT edge and only then clamps it into the viewport
 (`useStatDialog`, align `start`), so a trigger at the end of the composer row
 leaves the panel against the window's right margin instead of under the ring.
-`features/permissions/session-stats.js` reads the meter's right edge and the
+`features/context-stats/session-stats.js` reads the meter's right edge and the
 panel's own layout width — `offsetWidth`, not its rect: the entrance scales the
 box, and a transformed rect is two per cent narrower than the one that settles —
 and writes `--dsh-claude-context-panel-left` with the mark that turns it on;
@@ -314,7 +314,7 @@ host's inline value. The reading is re-taken when the panel's box changes (a
 `ResizeObserver`) and when the viewport moves (`reposition('viewport')`).
 
 What the skin appends to it is the session's numbers
-(`features/permissions/session-stats.js`), read from the host's `sessionStats`
+(`features/context-stats/session-stats.js`), read from the host's `sessionStats`
 and `tokenUsage` projections — the same durable whole-log values the host's own
 pills render — never by opening the host's stat dialogs. The labels and the
 duration / token templates come from the host's `chat` locale namespace, so the

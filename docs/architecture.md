@@ -273,7 +273,8 @@
 
 - **决定**：
   - 宿主画在输入卡片下方的统计行（轮次与步数 · tok/s、总 tokens · 缓存命中）与它的两张明细面板一起隐藏（`features/composer/inline-bar.css`）：输入行只剩右端的上下文计量环，数字进它自己的那个弹层。行仍留在文档里，只为让「性能与用量」这一档（详细 / 简洁）的结构还读得出来——详细档给出宿主那两组所有的行，简洁档只给四个数字：总用时（模型用时加工具调用用时，宿主没有这个合计，用皮肤自己的文案）、首 token 平均、输出速度与缓存命中，不带分组小标题，直接排成 2×2 网格。
-  - 数字按**数据**读，不读渲染结果：`sessionStats` 与 `tokenUsage` 是宿主在整份日志上折出来的会话投影，会话面交出它们的按 key 读取面（`session.projections.faceOf`，也就是宿主自己 `useProjection` 走的那个座位；`features/permissions/session-stats.js` 经 `sessions.binding(id)` 取）。面板打开时按当前值填，订阅到新帧就地重写：不再按胶囊、不再等宿主的对话框挂载。
+  - 这是独立的功能 `contextStats`（`src/features/context-stats/`），与权限控件共用 `permissionsControl` 开关（D29）。宿主的两张明细对话框只在它安装期间隐藏（`<body>` 上的 `SESSION_STATS_ATTR`），关掉即交还宿主。计量环按结构认：输入区底部那一行里画着圆环（`svg > circle`）的对话框触发按钮，统计胶囊不画圆环。
+  - 数字按**数据**读，不读渲染结果：`sessionStats` 与 `tokenUsage` 是宿主在整份日志上折出来的会话投影，会话面交出它们的按 key 读取面（`session.projections.faceOf`，也就是宿主自己 `useProjection` 走的那个座位；`features/context-stats/session-stats.js` 经 `sessions.binding(id)` 取）。面板打开时按当前值填，订阅到新帧就地重写：不再按胶囊、不再等宿主的对话框挂载。
   - **文字与格式向宿主对齐**：标签、时长模板与分词符都取自宿主的 `chat` 语言命名空间（`locale.bind('chat')`）；宿主在原始数值之上做的四条格式规则（`formatDuration`、`formatTokensPerSecond`、`formatExactTokens`、`formatCacheHitPercent`）在皮肤里各写一份，函数名对着来源，输出与宿主自己的显示逐字符相同。
   - 面板靠结构辨认（非模态、带 `dl`），开合靠按宿主的触发按钮（`aria-expanded` 是权威）；悬停进出走共享的停留与宽限，并跟随「悬停打开弹层」偏好，指针停在面板里时不收起。既然面板是宿主挂载的，皮肤给它打 `data-dsh-claude-context-panel` 并让它取卡片那套一次性入场（同一个 4px、同一个 0.15 秒）——同一个动作在哪个控件上都以同样的方式出现。
   - 面板的左右位置由皮肤重写：宿主从定位点的左缘放下弹层（`useStatDialog` 的 `align: 'start'`），输入行右端按这个位置只够把它挤到窗口右缘，离计量环很远。皮肤量出计量环的右缘与弹层自己的布局宽度（入场动画把盒子缩到 0.98，量矩形会少两个百分点，所以读 `offsetWidth`），写成 `--dsh-claude-context-panel-left` 并同时打上 `data-dsh-claude-context-aligned`，样式表用 `!important` 读取——与 hero 菜单同一套交接。盒子变化时由 ResizeObserver、视口移动时由 `reposition('viewport')` 重新量。
@@ -292,7 +293,7 @@
 ## D29. 功能开关：每个功能声明开关或不设开关的理由
 
 - **决定**：
-  - FEATURES 表（D13）的每一项二选一地声明 `pref: '<偏好键>'` 或 `ungated: '<理由>'`；两个都没写、两个都写，或 `pref` 不是 `host/settings.js` 的 `PREFS_DEFAULT` 里的键，构建拒绝（`checkFeatureSwitches`）。划分标准：替换或挪动宿主原有的控件与区域、或往界面上加新可见元素的功能设开关；只修宿主的毛病而不改变功能的（`selection`、`themeFlip`）、从属于另一个已有开关的（`copy` 与 `heroMenu` 跟随输入框改造的范围，`effort` 跟随模型选择器——宿主的工作强度在宿主自己的模型菜单里——`quickProviders` 是模型选择器的设置项）、只在点击时出现的（`ban`）以及设置页本身不设。
+  - FEATURES 表（D13）的每一项二选一地声明 `pref: '<偏好键>'` 或 `ungated: '<理由>'`；两个都没写、两个都写，或 `pref` 不是 `host/settings.js` 的 `PREFS_DEFAULT` 里的键，构建拒绝（`checkFeatureSwitches`）。划分标准：替换或挪动宿主原有的控件与区域、或往界面上加新可见元素的功能设开关；只修宿主的毛病而不改变功能的（`selection`、`themeFlip`）、从属于另一个已有开关的（`copy` 与 `heroMenu` 跟随输入框改造的范围，`effort` 跟随模型选择器——宿主的工作强度在宿主自己的模型菜单里——`quickProviders` 是模型选择器的设置项）、只在点击时出现的（`ban`）以及设置页本身不设。两个功能可以共用一个开关：`contextStats`（D27）与 `permissions` 都声明 `permissionsControl`，两者一起接管输入行的底部，一起开关。
   - `pref` 是 `FEATURE_PREF_DEFAULTS`（`src/constants.js`，全部默认开）里的键时由 `entry.js` 统一执行：启动时关着的功能不安装；偏好每次被采用时逐个对照，关掉就运行这个功能自己的 teardown、删掉它的句柄，交还它接管的宿主界面，打开就重新安装，都不刷新页面。调度器的两张清单列出全部句柄名，每次使用时检查句柄在不在。其余的 `pref`（`composerScope`、`homeLayout`、`modelPicker`、`collapseFooter`、`mascot`）由功能自己读。退役过的功能（D12）在本代内不因偏好变化装回。
   - 设置页按分页组织（通用、外观、输入区、侧栏、对话），每页的行定义各在 `src/features/settings/settings-tab-*.js`，控件在 `settings-controls.js`；从属于另一项的行紧跟在它下面、两行之间不画分隔线，父项关闭时变灰、不能操作。
 - **理由**：新功能登记时就要回答「读者能不能关掉它」，不会等到发布后才发现漏了；开关的语义统一为「关掉 = 宿主原样」，每个功能的 teardown 本来就负责交还宿主界面（D12），开关只是在运行中调用它。

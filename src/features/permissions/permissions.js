@@ -234,8 +234,6 @@
 
       let permDocPointerListener = null
       let permResizeListener = null
-      /** The session-stats card (src/features/permissions/session-stats.js). */
-      const stats = createSessionStats(ctx)
 
       /** Every dismiss route (item pick, outside pointer, resize/scroll, Escape) closes the menu through this one path. */
       function closePermMenu() {
@@ -579,35 +577,24 @@
         sync() {
           if (autoPresetError !== null) throw autoPresetError
           if (submitError !== null) throw submitError
-          stats.sync()
           syncSegments()
         },
         /**
-         * A viewport move under the context panel: the panel is the host's, and
-         * the stats card only re-takes its own reading of where the panel's
-         * right edge belongs (session-stats.js).
+         * Esc and composer focus close the menu. There is deliberately no
+         * 'outside' route — the menu runs its own document pointerdown
+         * listener (see buildPermTriggerAndPopover).
          */
-        reposition(reason) {
-          stats.reposition(reason)
-        },
-        /**
-         * Esc closes the menu; composer focus additionally closes the stats
-         * card. There is deliberately no 'outside' route — the menu runs its
-         * own document pointerdown listener (see buildPermTriggerAndPopover).
-         */
-        close(reason) {
+        close() {
           closePermMenu()
-          if (reason === 'composer') stats.close()
         }
       }
 
-      // The composer restyle hides the host's access button and statistics
-      // dialogs only while this says their replacement is installed.
+      // The composer restyle hides the host's access button only while this
+      // says its replacement is installed.
       document.body.setAttribute(PERMISSIONS_ATTR, '')
       startAutoPresetProbe()
 
       return () => {
-        stats.teardown()
         unregisterPopover('permission')
         if (permHoverIntent) permHoverIntent.cancel()
         dropAutoPresetRead()
