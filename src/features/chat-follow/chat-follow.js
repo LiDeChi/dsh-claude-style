@@ -32,6 +32,27 @@
     /** A fold glide in flight is waited out; after this many waits the round is dropped. */
     const FOLLOW_FOLD_WAIT_MS = 150
     const FOLLOW_FOLD_WAIT_ATTEMPTS = 4
+    /**
+     * How far the position has to move past the glide's own last reading before
+     * it counts as the host pinning it rather than the spring taking its own
+     * step (both happen inside one frame; see the glide below).
+     */
+    const GLIDE_PIN_TOLERANCE_PX = 1
+    /**
+     * The two arrivals that are the reader's own submission rather than content
+     * streaming in: his own message row, and the echo the host mounts in its
+     * place before the real row takes over.
+     */
+    const GLIDE_SUBMIT_SELECTOR = '[data-chat-flow-kind="user"], ' + SUBMISSION_ECHO_SELECTOR
+    /**
+     * How long the glide stands down after one of them arrives.
+     *
+     * The host's own jump to a freshly sent message is deliberate and is not the
+     * glide's to take back — the reader has to see the message he just sent —
+     * and the echo is swapped for the real row about a second later, which moves
+     * the position again. The stand-down covers both.
+     */
+    const GLIDE_SUBMIT_HOLD_MS = 1200
 
     /**
      * Watch the whole page for the moments that lose the host's follow, and hand
@@ -81,6 +102,188 @@
       const running = () => document.querySelector(FOLLOW_RUNNING_SELECTOR) !== null
         || performance.now() - lastActivityAt <= FOLLOW_ACTIVITY_GRACE_MS
 
+      // ---------- the stream glide ----------
+      //
+      // While work is streaming and the reader is at the end, the host follows by
+      // writing the end outright the moment content grows — measured on this
+      // build: the position never sat more than three pixels off the end, so the
+      // text above the last line was pushed up in one frame on every burst. The
+      // glide takes that write back before the frame paints and hands the
+      // distance to the spring (scroll-ease.js, the same walk the catch-up and
+      // the hand-back use), so the position travels there instead.
+      //
+      // Every reading is an element read plus at most one style write, and all of
+      // it is gated on work being in progress: with the stream idle this costs
+      // one attribute read per mutation batch and nothing else.
+      /** Where the glide last saw the position, and on which scroller; the reading a pin is measured against. */
+      let glideSeen = null
+      /** The scroller glideSeen belongs to. A session switch replaces the frame whole. */
+      let glideScroller = null
+      /** The flow column the glide's resize observer watches. */
+      let glideColumn = null
+      /** The column's height as the glide last saw it; the growth a frame is measured against. */
+      let glideHeight = 0
+      /** The host's own button while the glide keeps it out of sight. */
+      let glideButton = null
+      /** Whether the glide is holding the position right now. */
+      let glideHeld = false
+      /** Until this moment the glide stands down: a message the reader sent just arrived. */
+      let glideHoldUntil = 0
+
+      /** Whether content is arriving right now: the mark the host writes while it streams. */
+      const streaming = () => document.querySelector(FOLLOW_RUNNING_SELECTOR) !== null
+
+      /**
+       * Whether the glide owns the position right now.
+       *
+       * The gate is the streaming mark itself rather than the guard's wider
+       * "work in progress" window: the structural moments that window exists for
+       * are the hand-back's business, and the glide must not shadow them.
+       */
+      const glidePinning = () => {
+        if (!readEnabled()) return false
+        // The reader's animation choice means "no animation": nothing to walk.
+        if (motionReduced()) return false
+        // The reader's own message has just arrived: the host's jump to it stands.
+        if (performance.now() < glideHoldUntil) return false
+        if (!streaming()) return false
+        if (readerAway()) return false
+        if (typeof foldBusy === 'function' && foldBusy()) return false
+        return true
+      }
+
+      /**
+       * The test the spring asks every frame: the glide's own gates without the
+       * "work in progress" one, because the trail left by the last token still
+       * has to land after the stream has stopped.
+       */
+      const glideWanted = () => readEnabled() && !motionReduced() && !readerAway()
+        && performance.now() >= glideHoldUntil
+        && !(typeof foldBusy === 'function' && foldBusy())
+
+      /** Let the host's button show again. */
+      const unhideGlideButton = () => {
+        if (glideButton === null) return
+        glideButton.removeAttribute(STREAM_GLIDE_ATTR)
+        glideButton = null
+      }
+
+      /**
+       * Keep the host's own button out of sight while the glide follows.
+       *
+       * A position held off the end reads to the host as a reader who left the
+       * end, so its settlement turns the follow off and it renders that button
+       * although the glide is following. The mark is this skin's own and the
+       * stylesheet hides the button; the host's state is untouched, and the mark
+       * goes away the moment the glide lets go.
+       */
+      const hideGlideButton = () => {
+        if (document.querySelector(FOLLOWING_TAIL_SELECTOR) !== null) {
+          unhideGlideButton()
+          return
+        }
+        const button = findFollowTailButton()
+        if (button === glideButton) return
+        unhideGlideButton()
+        if (button !== null) {
+          button.setAttribute(STREAM_GLIDE_ATTR, '')
+          glideButton = button
+        }
+      }
+
+      /** Watch the flow column the glide reads growth from; a session switch replaces it. */
+      const glideSync = () => {
+        const column = document.querySelector(CHAT_FLOW_SELECTOR)
+        if (column === glideColumn) return
+        if (glideColumn !== null) glideResize.unobserve(glideColumn)
+        glideColumn = column
+        // A fresh column has no height to compare against; the first growth on
+        // it falls back to the last position seen.
+        glideHeight = 0
+        if (column !== null) glideResize.observe(column)
+      }
+
+      /**
+       * Hold the position through one frame of streaming.
+       *
+       * This runs from the resize observer below, which the browser calls after
+       * the host's own, so a pin written this frame is still taken back before
+       * it paints: the distance it added stays with the spring. The reference is
+       * the spring's own last write while it is easing, and the last position
+       * the glide saw otherwise. Only a move *down* is undone — an upward one is
+       * the reader, or the host going somewhere else, and neither is the glide's
+       * to take back.
+       */
+      const glideCheck = (grew) => {
+        if (!glidePinning()) {
+          if (glideHeld) {
+            glideHeld = false
+            unhideGlideButton()
+          }
+          return
+        }
+        glideSync()
+        const scroller = conversationScroller()
+        if (scroller === null) return
+        glideHeld = true
+        glideScroller = scroller
+        hideGlideButton()
+        const end = scroller.scrollHeight - scroller.clientHeight
+        // The frame's own step first: a position the spring has just written is
+        // one this frame is allowed to be at, so it can never read as an undone
+        // pin. Failing that, the position this scroller was last seen at — read
+        // before this frame's own callbacks, so it is where the frame started,
+        // which is what a pin written during the frame has to be measured
+        // against. Failing that too (a scroller that has never scrolled), the end
+        // this frame started at: this frame's end less the growth the column
+        // reported.
+        let expected = scrollEasePosition(scroller)
+        if (expected === null && glideSeen !== null && glideSeen.element === scroller) expected = glideSeen.top
+        if (expected === null && typeof grew === 'number' && grew > 0) expected = Math.max(0, end - grew)
+        if (expected !== null && scroller.scrollTop - expected > GLIDE_PIN_TOLERANCE_PX) {
+          scroller.scrollTop = expected
+        }
+        if (end - scroller.scrollTop > 0.5) easeScrollToEnd(scroller, glideWanted)
+      }
+
+      /**
+       * Track the position a pin is measured against.
+       *
+       * Scroll events are fired before a frame's own callbacks, so this carries
+       * the position the frame started at — which is exactly what a pin written
+       * during that frame has to be measured against.
+       */
+      const noteGlideScroll = (event) => {
+        const target = event.target
+        if (target instanceof HTMLElement && target.matches(CONVERSATION_SCROLL_SELECTOR)) {
+          // Kept with its element: a session switch replaces the scroller, and
+          // the old reading must not be measured against the new one.
+          glideSeen = { element: target, top: target.scrollTop }
+        }
+      }
+
+      /**
+       * The column's own box is what grows while text streams, and a resize is
+       * reported after the host's callback in the same step, so the growth read
+       * here is the distance the host's pin added this frame. Growth that leaves
+       * the column's box alone (a text node only) still arrives through the page
+       * observer below, where the spring's own last write is the reference.
+       */
+      const glideResize = new ResizeObserver((entries) => {
+        const entry = entries[entries.length - 1]
+        if (entry === undefined) {
+          glideCheck(0)
+          return
+        }
+        const size = entry.borderBoxSize
+        const box = size !== undefined && size.length > 0 ? size[0].blockSize : entry.contentRect.height
+        const grew = box - glideHeight
+        glideHeight = box
+        // A growth wider than the ease's own "somewhere else entirely" line is a
+        // replaced column, not a burst, and is no reading to measure against.
+        glideCheck(grew > 0 && grew <= SCROLL_EASE_JUMP_PX ? grew : 0)
+      })
+
       /**
        * Hand this round's follow back. Three gates have to open: the position,
        * the reader's intent and a fold glide in flight.
@@ -91,6 +294,13 @@
         if (readerAway()) return
         const scroller = conversationScroller()
         if (scroller === null) return
+        // While the glide holds the position the follow is its own business: the
+        // host has turned its follow off over the glide's writes, and its button
+        // is kept out of sight — clicking it would drop the glide for exactly the
+        // instant jump this feature exists to avoid. The landing itself lights
+        // the host's follow back up (its own onScroll reads a position at the end
+        // as the reader arriving there).
+        if (glidePinning()) return
         // More than a screen off the end is the reader reading higher up, not a follow that fell one step behind.
         if (scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop > scroller.clientHeight) return
         // A fold glide is moving the height, and the position is its business until it lands.
@@ -132,6 +342,13 @@
         if (!(node instanceof Element)) return false
         return node.matches(FOLLOW_STRUCTURE_SELECTOR) || node.querySelector(FOLLOW_STRUCTURE_SELECTOR) !== null
       }
+
+      /**
+       * Whether a node, or the subtree it brings, is a message the reader has
+       * just sent — his own row, or the echo the host mounts in its place.
+       */
+      const arrivesFromComposer = (node) => node instanceof Element
+        && (node.matches(GLIDE_SUBMIT_SELECTOR) || node.querySelector(GLIDE_SUBMIT_SELECTOR) !== null)
 
       /**
        * Note that the reader took the scroll over.
@@ -180,6 +397,28 @@
           }
         }
         if (structureSeen || guardSeen) queue()
+        // Text arriving is the glide's own signal and carries no structure: a
+        // character-data change, or a node added or removed anywhere, is enough
+        // to ask. Attribute batches (a streaming mark flipping) are skipped,
+        // which keeps the common idle case down to a boolean per batch. A node
+        // that is the reader's own message is not streaming content: it stands
+        // the glide down instead of feeding it (GLIDE_SUBMIT_HOLD_MS).
+        let contentArrived = false
+        for (const record of records) {
+          if (record.type === 'characterData') {
+            contentArrived = true
+            continue
+          }
+          for (const node of record.addedNodes) {
+            if (arrivesFromComposer(node)) glideHoldUntil = performance.now() + GLIDE_SUBMIT_HOLD_MS
+            contentArrived = true
+          }
+          for (const node of record.removedNodes) {
+            if (arrivesFromComposer(node)) glideHoldUntil = performance.now() + GLIDE_SUBMIT_HOLD_MS
+            contentArrived = true
+          }
+        }
+        if (contentArrived) glideCheck()
       })
 
       for (const type of FOLLOW_INTENT_TYPES) {
@@ -188,14 +427,27 @@
       observer.observe(document.body, {
         subtree: true,
         childList: true,
+        characterData: true,
         attributes: true,
         attributeFilter: ['data-state', FOLLOWING_TAIL_ATTRIBUTE],
         attributeOldValue: true,
       })
+      // The reading a pin is measured against; scroll events are fired before
+      // the frame's own callbacks, so this always carries the position the frame
+      // started at (see noteGlideScroll).
+      window.addEventListener('scroll', noteGlideScroll, { capture: true, passive: true })
 
       return () => {
         observer.disconnect()
         for (const type of FOLLOW_INTENT_TYPES) document.removeEventListener(type, noteReaderIntent, true)
+        window.removeEventListener('scroll', noteGlideScroll, true)
+        glideResize.disconnect()
+        unhideGlideButton()
+        // The glide's own easing stops with the feature; a hand-back in flight
+        // elsewhere on the page is not this teardown's business.
+        if (glideScroller !== null) stopScrollEase(glideScroller)
+        glideScroller = null
+        glideColumn = null
       }
     }
 

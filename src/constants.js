@@ -364,6 +364,15 @@
      */
     const CHAT_FOLLOW_ATTR = 'data-dsh-claude-chat-follow'
     /**
+     * On the host's own "back to the end" button while the stream glide
+     * (src/features/chat-follow/chat-follow.js) is following on the conversation
+     * scroller: the glide holds the position off the end on purpose, which the
+     * host reads as the reader having left, so it renders that button although
+     * it is being followed. The stylesheet keeps it out of sight until the glide
+     * lets go; the host's own state is not touched.
+     */
+    const STREAM_GLIDE_ATTR = 'data-dsh-claude-stream-glide'
+    /**
      * Present while the ported token reveal is installed
      * (src/features/chat-reveal/): its step rules (reveal-rules.css) hang off it,
      * and switching the feature off leaves the page with no trace of it.

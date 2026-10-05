@@ -55,6 +55,24 @@
     }
 
     /**
+     * The host's own "back to the end" button, the one it renders only while its
+     * follow is off.
+     *
+     * With the follow off, data-chat-following-tail is gone, so the frame that
+     * holds the button is found by walking back out of the column: column to
+     * scroll frame to frame, and the button sits beside the frame. The stream
+     * glide (chat-follow.js) needs the same button to keep it out of sight while
+     * it follows.
+     * @returns the button, or null when the frame or the button is not there.
+     */
+    function findFollowTailButton() {
+      const column = document.querySelector(CHAT_FLOW_SELECTOR)
+      const root = column === null || column.parentElement === null ? null : column.parentElement.parentElement
+      if (root === null || root.nextElementSibling === null) return null
+      return root.nextElementSibling.querySelector('button')
+    }
+
+    /**
      * Make the session follow its end again, lighting the host's own follow
      * back up when it has been switched off.
      *
@@ -98,14 +116,7 @@
         // A pinned position does not mean the follow is back: the settlement may
         // switch it off a beat later, and after that only the button brings it back.
         if (document.querySelector(FOLLOWING_TAIL_SELECTOR) === null) {
-          // With the follow off, data-chat-following-tail is gone, so the frame
-          // that holds the button is found by walking back out of the column:
-          // column to scroll frame to frame, and the button sits beside the frame.
-          const column = document.querySelector(CHAT_FLOW_SELECTOR)
-          const root = column === null || column.parentElement === null ? null : column.parentElement.parentElement
-          const button = root === null || root.nextElementSibling === null
-            ? null
-            : root.nextElementSibling.querySelector('button')
+          const button = findFollowTailButton()
           if (button !== null) {
             // The button's own followTail() reaches the end without a scroll
             // event, so the ease in flight is handed back rather than left to

@@ -1321,6 +1321,58 @@
         // Held at the end: the ease ended there rather than being left running.
         r.chatFollow.catchUpLate = bodyGap()
       }
+      // The stream glide (chat-follow.js): with the host's own streaming mark on
+      // the page, the end the host's follow pins the position to is taken back
+      // before the frame paints and handed to the spring, so the text walks there
+      // instead of jumping. The mark is the host's; the pin is what its follow
+      // does on every content change.
+      followScroller.scrollTop = followScroller.scrollHeight
+      await sleep(100)
+      var streamingMark = document.createElement('div')
+      streamingMark.setAttribute('data-streaming', '')
+      followColumn.appendChild(streamingMark)
+      var glideBlock = document.createElement('div')
+      glideBlock.style.height = '300px'
+      followColumn.appendChild(glideBlock)
+      followScroller.scrollTop = followScroller.scrollHeight
+      await sleep(30)
+      r.chatFollow.glideEarly = endGap()
+      r.chatFollow.glideDiag = {
+        motion: document.body.getAttribute('data-dsh-claude-motion'),
+        streamMark: document.querySelector('[data-streaming]') !== null,
+        rolling: document.querySelector('[data-dsh-claude-rolling]') !== null,
+        buttonMarked: document.querySelector('[data-dsh-claude-stream-glide]') !== null,
+        followAttr: document.querySelector('[data-chat-following-tail]') !== null,
+      }
+      await sleep(120)
+      r.chatFollow.glideMid = endGap()
+      await sleep(900)
+      r.chatFollow.glideDone = endGap()
+      // The host's own button is kept out of sight while the glide follows: a
+      // position held off the end reads to the host as a reader who left.
+      r.chatFollow.glideButtonMarked = document.querySelector('[data-dsh-claude-stream-glide]') !== null
+      // A message the reader has just sent is not streaming content: the host's
+      // jump to it stands, and the glide stands down around it. The streaming
+      // mark is still on the page here, so without the stand-down the glide
+      // would take this jump back like any other.
+      var userRow = document.createElement('div')
+      userRow.setAttribute('data-chat-flow-key', 'sent')
+      userRow.setAttribute('data-chat-flow-kind', 'user')
+      userRow.style.height = '300px'
+      followColumn.appendChild(userRow)
+      followScroller.scrollTop = followScroller.scrollHeight
+      await sleep(60)
+      r.chatFollow.submitGap = endGap()
+      await sleep(200)
+      r.chatFollow.submitGapLate = endGap()
+      userRow.remove()
+      await sleep(60)
+      streamingMark.remove()
+      glideBlock.remove()
+      await sleep(120)
+      followScroller.scrollTop = followScroller.scrollHeight
+      await sleep(200)
+      r.chatFollow.glideButtonBack = document.querySelector('[data-dsh-claude-stream-glide]') === null
     }
     // The ported caret motion (src/features/caret/): the focused composer
     // surface gets a drawn caret and the native one gives way; switching the

@@ -688,6 +688,22 @@ const CASES = {
         early: follow.catchUpEarly, mid: follow.catchUpMid,
         done: follow.catchUpDone, late: follow.catchUpLate,
       }))
+    // While the host's streaming mark is on the page, the end its own follow
+    // writes is taken back before the frame paints and the spring walks the
+    // distance (chat-follow.js, scroll-ease.js).
+    check('the stream glide takes the host\'s own pin back and walks it: well short a frame later, still walking, at the end afterwards',
+      follow.glideEarly > 100 && follow.glideMid < follow.glideEarly && follow.glideMid > AT_END_PX &&
+        follow.glideDone <= AT_END_PX,
+      JSON.stringify({
+        early: follow.glideEarly, mid: follow.glideMid, done: follow.glideDone,
+        diag: follow.glideDiag,
+      }))
+    check('a message the reader just sent is not taken back: the host\'s jump to it stands',
+      follow.submitGap <= AT_END_PX && follow.submitGapLate <= AT_END_PX,
+      JSON.stringify({ gap: follow.submitGap, late: follow.submitGapLate }))
+    check('the host\'s own back-to-the-end button is kept out of sight while the glide follows, and shows again after',
+      follow.glideButtonMarked === true && follow.glideButtonBack === true,
+      JSON.stringify({ marked: follow.glideButtonMarked, back: follow.glideButtonBack }))
   },
   caret(r) {
     check('apply() completes', r.applyError === null, r.applyError)
