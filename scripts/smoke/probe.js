@@ -1540,21 +1540,21 @@
         return value
       }
       r.fold.entranceOn = entranceOf()
-      window.__pushForm({ autoFold: false })
+      window.__pushForm({ chatAnimations: false })
       await sleep(200)
       var offBefore = window.__disclosureClicks
       disclosure.click()
       var offImmediate = window.__disclosureClicks - offBefore
       await sleep(300)
-      r.fold.autoFoldOff = {
+      r.fold.animationsOff = {
         mark: document.body.hasAttribute('data-dsh-claude-chat-fold'),
         entrance: entranceOf(),
         immediateClicks: offImmediate,
         rolling: document.querySelector('[data-dsh-claude-rolling]') !== null,
       }
-      window.__pushForm({ autoFold: true })
+      window.__pushForm({ chatAnimations: true })
       await sleep(200)
-      r.fold.autoFoldBack = { mark: document.body.hasAttribute('data-dsh-claude-chat-fold') }
+      r.fold.animationsBack = { mark: document.body.hasAttribute('data-dsh-claude-chat-fold') }
     }
     // The ported token reveal (src/features/chat-reveal/): characters arriving in
     // a streaming container are registered as named highlights from the faintest
@@ -1586,10 +1586,10 @@
       var revealGrown = revealPeek()
       await sleep(450)
       var revealSettled = revealPeek()
-      window.__pushForm({ tokenFade: false })
+      window.__pushForm({ chatAnimations: false })
       await sleep(150)
       var revealOff = revealPeek()
-      window.__pushForm({ tokenFade: true })
+      window.__pushForm({ chatAnimations: true })
       await sleep(150)
       var revealBack = revealPeek()
       // The animation choice: "reduced" withdraws the engine the same way the
@@ -1707,14 +1707,14 @@
       // The switch comes down whole: this feature takes the host's two seat keys
       // over, and a key cannot be handed back by reading a preference, so off
       // has to unregister them (D29/D32).
-      window.__pushForm({ fileMutationRow: false })
+      window.__pushForm({ chatAnimations: false })
       await sleep(150)
       r.files.offSeats = (window.__slots || []).filter(function (entry) { return entry.key === 'tool.call.toolview' }).length
-      window.__pushForm({ fileMutationRow: true })
+      window.__pushForm({ chatAnimations: true })
       await sleep(150)
       r.files.backSeats = (window.__slots || []).filter(function (entry) { return entry.key === 'tool.call.toolview' }).length
       // The other chat-behaviour plugin arriving and leaving while the page
-      // runs: the presence watch re-takes the decision, so the six features
+      // runs: the presence watch re-takes the decision, so the chat-area features
       // stand down (here: the seat keys and the install-time marks) and come
       // back without a reload (src/shared/peer-plugin.js).
       var fileSeats = function () {

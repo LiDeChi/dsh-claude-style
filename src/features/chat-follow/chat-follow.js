@@ -463,7 +463,7 @@
       // dsh-chat-ux drives the same moments and writes the same scroll
       // positions; two guards clicking the host's own button at once is not a
       // merged behaviour (src/shared/peer-plugin.js).
-      const readEnabled = () => !dshChatUxPresent() && readPrefs().enhancedFollow !== false
+      const readEnabled = () => !dshChatUxPresent() && readPrefs().chatAnimations !== false
       const foldBusy = () => ui.chatFold !== undefined && ui.chatFold !== null && ui.chatFold.isBusy()
       const stopGuard = createChatFollowGuard(readEnabled, foldBusy)
       const stopProcess = createChatProcessFollow(readEnabled)

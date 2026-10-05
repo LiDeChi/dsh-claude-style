@@ -266,30 +266,10 @@
       "zh": "把进行中、已停止和失败轮次的状态移到这一轮内容的末尾，显示用时、输出 token 数和当前动作。关闭后恢复系统的轮次状态。",
       "en": "Move the status of a running, stopped or failed turn to the end of the turn's work, with the elapsed time, the output tokens and what the model is doing. Off restores the host's turn status."
     },
-    "chatFollowTitle": { "zh": "聊天区跟随", "en": "Chat-area follow" },
-    "chatFollowDesc": {
-      "zh": "回答变长时画面跟着新出现的一行往下走，不会停在离底部差一点的地方；思考和工具输出收在可滚动的框里时，也照样跟到底。跟上去是一段平滑的滚动，不是一下跳过去。关闭后保持系统原来的滚动方式。",
-      "en": "Keeps the conversation following its newest line as an answer grows, instead of stopping just short of the bottom, and catches up the same way inside a scrolling work log. It glides there rather than jumping. Off keeps the host's own scrolling."
-    },
-    "autoFoldTitle": { "zh": "思考与过程自动开合", "en": "Automatic folding" },
-    "autoFoldDesc": {
-      "zh": "模型思考时「思考」一行自动展开，思考结束再收起；正在进行的步骤自动展开，这一步做完再收起；你自己点开或收起一行时，高度是一段一段走完的，不会瞬间跳过去。你亲手点过的行保持你选的样子。关闭后恢复系统的瞬间开合。",
-      "en": "Opens the thinking row while the model reasons and folds it back when it stops, opens a piece of work while it runs and folds it back when that step ends, and rolls a row open or shut when you press it. A row you pressed yourself keeps what you chose. Off snaps rows open and shut the way the host does."
-    },
-    "tokenFadeTitle": { "zh": "新文字淡入", "en": "Fade in new text" },
-    "tokenFadeDesc": {
-      "zh": "回答是一个字一个字浮现的：新到的字先很淡，再落到本色，像正在被写出来。整段一起出现的旧内容不会重播这个效果。关闭后文字直接完整显示。",
-      "en": "New text appears a few characters at a time, faint first and settling to its own colour, as if it were being written. A block that appears whole does not replay the fade. Off shows every character at full strength."
-    },
-    "fileRowTitle": { "zh": "文件变更行", "en": "File change rows" },
-    "fileRowDesc": {
-      "zh": "程序内部执行的写入和编辑，也像直接调用那样显示：行尾标出 +n -m，展开就是改动的行。看不出改了什么时，保留系统原来的输入 / 输出卡片。",
-      "en": "A write or edit run from inside a program is shown like a directly called one: the row carries the +n -m count and opens into the changed lines. When the change cannot be read from the call, the host's IN/OUT card stays."
-    },
-    "sendTitle": { "zh": "聊天气泡动效", "en": "Send flight" },
-    "sendDesc": {
-      "zh": "发出消息时，输入框浮起来、一边飞一边收成刚发出的那条气泡，落回它该在的位置。设置页的「动画效果」选「减弱」时不做这个动作。",
-      "en": "On send, the composer lifts and narrows into the message bubble as it travels, landing where that message sits. With Animation set to Reduced it does not fly."
+    "chatAnimationsTitle": { "zh": "聊天区动画效果", "en": "Chat-area animations" },
+    "chatAnimationsDesc": {
+      "zh": "对话区的动画合成一个开关。回答变长时画面跟着新出现的一行往下走，思考和工具输出收在可滚动的框里时也照样跟到底，跟上去是一段平滑的滚动，不是一下跳过去；模型思考时「思考」一行自动展开、结束收起，正在进行的步骤也同样开合，你自己点开或收起一行时高度是一段一段走完的；回答是一个字一个字淡入的，新到的字先很淡，再落到本色；程序内部执行的写入和编辑，行尾标出 +n -m，展开就是改动的行；发出消息时输入框浮起来，一边飞一边收成刚发出的那条气泡。关闭后这几项一起停，恢复系统原来的行为。设置页的「动画效果」选「减弱」时这些动作一并停下。",
+      "en": "The conversation area's animations in one switch. The view follows the newest line as an answer grows — gliding there, and catching up the same way inside a scrolling work log — instead of stopping just short of the bottom; the thinking row opens while the model reasons and folds back when it stops, a running step does the same, and a press rolls a height open or shut; new text fades in as it arrives, faint first and settling to its own colour; a write or edit run from inside a program is shown as a row carrying its +n -m count that opens into the changed lines; and the composer lifts into the message bubble on send. Off stops all of them and the host's own behaviour returns. With Animation set to Reduced they all stand still."
     },
     "caretTitle": { "zh": "输入框插入符动效", "en": "Composer caret motion" },
     "caretDesc": {

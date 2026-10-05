@@ -30,7 +30,7 @@
        * is on the page this stands down whole (src/shared/peer-plugin.js).
        */
       const syncFolds = () => {
-        const wanted = !dshChatUxPresent() && readPrefs().autoFold !== false
+        const wanted = !dshChatUxPresent() && readPrefs().chatAnimations !== false
         if (!wanted) {
           if (stopFolds !== null) {
             stopFolds()

@@ -194,11 +194,11 @@
         { name: 'workspace', pref: 'workspaceView', install() { return installWorkspaceView(ctx, ui) } }, // 侧栏工作区：进行中 / 已归档 分段 + 归档行删除
         { name: 'search', pref: 'sidebarSearch', install() { return installSearch(ctx, ui) } }, // 侧栏品牌行的搜索框 + 搜索面板（会话、项目、插件、Skill、快捷键）
         { name: 'turnStatus', pref: 'turnStatus', install() { return installTurnStatus(ctx, ui) } }, // 进行中、已停止与失败轮次的状态行：移到这一轮工作的末尾，火花 + 用时 · 输出 tokens · 当前动作（或已停止 / 处理失败）
-        { name: 'chatFollow', pref: 'enhancedFollow', install() { return installChatFollow(ctx, ui) } }, // 聊天区跟随：结构时刻把滚动交还给宿主跟随，封顶过程组里不让最新两行悬着
-        { name: 'chatFold', pref: 'autoFold', install() { return installChatFold(ctx, ui) } }, // 思考行与过程组自动开合，读者点击一行时的卷帘门过渡
-        { name: 'chatReveal', pref: 'tokenFade', install() { return installChatReveal(ctx, ui) } }, // token 淡入：新到的字先淡后实，按到达次序错开相位
-        { name: 'chatFiles', pref: 'fileMutationRow', install() { return installChatFiles(ctx, ui) } }, // 文件变更行：run_code 里派发的 write / edit 按直接调用的样子显示改动
-        { name: 'chatSend', pref: 'sendFlight', install() { return installChatSend(ctx, ui) } }, // 聊天气泡动效：提交时输入卡片浮起、一路收成那条气泡
+        { name: 'chatFollow', pref: 'chatAnimations', install() { return installChatFollow(ctx, ui) } }, // 聊天区跟随：结构时刻把滚动交还给宿主跟随，封顶过程组里不让最新两行悬着
+        { name: 'chatFold', pref: 'chatAnimations', install() { return installChatFold(ctx, ui) } }, // 思考行与过程组自动开合，读者点击一行时的卷帘门过渡
+        { name: 'chatReveal', pref: 'chatAnimations', install() { return installChatReveal(ctx, ui) } }, // token 淡入：新到的字先淡后实，按到达次序错开相位
+        { name: 'chatFiles', pref: 'chatAnimations', install() { return installChatFiles(ctx, ui) } }, // 文件变更行：run_code 里派发的 write / edit 按直接调用的样子显示改动
+        { name: 'chatSend', pref: 'chatAnimations', install() { return installChatSend(ctx, ui) } }, // 聊天气泡动效：提交时输入卡片浮起、一路收成那条气泡
         { name: 'caret', pref: 'caretMotion', install() { return installCaret(ctx, ui) } }, // 输入框插入符动效：把原生插入符按下去，自己画一根，位移走过渡
         { name: 'viewTabs', pref: 'viewTabs', install() { return installViewTabs(ctx, ui) } }, // 对话区视图标签条：按实测把标签条放到标题那一行（放得下才放）
         { name: 'settings', handle: 'settingsNav', ungated: '设置页本身', install() { return installSettingsSection(ctx, ui) } }

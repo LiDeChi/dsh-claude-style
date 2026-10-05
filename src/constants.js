@@ -265,11 +265,13 @@
      * names each feature's key (`pref`), and switching one off runs that
      * feature's teardown, which hands its surface back to the host.
      *
-     * `fileMutationRow` belongs here rather than with the other ported chat
-     * features because it does not draw over the host's row — it takes the
-     * host's two seat keys over (D32), and a seat registration cannot be
-     * unpicked by reading a preference: the feature has to come down whole,
-     * which is what this table's teardown does.
+     * `chatAnimations` is the one switch over the ported chat-area effects —
+     * the follow, the automatic folding with its rolling door, the text fade,
+     * the file change rows and the send flight. It belongs here rather than
+     * among the live-read preferences because two of those five cannot be
+     * stopped by reading a preference: the file change rows take the host's two
+     * seat keys over (D32), and a seat registration only comes back when the
+     * feature is torn down whole (`fileMutationRow` is the key this replaced).
      */
     const FEATURE_PREF_DEFAULTS = {
       permissionsControl: true,
@@ -277,7 +279,7 @@
       sidebarSearch: true,
       turnStatus: true,
       viewTabs: true,
-      fileMutationRow: true,
+      chatAnimations: true,
     }
 
     /**
@@ -576,10 +578,6 @@
       typeface: TYPEFACE_CLAUDE,
       mascot: MASCOT_BRAND,
       mascotScope: MASCOT_SCOPE_ALL,
-      enhancedFollow: true,
-      autoFold: true,
-      tokenFade: true,
-      sendFlight: true,
       caretMotion: CARET_MOTION_TYPING,
       ...FEATURE_PREF_DEFAULTS,
     }

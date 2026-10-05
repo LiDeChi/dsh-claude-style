@@ -227,7 +227,7 @@
         // dsh-chat-ux flies its own stand-in from the same card, hiding the same
         // row; two stand-ins is not one flight (src/shared/peer-plugin.js).
         if (dshChatUxPresent()) return
-        if (readPrefs().sendFlight === false) return
+        if (readPrefs().chatAnimations === false) return
         // The reader's animation choice, resolved and read here rather than once
         // at install (D26): a still page is a decision the reader can change
         // without a reload, and the resolved answer is what the rest of the skin

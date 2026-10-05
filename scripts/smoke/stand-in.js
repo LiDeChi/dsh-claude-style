@@ -235,7 +235,7 @@
   if (CASE === 'crab-states') formValue.mascot = 'crab'
   // The switches-off case starts with every feature switch off.
   if (CASE === 'switches-off') {
-    Object.assign(formValue, { permissionsControl: false, workspaceView: false, sidebarSearch: false, turnStatus: false, viewTabs: false, fileMutationRow: false })
+    Object.assign(formValue, { permissionsControl: false, workspaceView: false, sidebarSearch: false, turnStatus: false, viewTabs: false, chatAnimations: false })
   }
   var form = {
     // The deepy case stores the DeepSeek brand under the value earlier builds

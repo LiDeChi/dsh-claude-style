@@ -46,34 +46,10 @@
             controls.toggle(prefs.turnStatus, value => { write({ turnStatus: value }) }),
           ),
           controls.row(
-            'chatFollow',
-            settingsCopy('chatFollowTitle', 'Chat-area follow'),
-            desc('chatFollowDesc', 'Keeps the conversation following its newest line as an answer grows, instead of stopping just short of the bottom, and catches up the same way inside a scrolling work log. It glides there rather than jumping. Off keeps the host\'s own scrolling.'),
-            peerToggle(prefs.enhancedFollow, value => { write({ enhancedFollow: value }) }),
-          ),
-          controls.row(
-            'autoFold',
-            settingsCopy('autoFoldTitle', 'Automatic folding'),
-            desc('autoFoldDesc', 'Opens the thinking row while the model reasons and folds it back when it stops, opens a piece of work while it runs and folds it back when that step ends, and rolls a row open or shut when you press it. A row you pressed yourself keeps what you chose. Off snaps rows open and shut the way the host does.'),
-            peerToggle(prefs.autoFold, value => { write({ autoFold: value }) }),
-          ),
-          controls.row(
-            'tokenFade',
-            settingsCopy('tokenFadeTitle', 'Fade in new text'),
-            desc('tokenFadeDesc', 'New text appears few characters at a time, faint first and settling to its own colour, as if it were being written. A block that appears whole does not replay the fade. Off shows every character at full strength.'),
-            peerToggle(prefs.tokenFade, value => { write({ tokenFade: value }) }),
-          ),
-          controls.row(
-            'fileMutationRow',
-            settingsCopy('fileRowTitle', 'File change rows'),
-            desc('fileRowDesc', 'A write or edit run from inside a program is shown like a directly called one: the row carries the +n -m count and opens into the changed lines. When the change cannot be read from the call, the host\'s IN/OUT card stays.'),
-            peerToggle(prefs.fileMutationRow, value => { write({ fileMutationRow: value }) }),
-          ),
-          controls.row(
-            'sendFlight',
-            settingsCopy('sendTitle', 'Send flight'),
-            desc('sendDesc', 'On send, the composer lifts and narrows into the message bubble as it travels, landing where that message sits. With Animation set to Reduced it does not fly.'),
-            peerToggle(prefs.sendFlight, value => { write({ sendFlight: value }) }),
+            'chatAnimations',
+            settingsCopy('chatAnimationsTitle', 'Chat-area animations'),
+            desc('chatAnimationsDesc', 'The conversation area\'s animations in one switch: the view follows the newest line as an answer grows, gliding there and catching up the same way inside a scrolling work log; the thinking row and a running step open and fold back by themselves, and a press rolls a height open or shut; new text fades in as it arrives; a write or edit run from inside a program is shown as a row carrying its +n -m count; and the composer lifts into the message bubble on send. Off stops all of them and the host\'s own behaviour returns.'),
+            peerToggle(prefs.chatAnimations, value => { write({ chatAnimations: value }) }),
           ),
           controls.row(
             'caretMotion',

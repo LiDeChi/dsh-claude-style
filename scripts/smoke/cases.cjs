@@ -610,7 +610,7 @@ const CASES = {
       appearance: ['brand', 'palette', 'typeface', 'mascot', 'mascotScope'],
       composer: ['composerScope', 'homeLayout', 'modelPicker', 'quickProviders', 'permissionsControl'],
       sidebar: ['collapseFooter', 'sidebarSearch', 'workspaceView'],
-      conversation: ['turnStatus', 'chatFollow', 'autoFold', 'tokenFade', 'fileMutationRow', 'sendFlight', 'caretMotion', 'viewTabs'],
+      conversation: ['turnStatus', 'chatAnimations', 'caretMotion', 'viewTabs'],
     }
     const pages = settings.pages || {}
     for (const tab of Object.keys(expected)) {
@@ -759,12 +759,12 @@ const CASES = {
         glideOpenAfter.present === true && glideOpenAfter.rolling === false,
       JSON.stringify({ open: glideOpen, after: glideOpenAfter }))
     // The switch covers the door and the entrance fade as well (D29/D32).
-    const autoFoldOff = fold.autoFoldOff || {}
+    const animationsOff = fold.animationsOff || {}
     check('switching Automatic folding off stops the door, the entrance fade and the interception together',
-      fold.entranceOn === '0.12s, 0.12s' && autoFoldOff.mark === false && autoFoldOff.entrance === '0s' &&
-        autoFoldOff.immediateClicks === 1 && autoFoldOff.rolling === false &&
-        (fold.autoFoldBack || {}).mark === true,
-      JSON.stringify({ on: fold.entranceOn, off: autoFoldOff, back: fold.autoFoldBack }))
+      fold.entranceOn === '0.12s, 0.12s' && animationsOff.mark === false && animationsOff.entrance === '0s' &&
+        animationsOff.immediateClicks === 1 && animationsOff.rolling === false &&
+        (fold.animationsBack || {}).mark === true,
+      JSON.stringify({ on: fold.entranceOn, off: animationsOff, back: fold.animationsBack }))
   },
   'chat-reveal'(r) {
     check('apply() completes', r.applyError === null, r.applyError)
@@ -854,7 +854,7 @@ const CASES = {
       peer.thinkExpanded === false && peer.groupOpen === false,
       JSON.stringify({ think: peer.thinkExpanded, group: peer.groupOpen }))
     const settings = peer.settings || {}
-    const taken = ['chatFollow', 'autoFold', 'tokenFade', 'fileMutationRow', 'sendFlight', 'caretMotion']
+    const taken = ['chatAnimations', 'caretMotion']
     const answers = settings.answers || {}
     // The reader's own answer stays on show (these defaults are on, the caret
     // sits on Every move) while the control refuses input and the accent line
@@ -863,7 +863,7 @@ const CASES = {
       const answer = answers[key]
       return !!answer && (answer.on === true || answer.option === 'typing')
     }
-    check('the Conversation tab greys those six controls out, keeps each one showing the reader\'s own answer, and names dsh-chat-ux in the accent line',
+    check('the Conversation tab greys those two controls out, keeps each one showing the reader\'s own answer, and names dsh-chat-ux in the accent line',
       settings.registered === true && taken.every(key => (settings.rows || []).includes(key)) &&
         taken.every(key => (settings.refusing || []).includes(key)) &&
         taken.every(key => (settings.managed || []).includes(key)) &&

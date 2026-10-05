@@ -25,7 +25,7 @@
         // animation choice is read here rather than inside the engine: a change
         // to it has to take an engine that is already running down with it
         // (D26).
-        if (!dshChatUxPresent() && readPrefs().tokenFade !== false && !motionReduced()) {
+        if (!dshChatUxPresent() && readPrefs().chatAnimations !== false && !motionReduced()) {
           if (engine !== null) return
           engine = createChatRevealEngine()
           if (engine !== null) document.body.setAttribute(CHAT_REVEAL_ATTR, '')
