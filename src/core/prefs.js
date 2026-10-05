@@ -241,9 +241,32 @@
     /**
      * Re-resolve the current choice. The scheduler calls this when the system's
      * own setting flips, which "follow the system" has to pick up mid-session.
+     *
+     * The listeners are notified when the resolved answer really moved, because
+     * "the environment changed" is what several features act on and not every
+     * one of them reads the value lazily: the token reveal installs and
+     * withdraws a whole engine on it, and without the notification that engine
+     * keeps running (or stays down) though the answer has flipped. A choice of
+     * "always", or "reduced", does not move when the system flips, and nothing
+     * is re-run then.
      */
     function refreshMotionAttribute() {
+      const before = document.body.getAttribute(MOTION_ATTR)
       writeMotionAttribute(prefs.motion)
+      if (document.body.getAttribute(MOTION_ATTR) !== before) notifyAll(prefsListeners, prefs)
+    }
+
+    /**
+     * Re-run everything that asked to hear about the environment, without the
+     * stored preferences having changed.
+     *
+     * One caller: the other chat plugin appearing or leaving the page
+     * (src/shared/peer-plugin.js). Features that stand down while it is there
+     * subscribe to the preference stream, so the same notification that carries
+     * a stored value carries this too.
+     */
+    function notifyEnvironmentChange() {
+      notifyAll(prefsListeners, prefs)
     }
 
     /**

@@ -1,0 +1,236 @@
+/* ---------- chat files: the file-change row ---------- */
+/* The file-change row belongs to this skin: it takes over the host's two keyed
+   seat rows for the write and edit tools (chat-files.js), and what the host's own
+   ToolRow.module.css draws for them has build-time hashed names — not reachable,
+   and not an interface. So the rules are drawn again here, with the sizes, tokens
+   and rhythm of the host's own row. The line height and the leading icon are the
+   shared DisclosureRow's job; what it does not draw is added here: the separator
+   dot, the summary, the statistics tail, the path link, the IN/OUT card and the
+   trajectory entrance. */
+
+/* The added and removed colours read the host's own file-diff marker pair rather
+   than the diff body's success and error tokens: the body pair has one green in
+   both themes (rgb(34,197,94)), which is bright for 11px text on a light canvas,
+   while the marker pair is split for exactly that — light rgb(1,162,65) /
+   rgb(186,39,35), dark rgb(65,201,119) / rgb(250,66,62). Retuning means these two
+   lines, one per theme. */
+body[data-dsh-claude-style] {
+  --dsh-claude-diff-added: var(--dsw-alias-file-diff-added-marker);
+  --dsh-claude-diff-deleted: var(--dsw-alias-file-diff-deleted-marker);
+}
+
+body[data-dsh-claude-style] .dsh-claude-file-root {
+  display: flex;
+  flex-direction: column;
+}
+
+body[data-dsh-claude-style] .dsh-claude-file-leading {
+  flex-shrink: 0;
+}
+
+body[data-dsh-claude-style] .dsh-claude-file-chevron {
+  color: var(--dsw-alias-label-secondary);
+}
+
+body[data-dsh-claude-style] .dsh-claude-file-title {
+  font-weight: 400;
+  transition: color 100ms ease;
+}
+
+/* A 2 by 2 dot: the light separator between the title and the summary. */
+body[data-dsh-claude-style] .dsh-claude-file-sep {
+  flex: none;
+  width: 2px;
+  height: 2px;
+  border-radius: 1px;
+  margin: 0 8px;
+  background: var(--dsw-alias-label-caption);
+}
+
+body[data-dsh-claude-style] .dsh-claude-file-summary {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--dsh-content-font-size-secondary, 13px);
+  line-height: calc(24px + var(--dsh-content-font-delta, 0px));
+  color: var(--dsw-alias-label-tertiary);
+  transition: color 100ms ease;
+}
+
+/* The tail: it sits outside the summary's ellipsis, so it carries the same type
+   size of its own. A fixed gap sits between the two numbers — wider than a space,
+   so "+12" and "-3" do not read as one number. */
+body[data-dsh-claude-style] .dsh-claude-file-suffix {
+  flex: none;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-left: 10px;
+  white-space: nowrap;
+}
+
+/* The numbers: the code face, two steps below the path, with half a pixel pushing
+   the baseline back to the middle of the line box. */
+body[data-dsh-claude-style] .dsh-claude-file-stat {
+  font-family: var(--ds-font-family-code);
+  font-size: calc(var(--dsh-content-font-size-secondary, 13px) - 2px);
+  line-height: calc(24px + var(--dsh-content-font-delta, 0px));
+  transform: translateY(0.5px);
+}
+
+body[data-dsh-claude-style] .dsh-claude-file-add {
+  color: var(--dsh-claude-diff-added);
+}
+
+body[data-dsh-claude-style] .dsh-claude-file-del {
+  color: var(--dsh-claude-diff-deleted);
+}
+
+/* Hovering the row lifts it, but the two numbers do not follow: they are this
+   row's conclusion, their colour is the information, and turning them into body
+   colour would rub the conclusion out. */
+body[data-dsh-claude-style] .dsh-claude-file-row:hover .dsh-claude-file-title,
+body[data-dsh-claude-style] .dsh-claude-file-row:hover .dsh-claude-file-summary:not(.dsh-claude-file-error):not(.dsh-claude-file-stopped) {
+  color: var(--dsw-alias-label-primary);
+}
+
+/* The file path: same type size, a dotted underline saying it can be pressed. It
+   shrinks to the width of its text, so the blank space left in the row still
+   belongs to the open and close target. */
+body[data-dsh-claude-style] .dsh-claude-file-link {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  text-align: left;
+  font-size: var(--dsh-content-font-size-secondary, 13px);
+  line-height: calc(24px + var(--dsh-content-font-delta, 0px));
+  color: var(--dsw-alias-label-secondary);
+  text-decoration: underline dotted;
+  text-decoration-color: var(--dsw-alias-label-tertiary);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  transition: color 100ms ease;
+}
+
+body[data-dsh-claude-style] .dsh-claude-file-row:hover .dsh-claude-file-link,
+body[data-dsh-claude-style] .dsh-claude-file-link:hover {
+  color: var(--dsw-alias-label-primary);
+  text-decoration-color: currentColor;
+}
+
+body[data-dsh-claude-style] .dsh-claude-file-error {
+  color: var(--dsw-alias-state-error-primary);
+}
+
+body[data-dsh-claude-style] .dsh-claude-file-stopped {
+  color: var(--dsw-alias-state-warn-label);
+}
+
+body[data-dsh-claude-style] .dsh-claude-file-body {
+  display: flex;
+  flex-direction: column;
+}
+
+/* The expanded body: the diff card and the IN/OUT card share one left indent and
+   one rhythm between rows. */
+body[data-dsh-claude-style] .dsh-claude-file-diff,
+body[data-dsh-claude-style] .dsh-claude-file-io {
+  margin: 4px 0 4px 4px;
+}
+
+/* The IN/OUT card: the code block's surface and corner, each section scrolling on
+   its own with a hairline between them. */
+body[data-dsh-claude-style] .dsh-claude-file-io {
+  display: flex;
+  flex-direction: column;
+  border: 0.5px solid var(--dsw-alias-border-l1);
+  border-radius: 12px;
+  background: var(--dsw-alias-markdown-code-block);
+  font: var(--dsw-font-markdown-code-block-small);
+}
+
+body[data-dsh-claude-style] .dsh-claude-file-io-section {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  column-gap: 14px;
+  align-items: baseline;
+  padding: 12px 16px;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+body[data-dsh-claude-style] .dsh-claude-file-io-divider {
+  flex: none;
+  height: 0.5px;
+  background: var(--dsw-alias-border-l2);
+}
+
+body[data-dsh-claude-style] .dsh-claude-file-io-label {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  color: var(--dsw-alias-label-caption);
+}
+
+body[data-dsh-claude-style] .dsh-claude-file-io-text {
+  min-width: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--dsw-alias-label-secondary);
+}
+
+body[data-dsh-claude-style] .dsh-claude-file-io-text[data-error] {
+  color: var(--dsw-alias-state-error-primary);
+}
+
+/* The trajectory entrance: it appears when the row (its title line included) is
+   hovered or when it takes keyboard focus, and takes no room otherwise. */
+body[data-dsh-claude-style] .dsh-claude-file-inspect {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 4px;
+  margin: 4px 0 2px 4px;
+  padding: 2px 8px;
+  border: 0.5px solid var(--dsw-alias-border-l3);
+  border-radius: 999px;
+  corner-shape: round;
+  background: var(--dsw-alias-bg-base);
+  color: var(--dsw-alias-label-secondary);
+  font-size: 11px;
+  line-height: 16px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 100ms ease;
+}
+
+body[data-dsh-claude-style] .dsh-claude-file-root:hover .dsh-claude-file-inspect,
+body[data-dsh-claude-style] .dsh-claude-file-inspect:focus-visible {
+  opacity: 1;
+}
+
+body[data-dsh-claude-style] .dsh-claude-file-inspect:hover {
+  background: var(--dsw-alias-interactive-bg-hover-solid);
+  color: var(--dsw-alias-label-primary);
+}
+
+/* The running state is carried by the icon and its sweep alone, so the state
+   itself needs a sentence for a screen reader. */
+body[data-dsh-claude-style] .dsh-claude-file-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

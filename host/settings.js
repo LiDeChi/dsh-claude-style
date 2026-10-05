@@ -35,6 +35,12 @@ export const PREFS_DEFAULT = Object.freeze({
   sidebarSearch: true,
   turnStatus: true,
   viewTabs: true,
+  enhancedFollow: true,
+  autoFold: true,
+  tokenFade: true,
+  fileMutationRow: true,
+  sendFlight: true,
+  caretMotion: 'typing',
 })
 
 /**

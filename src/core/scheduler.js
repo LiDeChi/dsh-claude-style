@@ -263,7 +263,38 @@
       }
       ui.schedule = schedule
 
-      const observer = new MutationObserver(schedule)
+      /**
+       * Whether a record is one of the skin's own quiet writes: inside a marked
+       * container, or adding or removing marked nodes (QUIET_ATTR). The caret
+       * motion measures through probes and redraws its caret per frame; without
+       * this every keystroke would schedule a pass for work no feature reads.
+       * Anything else — including every mutation of the host's own DOM — still
+       * schedules one.
+       */
+      function quietRecord(record) {
+        // The target is the node the change happened on: an element for a child
+        // list or an attribute, and the text node itself for a character change —
+        // which is why the parent is asked as well (a probe that rewrites its own
+        // text is still the skin's own write).
+        const target = record.target instanceof Element ? record.target : record.target.parentElement
+        if (target !== null && target.closest('[' + QUIET_ATTR + ']') !== null) return true
+        if (record.addedNodes.length === 0 && record.removedNodes.length === 0) return false
+        for (const node of record.addedNodes) {
+          if (!(node instanceof Element) || !node.hasAttribute(QUIET_ATTR)) return false
+        }
+        for (const node of record.removedNodes) {
+          if (!(node instanceof Element) || !node.hasAttribute(QUIET_ATTR)) return false
+        }
+        return true
+      }
+
+      const observer = new MutationObserver((records) => {
+        for (const record of records) {
+          if (quietRecord(record)) continue
+          schedule()
+          return
+        }
+      })
       observer.observe(document.body, {
         childList: true,
         characterData: true,

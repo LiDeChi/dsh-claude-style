@@ -214,6 +214,16 @@
     const MOTION_ATTR = 'data-dsh-claude-motion'
 
     /**
+     * The composer caret's motion (src/features/caret/caret.js): `typing`
+     * transitions every move, `move` only explicit ones, `off` takes nothing
+     * over at all and leaves the browser's own caret in place.
+     */
+    const CARET_MOTION_OFF = 'off'
+    const CARET_MOTION_MOVE = 'move'
+    const CARET_MOTION_TYPING = 'typing'
+    const CARET_MOTIONS = [CARET_MOTION_OFF, CARET_MOTION_MOVE, CARET_MOTION_TYPING]
+
+    /**
      * Who paints the colours, and who sets the type. `claude` is the skin's own
      * palette (or typefaces); `host` leaves the host's colour (or font) tokens
      * to the host and to whatever other theme plugin writes them — a wallpaper
@@ -254,6 +264,12 @@
      * moves a host control, all on by default. src/entry.js's FEATURES table
      * names each feature's key (`pref`), and switching one off runs that
      * feature's teardown, which hands its surface back to the host.
+     *
+     * `fileMutationRow` belongs here rather than with the other ported chat
+     * features because it does not draw over the host's row — it takes the
+     * host's two seat keys over (D32), and a seat registration cannot be
+     * unpicked by reading a preference: the feature has to come down whole,
+     * which is what this table's teardown does.
      */
     const FEATURE_PREF_DEFAULTS = {
       permissionsControl: true,
@@ -261,6 +277,7 @@
       sidebarSearch: true,
       turnStatus: true,
       viewTabs: true,
+      fileMutationRow: true,
     }
 
     /**
@@ -338,6 +355,53 @@
       'drag': { frames: 8, box: [23, 12, 26, 22], still: 0 },
     }
 
+    /**
+     * Present while the ported chat-area follow is installed
+     * (src/features/chat-follow/). One rule hangs off it: a capped process
+     * group's body scrolls vertically alone, so the catch-up measures the same
+     * distance the host's own smooth scroll does. Switched off, the chat area
+     * is handed back untouched.
+     */
+    const CHAT_FOLLOW_ATTR = 'data-dsh-claude-chat-follow'
+    /**
+     * Present while the ported token reveal is installed
+     * (src/features/chat-reveal/): its step rules (reveal-rules.css) hang off it,
+     * and switching the feature off leaves the page with no trace of it.
+     */
+    const CHAT_REVEAL_ATTR = 'data-dsh-claude-chat-reveal'
+    /**
+     * On the real message row while the send bubble's stand-in is flying
+     * (src/features/chat-send/): the stylesheet hides that row, keeping its layout
+     * box so the stand-in can measure the destination from it every frame.
+     */
+    const CHAT_FLYING_ATTR = 'data-dsh-claude-send-flight'
+    /**
+     * On a node the skin owns purely for its own bookkeeping — the caret
+     * motion's probe container and the caret it draws. The shared scheduler
+     * ignores mutations against such a node (D6), so measuring or redrawing
+     * never wakes a pass that no feature needs.
+     */
+    const QUIET_ATTR = 'data-dsh-claude-quiet'
+    /**
+     * On the element the fold glide is pressing right now (src/features/chat-fold/
+     * fold-glide.js): while it stands, the elements inside lay out at their
+     * natural height instead of being squeezed by flex (fold-motion.css).
+     */
+    const CHAT_ROLLING_ATTR = 'data-dsh-claude-rolling'
+    /** On an editable surface once the caret motion has taken it over (src/features/caret/). */
+    const CARET_ATTR = 'data-dsh-claude-caret'
+    /** The drawn caret itself. */
+    const CARET_LAYER_ATTR = 'data-dsh-claude-caret-layer'
+    /** The drawn caret is visible right now. */
+    const CARET_VISIBLE_ATTR = 'data-dsh-claude-caret-visible'
+    /** On a parent lent the positioning context the drawn caret is placed against. */
+    const CARET_HOST_ATTR = 'data-dsh-claude-caret-host'
+    /**
+     * Present while the ported automatic folding is installed
+     * (src/features/chat-fold/): the stylesheet's live-detail rules hang off it,
+     * and switching the feature off hands the chat area back whole.
+     */
+    const CHAT_FOLD_ATTR = 'data-dsh-claude-chat-fold'
     /** Present while the skin takes over the sidebar footer (settings area + account row). */
     const FOOTER_ATTR = 'data-dsh-claude-footer-takeover'
     /**
@@ -503,6 +567,11 @@
       typeface: TYPEFACE_CLAUDE,
       mascot: MASCOT_BRAND,
       mascotScope: MASCOT_SCOPE_ALL,
+      enhancedFollow: true,
+      autoFold: true,
+      tokenFade: true,
+      sendFlight: true,
+      caretMotion: CARET_MOTION_TYPING,
       ...FEATURE_PREF_DEFAULTS,
     }
 
@@ -516,6 +585,7 @@
       typeface: TYPEFACES,
       mascot: MASCOTS,
       mascotScope: MASCOT_SCOPES,
+      caretMotion: CARET_MOTIONS,
     }
     /** Route that resolves the name this instance runs as, once; never polled. */
     const USERNAME_ROUTE = '/dsh-claude-style/username'

@@ -1,0 +1,12 @@
+/* ---------- chat follow: the capped process group's body ---------- */
+/* The catch-up in src/features/chat-follow/process-follow.js measures
+   scrollHeight minus clientHeight, and the host declares only overflow-y on
+   this body. By the CSS Overflow rules a visible axis beside a non-visible one
+   computes to auto, so content a couple of pixels too wide (a wide table, an
+   inline-flex atom, scrollbar-gutter's rounding) grows a horizontal scrollbar
+   and adds its thickness to that difference. Clipped rather than scrollable:
+   what can scroll sideways inside a group (code blocks, tables) carries its own
+   overflow-x. */
+body[data-dsh-claude-style][%%CHAT_FOLLOW_ATTR%%] [data-step-process]:not([data-group-expanded-mode]) [data-step-process-body] {
+  overflow-x: hidden;
+}

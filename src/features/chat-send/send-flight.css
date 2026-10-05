@@ -1,0 +1,8 @@
+/* ---------- chat send: the bubble's take-off ---------- */
+/* One rule: the real row hides while the stand-in flies. visibility rather than
+   display — the hidden row has to keep its layout box, because the stand-in
+   measures the destination from it every frame. The attribute name is
+   constants.js's CHAT_FLYING_ATTR, spelled the same by the JS that writes it. */
+body[data-dsh-claude-style] [%%CHAT_FLYING_ATTR%%] {
+  visibility: hidden;
+}
