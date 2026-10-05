@@ -7,21 +7,43 @@
      * the end position outright: while text streams, that lands as a jump of
      * forty-odd pixels several times a second — the paragraph above the last
      * line is pushed up in one frame, which reads as the text snapping. So the
-     * position is walked there instead, on a curve: every frame the distance
-     * still to go shrinks by the same share.
+     * position is walked there instead, on a curve.
      *
-     * That share is why this is a curve and not a fixed-duration tween. The
-     * target keeps moving while the answer grows: a tween restarted on every
-     * change would stutter between restarts, and one that is not restarted falls
-     * further behind with every line. A share per frame eases out, keeps up with
-     * a moving target, and lands exactly on it.
+     * Two numbers shape that curve, because model streams are bursty: a few
+     * hundred tokens can arrive in a fifth of a second (a third of a screen of
+     * text) and then nothing arrives for two or three seconds.
      *
-     * The frame's own interval drives the share, so a dropped frame covers more
-     * ground rather than arriving late, and the loop exists only while something
-     * is easing — the last arrival cancels it.
+     *   share   every frame the distance still to go shrinks by the same share,
+     *           so the last stretch is an ease-out onto the end rather than a
+     *           stop. A share is also what a moving target needs: a tween
+     *           restarted on every change would stutter between restarts, and
+     *           one that is not restarted falls further behind with every line.
+     *   speed   the share alone would move a large burst absurdly fast — the
+     *           first frame of a three-hundred-pixel burst would cross seventy
+     *           pixels — so the step is also capped at a speed the eye can
+     *           follow (about the browser's own smooth scroll). A burst then
+     *           glides at one steady speed, and the share takes over for the
+     *           last stretch. The quiet stretch between bursts is seconds long,
+     *           so a catch-up of a few hundred milliseconds always has room.
+     *
+     * The frame's own interval drives both, so a dropped frame covers more ground
+     * rather than arriving late, and the loop exists only while something is
+     * easing — the last arrival cancels it.
      */
     /** The time constant: about three of these cover 95% of the distance. */
     const SCROLL_EASE_TAU_MS = 55
+    /**
+     * The fastest the position moves, in pixels a second: about what the
+     * browser's own smooth scroll uses, which is the pace a reader already reads
+     * a long jump at. Past it the motion reads as a blur.
+     */
+    const SCROLL_EASE_MAX_SPEED_PX_S = 1800
+    /**
+     * Beyond this the position is not catching up with text but going somewhere
+     * else — a session switch, a page of history being restored — and is put
+     * there at once: gliding a screenful would only make the reader wait.
+     */
+    const SCROLL_EASE_JUMP_PX = 1200
     /**
      * Under this the position is put exactly on the end and the ease ends.
      *
@@ -94,8 +116,15 @@
           scrollEasing.delete(element)
           continue
         }
+        // Somewhere else entirely, not a catch-up: at once, and no glide.
+        if (Math.abs(gap) > SCROLL_EASE_JUMP_PX) {
+          element.scrollTop = target
+          scrollEasing.delete(element)
+          continue
+        }
         const before = element.scrollTop
-        element.scrollTop = before + gap * share
+        const capped = SCROLL_EASE_MAX_SPEED_PX_S * (interval / 1000)
+        element.scrollTop = before + Math.min(gap * share, capped)
         // The container's real end can sit a few pixels inside the arithmetic
         // one — a child's clipped overflow, a scrollbar's rounding — and the
         // write is then clamped: a frame that moved nothing has arrived, whatever

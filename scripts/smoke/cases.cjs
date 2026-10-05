@@ -679,10 +679,10 @@ const CASES = {
       follow.readerBefore === 60 && follow.readerAfter === 60,
       JSON.stringify({ before: follow.readerBefore, after: follow.readerAfter }))
     // The catch-up is a curve, not a jump: a frame later the capped body is
-    // still well short of its end, part way there by a tenth of a second, and
-    // held at the end afterwards (scroll-ease.js).
-    check('the capped body walks to its end instead of jumping: short a frame later, part way at a tenth of a second, at the end afterwards',
-      follow.catchUpEarly > 200 && follow.catchUpMid < follow.catchUpEarly && follow.catchUpMid > 0 &&
+    // still well short of its end, still moving at a tenth of a second, and held
+    // at the end once the glide has run out (scroll-ease.js).
+    check('the capped body walks to its end instead of jumping: short a frame later, still moving at a tenth of a second, at the end afterwards',
+      follow.catchUpEarly > 200 && follow.catchUpMid < follow.catchUpEarly && follow.catchUpMid > AT_END_PX &&
         follow.catchUpDone <= AT_END_PX && follow.catchUpLate <= AT_END_PX,
       JSON.stringify({
         early: follow.catchUpEarly, mid: follow.catchUpMid,

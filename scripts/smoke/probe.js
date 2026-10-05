@@ -1313,9 +1313,11 @@
         r.chatFollow.catchUpEarly = bodyGap()
         await sleep(110)
         r.chatFollow.catchUpMid = bodyGap()
-        await sleep(400)
+        // A burst this size glides at the capped speed, so it takes about half a
+        // second to arrive; the quiet stretch between bursts is what that fits in.
+        await sleep(900)
         r.chatFollow.catchUpDone = bodyGap()
-        await sleep(500)
+        await sleep(600)
         // Held at the end: the ease ended there rather than being left running.
         r.chatFollow.catchUpLate = bodyGap()
       }
