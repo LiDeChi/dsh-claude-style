@@ -268,33 +268,33 @@
     },
     "chatFollowTitle": { "zh": "聊天区跟随", "en": "Chat-area follow" },
     "chatFollowDesc": {
-      "zh": "思考行收起、工具调用出现这些结构时刻，把贴在底部的读者交还给系统的跟随；「标准」与「简洁」档里封顶的过程组，思考与工具输出不再掉队。关闭后系统跟随的原有行为不变。",
-      "en": "At the structural moments (a thinking row folding, a tool call arriving) hand a reader at the bottom back to the host's follow, and keep thinking and tool output from falling behind inside a capped process group. Off leaves the host's follow as it is."
+      "zh": "回答变长时画面跟着新出现的一行往下走，不会停在离底部差一点的地方；思考和工具输出收在可滚动的框里时，也照样跟到底。关闭后保持系统原来的滚动方式。",
+      "en": "Keeps the conversation following its newest line as an answer grows, instead of stopping just short of the bottom, and catches up the same way inside a scrolling work log. Off keeps the host's own scrolling."
     },
     "autoFoldTitle": { "zh": "思考与过程自动开合", "en": "Automatic folding" },
     "autoFoldDesc": {
-      "zh": "模型还在思考时把思考行开着，思考停下就收回去；运行中的过程组自动展开，这一段过程结束再收起——「详细」与「完全展开」两档不封顶组体，插件不碰它们；读者点开或收起一行时，展开体像卷帘门一样逐帧拉开或收回。读者自己按过的行或组，在当时的阶段里不再动手。关闭后上述三样都不动手，交还给系统原来的瞬开瞬收。",
-      "en": "Open a thinking row while the model is reasoning and fold it back when it stops; open a running process group and fold it back once that piece of work ends (the Detailed and Fully expanded tiers do not cap a body and are never touched), and roll a body open or shut frame by frame when the reader presses its row. A row or group the reader pressed himself keeps what he chose for that phase. Off leaves the chat area to the host's own instant toggle."
+      "zh": "模型思考时「思考」一行自动展开，思考结束再收起；正在进行的步骤自动展开，这一步做完再收起；你自己点开或收起一行时，高度是一段一段走完的，不会瞬间跳过去。你亲手点过的行保持你选的样子。关闭后恢复系统的瞬间开合。",
+      "en": "Opens the thinking row while the model reasons and folds it back when it stops, opens a piece of work while it runs and folds it back when that step ends, and rolls a row open or shut when you press it. A row you pressed yourself keeps what you chose. Off snaps rows open and shut the way the host does."
     },
     "tokenFadeTitle": { "zh": "新文字淡入", "en": "Fade in new text" },
     "tokenFadeDesc": {
-      "zh": "流式回答里新到的字符先淡后实，约十分之一秒内坐实到它自己的颜色，并按到达次序略作错开。整段一次到达的大批文字、翻历史挂上来的旧内容、以及刚被折叠重排过的文字都保持本色。关闭后每个字都以本色出现。",
-      "en": "Characters arriving in a streaming answer appear faint and settle to their own colour over about a tenth of a second, staggered slightly by arrival order. A burst of thousands of characters at once, a block of history appearing at once and text that just reflowed from a fold all stay solid. Off shows every character at full strength."
+      "zh": "回答是一个字一个字浮现的：新到的字先很淡，再落到本色，像正在被写出来。整段一起出现的旧内容不会重播这个效果。关闭后文字直接完整显示。",
+      "en": "New text appears a few characters at a time, faint first and settling to its own colour, as if it were being written. A block that appears whole does not replay the fade. Off shows every character at full strength."
     },
     "fileRowTitle": { "zh": "文件变更行", "en": "File change rows" },
     "fileRowDesc": {
-      "zh": "从 run_code 程序里派发出去的写入与编辑，按直接调用的样子显示：行尾带 +n -m，展开是改动卡片。改动内容无法从参数推出的调用保留系统的输入 / 输出卡片。",
-      "en": "A write or edit dispatched from inside a run_code program is shown like a directly called one: the row carries the +n -m tail and expands into the diff card. A call whose changed text cannot be derived from its arguments keeps the host's IN/OUT card."
+      "zh": "程序内部执行的写入和编辑，也像直接调用那样显示：行尾标出 +n -m，展开就是改动的行。看不出改了什么时，保留系统原来的输入 / 输出卡片。",
+      "en": "A write or edit run from inside a program is shown like a directly called one: the row carries the +n -m count and opens into the changed lines. When the change cannot be read from the call, the host's IN/OUT card stays."
     },
     "sendTitle": { "zh": "聊天气泡动效", "en": "Send flight" },
     "sendDesc": {
-      "zh": "提交消息时，输入卡片原样浮起、一边飞一边收成那条气泡，草稿里的字跟着变窄的形状重新排，落地时正好接上真实的消息行。动画效果选了「减弱」、两端不在同一屏、或者起点读不到（快捷键或程序化提交）时都不飞。",
-      "en": "When a message is submitted, the composer card lifts as it is and narrows into the bubble as it travels, carrying the words in the draft, then lands on the message row. Nothing is flown when the animation choice is Reduced, when the two ends are not on one screen, or when the origin cannot be read (a shortcut or a programmatic submission)."
+      "zh": "发出消息时，输入框浮起来、一边飞一边收成刚发出的那条气泡，落回它该在的位置。设置页的「动画效果」选「减弱」时不做这个动作。",
+      "en": "On send, the composer lifts and narrows into the message bubble as it travels, landing where that message sits. With Animation set to Reduced it does not fly."
     },
     "caretTitle": { "zh": "输入框插入符动效", "en": "Composer caret motion" },
     "caretDesc": {
-      "zh": "把输入框里的光标换成插件自己画的一根，移动时带一段位移过渡：「每一格」连打字也滑，「只在移动时」只在方向键、点击这类显式移动上滑，打字瞬时；「关闭」完全不动手，浏览器自己的光标照常。提问卡片的作答框与排队消息的行内编辑框同样覆盖。",
-      "en": "Draw the composer's text caret in place of the browser's, so moving it can glide: Every move transitions typing too, Explicit moves only transitions an arrow key or a click (typing lands instantly), and Off leaves the browser's own caret alone. A question card's answer box and a queued message's inline editor are covered as well."
+      "zh": "输入框里的光标由插件绘制，移动时滑过去，而不是直接跳过去；「只在移动时」只在方向键、点击这类移动上滑，打字时光标瞬时到位。",
+      "en": "The composer's caret is drawn by the plugin and glides between positions instead of jumping. Explicit moves glides only on an arrow key or a click, and lands instantly while typing."
     },
     "caretTyping": { "zh": "每一格", "en": "Every move" },
     "caretMove": { "zh": "只在移动时", "en": "Explicit moves" },
