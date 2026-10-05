@@ -610,7 +610,7 @@ const CASES = {
       appearance: ['brand', 'palette', 'typeface', 'mascot', 'mascotScope'],
       composer: ['composerScope', 'homeLayout', 'modelPicker', 'quickProviders', 'permissionsControl'],
       sidebar: ['collapseFooter', 'sidebarSearch', 'workspaceView'],
-      conversation: ['turnStatus', 'viewTabs'],
+      conversation: ['turnStatus', 'chatFollow', 'autoFold', 'tokenFade', 'fileMutationRow', 'sendFlight', 'caretMotion', 'viewTabs'],
     }
     const pages = settings.pages || {}
     for (const tab of Object.keys(expected)) {
@@ -659,6 +659,197 @@ const CASES = {
     check('with the mascot off it leaves; picking Deepy puts the whale out instead',
       crab.off === null && crab.deepyPicked === true, JSON.stringify({ off: crab.off, deepy: crab.deepyPicked }))
     commonChecks(r)
+  },
+  'chat-follow'(r) {
+    check('apply() completes', r.applyError === null, r.applyError)
+    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    const follow = r.chatFollow || {}
+    check('the follow feature marks the document, and only a capped process body is clipped to one axis',
+      follow.marked === true && follow.overflowX === 'hidden' && follow.expandedOverflowX === 'auto',
+      JSON.stringify(follow))
+    check('a structural moment hands the scroll back: the position was 60px off the end and lands at it',
+      follow.before === 60 && follow.after === 0, JSON.stringify({ before: follow.before, after: follow.after }))
+    check('a reader who scrolled away himself is left where he is',
+      follow.readerBefore === 60 && follow.readerAfter === 60,
+      JSON.stringify({ before: follow.readerBefore, after: follow.readerAfter }))
+  },
+  caret(r) {
+    check('apply() completes', r.applyError === null, r.applyError)
+    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    const caret = r.caret || {}
+    const on = caret.on || {}
+    const off = caret.off || {}
+    const back = caret.back || {}
+    check('the focused composer surface gets a drawn caret and the native one gives way',
+      on.layer === true && on.visible === true && on.marked === true && on.nativeHidden === true,
+      JSON.stringify(on))
+    check('the drawn caret is placed with a transform',
+      typeof on.transform === 'string' && on.transform.indexOf('translate(') === 0, JSON.stringify(on.transform))
+    check('off takes the drawn caret and the mark away and gives the native caret back',
+      off.layer === false && off.marked === false && off.nativeHidden === false, JSON.stringify(off))
+    check('switching it back draws it again', back.layer === true && back.marked === true, JSON.stringify(back))
+    const plain = caret.plain || {}
+    check('a textarea under the composer seat is taken over the same way',
+      plain.layer === true && plain.marked === true && plain.visible === true && plain.nativeHidden === true,
+      JSON.stringify(plain))
+    const caretReduced = caret.reduced || {}
+    check('the animation choice stills the drawn caret without taking it away (D26)',
+      caretReduced.layer === true &&
+        String(caretReduced.transition).split(',').every(value => value.trim() === '0s') &&
+        caretReduced.animation === 'none',
+      JSON.stringify(caretReduced))
+  },
+  'chat-fold'(r) {
+    check('apply() completes', r.applyError === null, r.applyError)
+    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    const fold = r.fold || {}
+    check('a running thinking row and a running process group are opened, and the group carries its label half',
+      fold.thinkOpen === true && fold.groupOpen === true && fold.openMark === true && fold.liveDetail === true &&
+        fold.label === 'Working' && fold.labelName === 'Working' && fold.spread === '56px',
+      JSON.stringify(fold))
+    check('a tier that does not cap its body is never pressed',
+      fold.expandedUntouched === true && (fold.clicks || {}).expanded === 0, JSON.stringify(fold.clicks))
+    const after = fold.after || {}
+    check('when the reasoning stops and the section ends, both fold back',
+      after.thinkOpen === false && after.groupOpen === false && after.openMark === false && after.liveDetail === false,
+      JSON.stringify(after))
+    check('a group the reader opened himself in that phase stays open', fold.readerOpen === true, JSON.stringify(fold.readerOpen))
+    const glide = fold.glide || {}
+    const glideAfter = glide.after || {}
+    check('a reader press on a folding row is intercepted, the real element is pressed with the door marked, and the press is handed back',
+      glide.rolling === true && glide.clipped === true && glide.clicksDuringRoll === 0 &&
+        glideAfter.bodyGone === true && glideAfter.rollingAnywhere === false && glideAfter.clicks === 1,
+      JSON.stringify(glide))
+    const glideOpen = glide.open || {}
+    const glideOpenAfter = glide.openAfter || {}
+    check('the opening direction rolls the body the host inserts and hands the styles back when the door lands',
+      glideOpen.inserted === true && glideOpen.rolling === true &&
+        glideOpenAfter.present === true && glideOpenAfter.rolling === false,
+      JSON.stringify({ open: glideOpen, after: glideOpenAfter }))
+    // The switch covers the door and the entrance fade as well (D29/D32).
+    const autoFoldOff = fold.autoFoldOff || {}
+    check('switching Automatic folding off stops the door, the entrance fade and the interception together',
+      fold.entranceOn === '0.12s, 0.12s' && autoFoldOff.mark === false && autoFoldOff.entrance === '0s' &&
+        autoFoldOff.immediateClicks === 1 && autoFoldOff.rolling === false &&
+        (fold.autoFoldBack || {}).mark === true,
+      JSON.stringify({ on: fold.entranceOn, off: autoFoldOff, back: fold.autoFoldBack }))
+  },
+  'chat-reveal'(r) {
+    check('apply() completes', r.applyError === null, r.applyError)
+    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    const reveal = r.reveal || {}
+    const opening = reveal.opening || {}
+    const grown = reveal.grown || {}
+    const settled = reveal.settled || {}
+    const off = reveal.off || {}
+    const back = reveal.back || {}
+    const reduced = reveal.reduced || {}
+    check('characters arriving in a streaming container are registered as step highlights from the faintest step',
+      opening.mark === true && opening.total > 0 && opening.steps > 0, JSON.stringify(opening))
+    check('more characters arriving join them', grown.total > 0 && grown.steps >= 1, JSON.stringify(grown))
+    check('once faded they leave the registry', settled.total === 0, JSON.stringify(settled))
+    check('the preference withdraws the engine whole, and switching it back installs it again',
+      off.total === 0 && off.mark === false && back.mark === true, JSON.stringify({ off: off, back: back }))
+    check('the animation choice reaches it too: Reduced withdraws the engine, not the system query (D26)',
+      reduced.total === 0 && reduced.mark === false, JSON.stringify(reduced))
+    const flip = reveal.systemFlip || {}
+    check('the system setting flipping under "follow the system" takes the running engine with it, and brings it back',
+      (flip.reduced || {}).total === 0 && (flip.reduced || {}).mark === false && (flip.back || {}).mark === true,
+      JSON.stringify(flip))
+  },
+  'chat-files'(r) {
+    check('apply() completes', r.applyError === null, r.applyError)
+    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    const files = r.files || {}
+    const seats = files.seats || []
+    const collapsed = files.collapsed || {}
+    const expanded = files.expanded || {}
+    const failed = files.failed || {}
+    const running = files.running || {}
+    const escalated = files.escalated || {}
+    check('both file tools are claimed from the tool view seat below the host rows',
+      seats.length === 2 && seats[0].seat === 'edit' && seats[1].seat === 'write' && seats[0].priority === -1,
+      JSON.stringify(seats))
+    check('a settled edit reads as a row with its tool, variant and state, the shortened path and the +n -m tail',
+      (collapsed.root || {}).variant === 'edit' && (collapsed.root || {}).state === 'ok' &&
+        collapsed.texts.includes('app.js') && collapsed.texts.includes('+1') && collapsed.texts.includes('-1') &&
+        typeof collapsed.summary === 'string' && collapsed.summary.includes('dsh-claude-file-link'),
+      JSON.stringify({ root: collapsed.root, texts: collapsed.texts, summary: collapsed.summary }))
+    check('the title comes from the seat copy and the row itself opens and closes',
+      (collapsed.disclosure || {}).title === 't:tool.title.edit' && (collapsed.disclosure || {}).expandOnRowClick === true &&
+        (collapsed.disclosure || {}).keepContentWhenOpen === true,
+      JSON.stringify(collapsed.disclosure))
+    check('expanded, the hunks the result metadata reported go into the diff card at the chat line cap',
+      (expanded.diff || {}).maxLines === 9 && ((expanded.diff || {}).diffs || []).length === 1 &&
+        (expanded.diff || {}).className === 'dsh-claude-file-diff' && expanded.texts.includes('t:row.inspect'),
+      JSON.stringify(expanded.diff))
+    check('a failed call draws no diff and no path link, and its verdict colours the summary',
+      (failed.root || {}).state === 'error' && failed.diff === null && typeof failed.summary === 'string' &&
+        failed.summary.includes('dsh-claude-file-error') && failed.texts.includes('ToolError: permission_denied') &&
+        failed.hiddenText === 't:row.failed',
+      JSON.stringify({ root: failed.root, summary: failed.summary, hidden: failed.hiddenText }))
+    check('a write that is still running shows the change its arguments describe, with the running state announced',
+      (running.diff || {}).className === 'dsh-claude-file-diff' && running.hiddenText === 't:row.running',
+      JSON.stringify({ diff: running.diff && running.diff.className, hidden: running.hiddenText }))
+    check("a call whose change cannot be derived keeps the host's IN/OUT card",
+      escalated.diff === null && escalated.io !== null && escalated.texts.includes('t:row.input') && escalated.texts.indexOf('t:row.output') === -1,
+      JSON.stringify({ diff: escalated.diff, io: escalated.io !== null, texts: escalated.texts }))
+    check('the switch hands both seat keys back and takes them again, without a reload',
+      files.offSeats === 0 && files.backSeats === 2, JSON.stringify({ off: files.offSeats, back: files.backSeats }))
+    // The other plugin coming and going mid-session (src/shared/peer-plugin.js):
+    // the decision is re-taken, not frozen at install.
+    const peerOn = files.peerOn || {}
+    const peerOff = files.peerOff || {}
+    check('the other plugin arriving mid-session takes the seat keys and the ported marks down',
+      peerOn.seats === 0 && peerOn.foldMark === false && peerOn.revealMark === false, JSON.stringify(peerOn))
+    check('and leaving hands them back, without a reload',
+      peerOff.seats === 2 && peerOff.foldMark === true, JSON.stringify(peerOff))
+  },
+  // The other chat-behaviour plugin on the page: the ported features must hand
+  // their behaviour over whole (src/shared/peer-plugin.js, D32).
+  'peer-chat-ux'(r) {
+    check('apply() completes', r.applyError === null, r.applyError)
+    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    const peer = r.peer || {}
+    const marks = peer.marks || {}
+    check('a streaming chat area and a focused composer get none of the ported effects',
+      marks.follow === false && marks.fold === false && marks.reveal === false &&
+        marks.caretLayer === false && marks.caretMark === false && peer.highlights === 0,
+      JSON.stringify(peer))
+    check('the file change rows leave the host its two seat keys',
+      peer.seats === 0, JSON.stringify(peer.seats))
+    check('a running thinking row and process group are left exactly as the host rendered them',
+      peer.thinkExpanded === false && peer.groupOpen === false,
+      JSON.stringify({ think: peer.thinkExpanded, group: peer.groupOpen }))
+    const settings = peer.settings || {}
+    const taken = ['chatFollow', 'autoFold', 'tokenFade', 'fileMutationRow', 'sendFlight', 'caretMotion']
+    check('the Conversation tab shows those six switches as off and refusing input, and says who took them over',
+      settings.registered === true && taken.every(key => (settings.rows || []).includes(key)) &&
+        taken.every(key => (settings.refusing || []).includes(key)) &&
+        (settings.texts || []).some(text => text.includes('dsh-chat-ux')),
+      JSON.stringify({ rows: settings.rows, refusing: settings.refusing }))
+    check('the rows the other plugin does not own keep answering',
+      (settings.refusing || []).includes('turnStatus') === false && (settings.refusing || []).includes('viewTabs') === false,
+      JSON.stringify(settings.refusing))
+    commonChecks(r)
+  },
+  'chat-send'(r) {
+    check('apply() completes', r.applyError === null, r.applyError)
+    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    const send = r.send || {}
+    const flying = send.flying || {}
+    const landed = send.landed || {}
+    check('a submission lifts a stand-in off the composer card and hides the real row while it flies',
+      send.inputFound === true && flying.ghost === true && flying.clone === true && flying.hidden === true &&
+        flying.visibility === 'hidden' && flying.animations > 0,
+      JSON.stringify(send))
+    check('when the flight lands the stand-in is gone and the row is visible again',
+      landed.ghost === false && landed.hidden === false && landed.visibility === 'visible',
+      JSON.stringify(landed))
+    const sendReduced = send.reduced || {}
+    check('the animation choice reaches it too: Reduced measures no origin and flies nothing (D26)',
+      sendReduced.ghost === false && sendReduced.hidden === false && sendReduced.visibility === 'visible',
+      JSON.stringify(sendReduced))
   },
   deepy(r) {
     check('apply() completes', r.applyError === null, r.applyError)

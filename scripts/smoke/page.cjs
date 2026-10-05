@@ -94,9 +94,121 @@ function page(name) {
     '</style>' +
     '<div class="_h_older_1"><button type="button">Load earlier</button></div>' +
     '<div class="_h_balance_1"><a class="_h_linkButton_1 _h_primary_1" href="#">Top up</a></div>'
+  // The chat area the chat-follow case drives: the host's scroll frame around a
+  // scrollable column, the "back to the end" slot beside that frame, and one
+  // capped process group next to one that is fully expanded.
+  var chatArea = name === 'chat-follow'
+    ? '<style>' +
+        '#debugScroller { height: 240px; overflow-y: auto; }' +
+        '[data-step-process-body] { max-height: 120px; overflow-y: auto; }' +
+      '</style>' +
+      '<div id="debugFrame"><div id="debugScroller" data-conversation-scroll><div data-chat-flow>' +
+        '<div data-chat-flow-key="a" style="height:600px">a</div>' +
+        '<div data-chat-flow-key="b" style="height:600px">b</div>' +
+      '</div></div><div id="debugTail"><button type="button">Back to the end</button></div></div>' +
+      '<div data-step-process><div data-step-process-body><div data-step-process-content style="height:400px">capped</div></div></div>' +
+      '<div data-step-process data-group-expanded-mode="detailed"><div data-step-process-body><div data-step-process-content style="height:400px">expanded</div></div></div>'
+    : ''
+  // The caret case drives both editable surfaces: the shared contenteditable
+  // composer input, and a plain textarea under a composer seat — the shape a
+  // question card's answer box has.
+  var caretArea = name === 'caret'
+    ? '<div data-composer-seat><textarea id="debugAnswer" rows="3">hello world</textarea></div>'
+    : ''
+  // The fold case drives the two surfaces the ported folding acts on: a thinking
+  // row (opened and folded back by its own control) and process groups — one
+  // running and capped, one in a tier that does not cap its body. The host's own
+  // behaviour is modelled in the script: the row's control flips data-expanded,
+  // a group's header flips its body's hidden.
+  var foldArea = name === 'chat-fold'
+    ? '<style>[data-step-process-body][hidden] { display: none; }</style>' +
+      '<div data-variant="think" data-state="running" id="debugThink"><button type="button">Thinking</button></div>' +
+      '<div data-step-process id="debugGroup">' +
+        '<button type="button" data-process-activity id="debugGroupHeader"><span data-shimmer>Working</span> · building</button>' +
+        '<div data-step-process-body hidden="until-found" id="debugGroupBody"><div data-step-process-content>body</div></div>' +
+      '</div>' +
+      '<div data-chat-flow id="debugFlow">' +
+        '<button type="button" data-disclosure-row id="debugDisclosure">Row</button>' +
+        '<div id="debugDisclosureBody" style="height:600px">row body</div>' +
+      '</div>' +
+      '<div data-step-process data-group-expanded-mode="detailed" id="debugExpanded">' +
+        '<button type="button" data-process-activity id="debugExpandedHeader"><span data-shimmer>Expanded</span></button>' +
+        '<div data-step-process-body id="debugExpandedBody"><div data-step-process-content>open</div></div>' +
+      '</div>' +
+      '<script>' +
+      '(function () {' +
+      '  window.__foldClicks = { think: 0, group: 0, expanded: 0 };' +
+      '  window.__disclosureClicks = 0;' +
+      '  var think = document.getElementById("debugThink");' +
+      '  think.querySelector("button").addEventListener("click", function () {' +
+      '    window.__foldClicks.think += 1;' +
+      '    if (think.hasAttribute("data-expanded")) think.removeAttribute("data-expanded");' +
+      '    else think.setAttribute("data-expanded", "");' +
+      '  });' +
+      '  var body = document.getElementById("debugGroupBody");' +
+      '  document.getElementById("debugGroupHeader").addEventListener("click", function () {' +
+      '    window.__foldClicks.group += 1;' +
+      '    if (body.hasAttribute("hidden")) body.removeAttribute("hidden");' +
+      '    else body.setAttribute("hidden", "until-found");' +
+      '  });' +
+      '  var flow = document.getElementById("debugFlow");' +
+      '  document.addEventListener("click", function (event) {' +
+      '    if (!(event.target instanceof Element)) return;' +
+      '    if (event.target.closest("#debugDisclosure") === null) return;' +
+      '    window.__disclosureClicks += 1;' +
+      '    var current = document.getElementById("debugDisclosureBody");' +
+      '    if (current !== null) { current.remove(); return; }' +
+      '    var restored = document.createElement("div");' +
+      '    restored.id = "debugDisclosureBody";' +
+      '    restored.style.height = "600px";' +
+      '    restored.textContent = "row body";' +
+      '    flow.appendChild(restored);' +
+      '  });' +
+      '  var expandedBody = document.getElementById("debugExpandedBody");' +
+      '  document.getElementById("debugExpandedHeader").addEventListener("click", function () {' +
+      '    window.__foldClicks.expanded += 1;' +
+      '    if (expandedBody.hasAttribute("hidden")) expandedBody.removeAttribute("hidden");' +
+      '    else expandedBody.setAttribute("hidden", "until-found");' +
+      '  });' +
+      '})();' +
+      '</script>'
+    : ''
+  // The other chat-behaviour plugin, installed: the host's own startup picture
+  // names every client entry before any of them runs, which is the signal
+  // src/shared/peer-plugin.js reads first (the style element is the other one).
+  var boot = name === 'peer-chat-ux'
+    ? '<script>window.__DSH_BOOT__ = { entries: [{ id: "ui-skin-claude-style", rev: "smoke" }, { id: "@alm-allen/dsh-chat-ux", rev: "smoke" }] }</script>'
+    : ''
+  // The system's reduced-motion setting, driven by hand: the reveal case flips it
+  // while the animation choice is "follow the system", which is the one path that
+  // reaches the features through the resolved attribute alone (src/core/prefs.js,
+  // refreshMotionAttribute). Only that case gets the stub; every other case keeps
+  // the browser's real answer.
+  var motionStub = name === 'chat-reveal'
+    ? '<script>(function () {' +
+        'var listeners = [];' +
+        'var query = {' +
+          'media: "(prefers-reduced-motion: reduce)",' +
+          'matches: false,' +
+          'addEventListener: function (type, listener) { if (type === "change") listeners.push(listener) },' +
+          'removeEventListener: function (type, listener) {' +
+            'var at = listeners.indexOf(listener);' +
+            'if (at >= 0) listeners.splice(at, 1);' +
+          '},' +
+        '};' +
+        'var real = window.matchMedia.bind(window);' +
+        'window.matchMedia = function (text) { return String(text).indexOf("prefers-reduced-motion") >= 0 ? query : real(text) };' +
+        'window.__setSystemReduced = function (value) {' +
+          'query.matches = value;' +
+          'for (var i = 0; i < listeners.length; i++) listeners[i]({ matches: value, media: query.media });' +
+        '};' +
+      '})();</script>'
+    : ''
   return `<!doctype html>
 <html><head><meta charset="utf-8"><title>dsh-claude-style smoke: ${name}</title></head>
 <body>
+${boot}
+${motionStub}
 ${footer}
 <div class="_x_treeBody_1" role="tree">
   <div class="_x_sessionRow_1" role="treeitem"><span class="_x_slot_1"><div data-slot="sidebar.session.row.leading" style="display:contents"></div></span><span class="_x_title_1">idle session</span></div>
@@ -104,7 +216,9 @@ ${footer}
 </div>
 <div data-composer-card${name === 'automode-hero' ? ' data-phase="hero"' : ''}>
 ${heroRow}
+  ${name === 'chat-send' ? '<div data-input-scroll style="overflow:auto;max-height:120px">' : ''}
   <div data-composer-input contenteditable="true" id="editor">/comp</div>
+  ${name === 'chat-send' ? '</div>' : ''}
   <div class="_x_row_1">
     <div class="_x_tools_1">
       <button class="_x_add_1" aria-label="Add files or run commands" aria-haspopup="listbox" id="commands"><svg viewBox="0 0 16 16" width="14" height="14"><path d="M8 2v12M2 8h12"/></svg></button>
@@ -116,6 +230,9 @@ ${heroRow}
 ${dock}
 ${heroLayout}
 ${hostControls}
+${chatArea}
+${caretArea}
+${foldArea}
 <script>window.SMOKE_CASE = ${JSON.stringify(name)}; window.SMOKE_MARKUP = ${JSON.stringify(MARKUP)}; window.SMOKE_PNG = ${JSON.stringify(PNG_1PX)}</script>
 <script>${STAND_IN}</script>
 <script src="/client.js"></script>

@@ -235,7 +235,7 @@
   if (CASE === 'crab-states') formValue.mascot = 'crab'
   // The switches-off case starts with every feature switch off.
   if (CASE === 'switches-off') {
-    Object.assign(formValue, { permissionsControl: false, workspaceView: false, sidebarSearch: false, turnStatus: false, viewTabs: false })
+    Object.assign(formValue, { permissionsControl: false, workspaceView: false, sidebarSearch: false, turnStatus: false, viewTabs: false, fileMutationRow: false })
   }
   var form = {
     // The deepy case stores the DeepSeek brand under the value earlier builds
@@ -681,18 +681,36 @@
   // the whole wiring — the seat's own rendering is the host's. The component is
   // kept so the probe can render it the way the seat would.
   // The settings case declares the settings dialog's section slot and the
-  // plugin page's config slot instead, so the probe can render the page.
-  var slotRegistry = CASE === 'studio' || CASE === 'settings' ? {
+  // plugin page's config slot instead, so the probe can render the page. The
+  // peer case declares those two plus the tool seat, so the probe can see both
+  // the page it greys out and the seat keys the file rows must leave alone.
+  var slotRegistry = CASE === 'studio' || CASE === 'settings' || CASE === 'chat-files' || CASE === 'peer-chat-ux' ? {
     inject: function (key, callback) {
-      var declared = CASE === 'studio' ? key === 'conversation.input.dock' : key === 'settings.section' || key === 'plugins.bundle.config'
+      var declared = CASE === 'studio'
+        ? key === 'conversation.input.dock'
+        : CASE === 'chat-files'
+          ? key === 'tool.call.toolview'
+          : CASE === 'peer-chat-ux'
+            ? key === 'tool.call.toolview' || key === 'settings.section' || key === 'plugins.bundle.config'
+            : key === 'settings.section' || key === 'plugins.bundle.config'
       return declared ? callback() : function () {}
     },
     register: function (spec, component) {
       window.__slots = window.__slots || []
-      window.__slots.push({ key: spec.name, id: spec.id, order: spec.order, component: typeof component })
+      var entry = { key: spec.name, id: spec.id, seat: spec.key, priority: spec.priority, order: spec.order, component: typeof component }
+      window.__slots.push(entry)
       window.__slotComponents = window.__slotComponents || {}
-      window.__slotComponents[spec.id] = component
-      return function () {}
+      window.__slotComponents[spec.id === undefined ? spec.key : spec.id] = component
+      // The host hands back a disposer and the skin calls it when a feature
+      // comes down: the list is live, so a case can tell "registered" from
+      // "handed back".
+      var live = true
+      return function () {
+        if (!live) return
+        live = false
+        var at = window.__slots.indexOf(entry)
+        if (at >= 0) window.__slots.splice(at, 1)
+      }
     },
     // The host lists a slot's entries in render order (ui-slots' registry),
     // each with the options it was registered under.
@@ -729,7 +747,7 @@
   // same way. The other cases keep no inject, which is what makes them read
   // synchronously at install (the install-fault case depends on that read
   // throwing).
-  if (CASE === 'desktop' || CASE === 'studio' || CASE === 'settings') {
+  if (CASE === 'desktop' || CASE === 'studio' || CASE === 'settings' || CASE === 'chat-files' || CASE === 'peer-chat-ux') {
     window.__ctx.inject = function (deps, cb) {
       var disposers = []
       cb({
@@ -839,6 +857,8 @@
       return [states !== null && Object.prototype.hasOwnProperty.call(states, v) ? states[v] : v, function () {}]
     },
     useEffect: function () {},
+    useMemo: function (fn) { return fn() },
+    useCallback: function (fn) { return fn },
     useRef: function (v) { return { current: v } },
     useLayoutEffect: function () {},
   }
@@ -853,6 +873,25 @@
     IconUnarchiveOutlineRegular: primitive('IconUnarchiveOutlineRegular'),
     IconTrashOutlineRegular: primitive('IconTrashOutlineRegular'),
     IconWarningOutlineRegular: primitive('IconWarningOutlineRegular'),
+    // The file-change row's own share (features/chat-files/): the disclosure row,
+    // the shimmer, the diff card and its two icons are the host's primitives, and
+    // the totals helper counts one added and one removed line per hunk.
+    DisclosureRow: primitive('DisclosureRow'),
+    TextShimmer: primitive('TextShimmer'),
+    DiffBlock: primitive('DiffBlock'),
+    IconEditOutlineRegular: primitive('IconEditOutlineRegular'),
+    IconInspectOutlineRegular: primitive('IconInspectOutlineRegular'),
+    diffTotals: function (hunks) {
+      var added = 0
+      var removed = 0
+      for (var i = 0; i < hunks.length; i += 1) {
+        var before = hunks[i].oldText === null ? '' : String(hunks[i].oldText)
+        var after = String(hunks[i].newText)
+        if (after !== '') added += after.split('\n').length
+        if (before !== '') removed += before.split('\n').length
+      }
+      return { added: added, removed: removed }
+    },
   }
   // The host's react-dom/client. Each root records the element it was created
   // on, how many times it was asked to render and whether it was unmounted, so
