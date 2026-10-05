@@ -510,17 +510,11 @@
           closePopover()
         },
         openSettings: hostMenu.openSettings,
-        /**
-         * Ctrl+, opens settings. The scheduler's keydown handler owns the
-         * unconditional preventDefault; this returns whether it acted, which the
-         * scheduler does not gate on.
-         */
+        /** Ctrl+, opens settings, and the key goes no further. */
         onKey(e) {
-          if ((e.ctrlKey || e.metaKey) && e.key === ',') {
-            hostMenu.openSettings()
-            return true
-          }
-          return false
+          if (!(e.ctrlKey || e.metaKey) || e.key !== ',') return
+          e.preventDefault()
+          hostMenu.openSettings()
         },
         owns(target) {
           if (!target) return false

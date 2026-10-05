@@ -62,21 +62,17 @@
        * a failing sync through the handle; a handle that differs from the install
        * name (settings → settingsNav) stops the sync alone — the failure counter
        * already refuses the next pass, and the install keeps running so the
-       * settings page stays. That was the shipped behavior by accident; it is an
-       * explicit branch here.
+       * settings page stays.
        */
       function retire(name) {
         failed.add(name)
-        for (let i = 0; i < installed.length; i++) {
-          const entry = installed[i]
-          if (entry.name !== name && entry.handle !== name) continue
-          // A handle-only match does not tear the install down.
-          if (entry.name !== name) return
-          const stop = entry.stop
-          installed.splice(i, 1)
+        const index = installed.findIndex(entry => entry.name === name || entry.handle === name)
+        // A handle-only match does not tear the install down.
+        if (index !== -1 && installed[index].name === name) {
+          const stop = installed[index].stop
+          installed.splice(index, 1)
           // Retiring goes through even when the feature's own teardown fails too.
           try { stop() } catch (error) { reportError(error) }
-          break
         }
         if (name === 'footer') retireFooterTakeover()
         if (name === 'composer') retireComposerRestyle()
@@ -196,28 +192,21 @@
         { name: 'settings', handle: 'settingsNav', ungated: '设置页本身', install() { return installSettingsSection(ctx, ui) } }
       ]
 
-      // The scheduler's two ordered lists name every feature's handle, in
-      // FEATURES order: a switched feature can come and go during the
-      // generation, so the scheduler checks at each use whether the handle
-      // exists (and, for a pass, has a `sync`).
-      const handleNames = FEATURES.map(feature => feature.handle || feature.name)
-      const passFeatures = handleNames.slice()
-      const hookFeatures = handleNames.slice()
-      const switched = FEATURES.filter(feature => Object.prototype.hasOwnProperty.call(FEATURE_PREF_DEFAULTS, feature.pref))
-      for (let fi = 0; fi < FEATURES.length; fi++) {
-        const feature = FEATURES[fi]
+      const switched = FEATURES.filter(feature => Object.hasOwn(FEATURE_PREF_DEFAULTS, feature.pref ?? ''))
+      for (const feature of FEATURES) {
         if (switched.includes(feature)) applySwitch(feature)
         else install(feature)
       }
       offSwitches = subscribePrefs(() => {
-        for (let si = 0; si < switched.length; si++) applySwitch(switched[si])
+        for (const feature of switched) applySwitch(feature)
         if (typeof ui.schedule === 'function') ui.schedule()
       })
 
       // Last: its passes read the `ui` handles lazily. Without it nothing syncs,
       // and a live stylesheet over overrides that never run is worse than no
       // skin at all — so if it cannot install, the whole skin rolls back.
-      if (!install({ name: 'scheduler', install() { return installScheduler(ctx, ui, passFeatures, hookFeatures) } })) teardown()
+      const handleNames = FEATURES.map(feature => feature.handle || feature.name)
+      if (!install({ name: 'scheduler', install() { return installScheduler(ctx, ui, handleNames) } })) teardown()
     }
 
     exports.apply = apply

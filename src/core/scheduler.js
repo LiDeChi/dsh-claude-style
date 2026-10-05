@@ -1,12 +1,10 @@
     /**
      * A feature's handle on the shared `ui` registry. The scheduler calls the
      * hooks; every hook is optional, and a feature that does not implement one
-     * is simply skipped for that trigger. The scheduler reads nothing else from
-     * a handle except `sync`, which decides pass order.
+     * is simply skipped for that trigger.
      *
      * @typedef {Object} FeatureHandle
-     * @property {Function} [sync] Every scheduler pass. The one hook a pass
-     *     feature must have.
+     * @property {Function} [sync] Every scheduler pass, in FEATURES order.
      * @property {Function} [owns] `owns(target) → boolean`: whether the press
      *     landed inside the feature's own DOM. A press the feature does not own
      *     closes it through `close('outside')`.
@@ -17,7 +15,7 @@
      * @property {Function} [close] `close(reason)`: `'outside'` (press
      *     outside), `'escape'` (Esc), or `'composer'` (focus moved into the
      *     composer). Features ignore the reasons they do not act on, so each
-     *     keeps its exact shipped dismiss routes.
+     *     keeps its own dismiss routes.
      * @property {Function} [onInput] `onInput(target)`: an input or
      *     compositionend event whose target is inside the composer input.
      * @property {Function} [onFocusIn] `onFocusIn(target)`: every focusin,
@@ -29,9 +27,9 @@
      *     transcript at its end on a card change.
      * @property {Function} [onCopyChange] `onCopyChange()`: the locale, the
      *     preferences or the model copy changed.
-     * @property {Function} [onKey] `onKey(event) → boolean`: a keydown, after
-     *     the scheduler's own Esc handling. The return value does not gate the
-     *     scheduler's unconditional Ctrl+, preventDefault.
+     * @property {Function} [onKey] `onKey(event)`: every keydown the reader
+     *     makes, after the Esc route. A feature that takes the key calls
+     *     `event.preventDefault()` itself.
      * @property {Function} [onActivity] `onActivity()`: the reader moved the
      *     pointer, pressed it or pressed a key (the skin's own synthetic Esc
      *     aside). Deepy falls asleep after a quiet minute and wakes on the next
@@ -55,15 +53,14 @@
       console.error(`[dsh-claude-style] "${name}" failed and was switched off:`, error)
     }
 
-    function installScheduler(ctx, ui, passFeatures, hookFeatures) {
-      /**
-       * The features a pass syncs (their `ui` handle names), in pass order.
-       * entry.js passes them in FEATURES order, filtered to handles that exist
-       * and have a `sync`.
-       */
-      const PASS_FEATURES = passFeatures || []
-      /** Every installed feature handle, in install order, for the event hooks. */
-      const HOOK_FEATURES = hookFeatures || []
+    /**
+     * @param ctx - client context.
+     * @param ui - the shared handle table.
+     * @param features - every feature's `ui` handle name, in FEATURES order: a
+     *     switched feature comes and goes during the generation, so each use
+     *     checks whether the handle exists.
+     */
+    function installScheduler(ctx, ui, features) {
       // The pass state comes first: subscribing to the preferences below can
       // call schedule() before this function returns (a settings form that is
       // already served answers synchronously — a hot reload does exactly that).
@@ -74,12 +71,17 @@
       /** Set by the teardown: no pass may be scheduled, or run, after it. */
       let stopped = false
 
+      /** Call one hook on every feature that implements it, in FEATURES order. */
+      function dispatch(hook, ...args) {
+        for (const name of features) {
+          const handle = ui[name]
+          if (handle && typeof handle[hook] === 'function') handle[hook](...args)
+        }
+      }
+
       /** The reader is at the page: every feature with an `onActivity` hears it. */
       function onGlobalActivity() {
-        for (let i = 0; i < HOOK_FEATURES.length; i++) {
-          const handle = ui[HOOK_FEATURES[i]]
-          if (handle && typeof handle.onActivity === 'function') handle.onActivity()
-        }
+        dispatch('onActivity')
       }
 
       function onGlobalPointerDown(e) {
@@ -89,19 +91,16 @@
         // effort card are hover-driven popovers, the account drawer a click one.
         // Features without an `owns` keep their own dismiss route — permissions
         // runs its own outside-press listener, and quickProviders closes only on
-        // composer focus — so none gains a route it did not have.
-        for (let i = 0; i < HOOK_FEATURES.length; i++) {
-          const handle = ui[HOOK_FEATURES[i]]
+        // composer focus.
+        for (const name of features) {
+          const handle = ui[name]
           if (!handle || typeof handle.owns !== 'function' || typeof handle.close !== 'function') continue
           if (target && !handle.owns(target)) handle.close('outside')
         }
         // A press also drives hooks that are not about closing: settingsNav's
         // class changes are outside the observer's attributeFilter, so its sync
-        // runs on the press itself. It is last, in feature order.
-        for (let j = 0; j < HOOK_FEATURES.length; j++) {
-          const pressed = ui[HOOK_FEATURES[j]]
-          if (pressed && typeof pressed.onPointerDown === 'function') pressed.onPointerDown(target)
-        }
+        // runs on the press itself.
+        dispatch('onPointerDown', target)
       }
 
       function onGlobalKeyDown(e) {
@@ -113,30 +112,17 @@
         // overlay the moment it covers the pointer.
         if (e.__dshHostMenuEscape === true) return
         onGlobalActivity()
-        if (e.key === 'Escape') {
-          // Every feature's own Esc route, in feature order. The account-hold
-          // overlay is the one layer that does NOT close on a window blur (it is
-          // meant to be read, and reading it may mean switching windows), so Esc
-          // is its keyboard way out; a feature that ignores the reason is skipped.
-          for (let i = 0; i < HOOK_FEATURES.length; i++) {
-            const handle = ui[HOOK_FEATURES[i]]
-            if (handle && typeof handle.close === 'function') handle.close('escape')
-          }
-        }
-        if ((e.ctrlKey || e.metaKey) && e.key === ',') {
-          // Unconditional: the hook's return value never gates this.
-          e.preventDefault()
-          for (let k = 0; k < HOOK_FEATURES.length; k++) {
-            const keyHandle = ui[HOOK_FEATURES[k]]
-            if (keyHandle && typeof keyHandle.onKey === 'function') keyHandle.onKey(e)
-          }
-        }
+        // Every feature's own Esc route, in feature order. The account-hold
+        // overlay is the one layer that does NOT close on a window blur (it is
+        // meant to be read, and reading it may mean switching windows), so Esc
+        // is its keyboard way out.
+        if (e.key === 'Escape') dispatch('close', 'escape')
+        dispatch('onKey', e)
         // Enter is deliberately NOT handled here. The host's composer keymap
-        // already sends on Enter, and first picks
-        // the highlighted item of an open `/` or `@` menu, holds back for IME
-        // (including Safari's late keydown) and ignores key repeat. This listener
-        // runs in the capture phase, before the editor: clicking Send from here
-        // stole all of that — Enter on an open menu sent the half-typed text.
+        // already sends on Enter, and first picks the highlighted item of an
+        // open `/` or `@` menu, holds back for IME (including Safari's late
+        // keydown) and ignores key repeat; this listener runs in the capture
+        // phase, before the editor, so taking Enter here would skip all of that.
       }
 
       // Focus moving into the composer means the user is about to type: every
@@ -154,29 +140,15 @@
         // a non-element focus target (a text node) is turned away here.
         const target = closestFrom(e.target, '*')
         if (target === null) return
-        if (closestComposerCard(target) !== null) {
-          for (let i = 0; i < HOOK_FEATURES.length; i++) {
-            const handle = ui[HOOK_FEATURES[i]]
-            if (handle && typeof handle.close === 'function') handle.close('composer')
-          }
-        }
-        for (let j = 0; j < HOOK_FEATURES.length; j++) {
-          const focused = ui[HOOK_FEATURES[j]]
-          if (focused && typeof focused.onFocusIn === 'function') focused.onFocusIn(target)
-        }
+        if (closestComposerCard(target) !== null) dispatch('close', 'composer')
+        dispatch('onFocusIn', target)
       }
 
       function onComposerInput(e) {
-        const target = e.target
-        if (!target) return
-        if (target.hasAttribute && (target.hasAttribute('data-composer-input') || (target.closest && target.closest('[data-composer-input]')))) {
-          // The [data-composer-input] filter stays in this event pipe; a feature
-          // is only told that a composer-input event happened.
-          for (let i = 0; i < HOOK_FEATURES.length; i++) {
-            const handle = ui[HOOK_FEATURES[i]]
-            if (handle && typeof handle.onInput === 'function') handle.onInput(target)
-          }
-        }
+        // The [data-composer-input] filter stays in this event pipe; a feature
+        // is only told that a composer-input event happened.
+        const input = closestFrom(e.target, '[data-composer-input]')
+        if (input !== null) dispatch('onInput', e.target)
       }
 
       document.addEventListener('pointerdown', onGlobalPointerDown)
@@ -186,21 +158,11 @@
       document.addEventListener('compositionend', onComposerInput, true)
       document.addEventListener('focusin', onGlobalFocusIn, true)
 
-      // Re-pin every feature that anchors to a moving target. The scheduler
-      // knows only the hook: a feature with a `reposition(reason)` re-resolves
-      // its own anchor (and checks whether it is open).
-      function repositionFeatures(reason) {
-        for (let i = 0; i < HOOK_FEATURES.length; i++) {
-          const handle = ui[HOOK_FEATURES[i]]
-          if (handle && typeof handle.reposition === 'function') handle.reposition(reason)
-        }
-      }
-
       // Fixed popovers are anchored to their trigger; scroll of the page (not
       // the conversation's own auto-stick) and resizes move the anchor, so
       // whichever is open must re-resolve it in the same frame as the reflow.
       function onFixedPopoverViewportChange() {
-        repositionFeatures('viewport')
+        dispatch('reposition', 'viewport')
       }
       window.addEventListener('resize', onFixedPopoverViewportChange)
       window.addEventListener('scroll', onFixedPopoverViewportChange, true)
@@ -212,10 +174,7 @@
       // painted; subscribing here (rather than reading the locale at render time
       // only) is what makes the change land while a popover is open.
       function onCopyChange() {
-        for (let i = 0; i < HOOK_FEATURES.length; i++) {
-          const handle = ui[HOOK_FEATURES[i]]
-          if (handle && typeof handle.onCopyChange === 'function') handle.onCopyChange()
-        }
+        dispatch('onCopyChange')
         schedule()
       }
       // Without a locale service the picker keeps the fallback language.
@@ -257,7 +216,7 @@
         // The card resizing moves the anchors pinned to it (the rail toggle,
         // a container width change) with no window resize: re-pin in the same
         // frame, or a JS-pinned control trails the ones CSS just reflowed.
-        repositionFeatures('composer')
+        dispatch('reposition', 'composer')
       })
 
       /** Failed passes in a row after which a feature's sync is switched off. */
@@ -269,8 +228,7 @@
        * next pass; after SYNC_FAILURE_LIMIT failures in a row the feature is
        * reported once and retired (src/entry.js: its teardown runs and the host
        * gets back what it had taken over), and the rest of the pass carries on
-       * without it. (Unguarded, one throwing sync aborted every sync after it,
-       * on every pass.)
+       * without it.
        */
       function runSync(name) {
         const feature = ui[name]
@@ -284,7 +242,7 @@
           syncFailures[name] = failures + 1
           if (failures + 1 < SYNC_FAILURE_LIMIT) return
           reportFeatureFailure(name, error)
-          if (typeof ui.retire === 'function') ui.retire(name)
+          ui.retire(name)
         }
       }
 
@@ -294,7 +252,7 @@
         pendingFrame = requestAnimationFrame(() => {
           scheduled = false
           if (stopped) return
-          for (let i = 0; i < PASS_FEATURES.length; i++) runSync(PASS_FEATURES[i])
+          for (const name of features) runSync(name)
           const currentCard = findComposerCard()
           if (currentCard !== observedCard) {
             if (observedCard) composerCardObserver.unobserve(observedCard)
@@ -325,10 +283,9 @@
 
       return () => {
         // A pass already requested would run against torn-down features and
-        // build their DOM again after the teardown (measured: dozens of skin
-        // nodes and the composer's body attribute came back). Cancel it, and
-        // refuse every later schedule() — a feature's pending promise (the
-        // account profile, a preset switch) may still call it.
+        // build their DOM again after the teardown. Cancel it, and refuse every
+        // later schedule() — a feature's pending promise (the account profile,
+        // a preset switch) may still call it.
         stopped = true
         if (scheduled) cancelAnimationFrame(pendingFrame)
         scheduled = false

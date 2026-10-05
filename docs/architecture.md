@@ -124,7 +124,7 @@
 
 - **决定**：
   - `src/entry.js` 的 FEATURES 表（`{ name, handle?, pref | ungated, install }`）同时决定安装顺序与刷新顺序：刷新顺序就是这个顺序，每轮跳过句柄此刻不存在或没有 `sync` 的功能。每项必须声明开关或不设开关的理由（D29）。
-  - 调度器只认功能句柄上的可选钩子（类型定义在 scheduler.js 开头）：`sync` / `owns` + `close('outside')` / `onPointerDown` / `close('escape')` / `close('composer')` / `onInput` / `onFocusIn` / `reposition('viewport' | 'composer')` / `onCopyChange` / `onKey` / `onActivity`；没实现的钩子直接跳过，每个功能保留自己的关闭方式。
+  - 调度器只认功能句柄上的可选钩子（类型定义在 scheduler.js 开头）：`sync` / `owns` + `close('outside')` / `onPointerDown` / `close('escape')` / `close('composer')` / `onInput` / `onFocusIn` / `reposition('viewport' | 'composer')` / `onCopyChange` / `onKey` / `onActivity`；没实现的钩子直接跳过，每个功能保留自己的关闭方式。`onKey` 收到读者的每一次按键，接手这个键的功能自己调用 `preventDefault()`：调度器不认识任何具体的快捷键，接手它的功能退役后，这个键交还宿主。
   - `retire` 按 name 或 handle 匹配：只匹配到 handle 时只停止 sync、不拆安装（设置页的 `settingsNav`）。
   - 功能拆出的部分写成顶层工厂 `createX(...)`：状态留在工厂自己的闭包里，访问器与回调经参数传入，不伸手进别的闭包；名字以功能开头（`createAccountProfile`）。
 - **理由**：加一个功能只需在 FEATURES 表加一行、在句柄上实现钩子；调度器不认识任何具体功能，没有要手工同步的清单。
