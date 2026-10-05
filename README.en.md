@@ -77,11 +77,25 @@ The settings page appears both in the settings dialog (the "Claude Style" tab) a
 | Appearance | Brand mark, Colours, Typefaces, Mascot, Where it appears |
 | Composer | Composer restyle, Home layout, Redraw the model picker (with Quick providers under it), Redraw the permission control |
 | Sidebar | Collapse the sidebar settings area, Sidebar search, In progress / Archived view |
-| Conversation | Turn status line, Chat / Trajectory tabs |
+| Conversation | Turn status line, Chat-area follow, Automatic folding, Fade in new text, File change rows, Send flight, Composer caret motion, Chat / Trajectory tabs |
 
 Every feature that takes over part of the host's interface has its own switch; turning it off brings the host's original back at once, without a reload.
 
-**Alongside other theme plugins**: with Colours and Typefaces set to Follow the host, the skin no longer rewrites the host's colours and fonts and keeps only its layout and controls; the colours are left to DSH itself, or to another theme plugin enabled at the same time. With [dsh-wallpaper-engine](https://github.com/elysia395/dsh-wallpaper-engine), for example, the wallpaper shows through the sidebar and the conversation, and the skin's own popovers take that plugin's glass, translucent and blurring the picture behind them.
+**Alongside other theme plugins**: with Colours and Typefaces set to Follow the host, the skin no longer rewrites the host's colours and fonts and keeps only its layout and controls; the colours are left to DSH itself, or to another theme plugin enabled at the same time. With [dsh-wallpaper-engine](https://github.com/elysia395/dsh-wallpaper-engine), for example, the wallpaper shows through the sidebar and the conversation, and the skin's own popovers take that plugin's glass, translucent and blurring the picture behind them. **Alongside [dsh-chat-ux](https://github.com/alm-allen/dsh-chat-ux)**: that plugin implements the same chat-area interactions (the rolling door, automatic folding, the token fade, file change rows, the send flight, the drawn caret), and two copies of them intercept each other's clicks and press the same controls. So this skin stands down when it sees that plugin: those rows on the settings page's Conversation tab show as off and disabled and say who took them over, your own stored choices are untouched, and they come back once dsh-chat-ux is removed.
+
+**Chat-area follow**: at the structural moments — a thinking row folding, a tool call row arriving — a reader sitting at the bottom is handed back to the host's own follow, instead of being left tens of pixels short by the burst of content; a process group capped in the Standard and Compact tiers (thinking and tool output kept in one scrolling body) is caught up the same way. Once the reader scrolls away from the bottom himself, the plugin stays out of it until he returns.
+
+**Automatic folding**: a thinking row opens while the model reasons and folds back when it stops; a running process group opens and folds back once that piece of work ends. A row or group the reader pressed himself keeps what he chose for that phase.
+
+**Send flight**: on submission the composer card lifts as it is and narrows into the bubble as it travels, its words re-flowing into the shape, landing on the message row.
+
+**File change rows**: a write or edit dispatched from inside a run_code program carries the `+n -m` tail and an expandable diff card, and its path opens the file; a failed or interrupted row keeps its verdict.
+
+**New text fades in**: characters arriving in a streaming answer start faint and settle over about 0.12 s, staggered slightly by arrival order; a block arriving whole, a burst of thousands of characters and text that just reflowed from a fold stay solid.
+
+**A rolling door for folds**: opening or closing a row (a tool card, a thinking row, a command card) or a process group moves the height frame by frame, really pushing the content below away or pulling it back. The door only rolls the stretch the reader can see, so any length moves at the same speed, and a body holding several cards rolls as one door. It rides the Automatic folding switch, together with the entrance fade of an expanded body.
+
+**Composer caret motion**: the composer's text caret is drawn by the plugin and glides when it moves; a question card's answer box and a queued message's inline editor are covered as well. The Conversation tab offers Every move (the default), Explicit moves and Off.
 
 **Mascot**: a pixel companion stands on the composer's top edge and changes its animation with what the agent is doing (thinking, writing and calling tools, several sessions at work, subagents, waiting on you, compacting the context, finished, failed, asleep). Follow the brand shows the pixel crab under Claude and Deepy the whale under DeepSeek; either can be picked for good, or none. Where it appears keeps it to the new-conversation page, or puts it in conversations as well.
 

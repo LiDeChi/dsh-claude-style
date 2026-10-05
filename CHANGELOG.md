@@ -6,12 +6,25 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 [中文](#cn-unreleased) | [English](#en-unreleased)
 
+<h3 id="cn-unreleased">新增功能</h3>
+
+- **聊天气泡动效**：提交消息的那一下，输入卡片原样浮起一份，一边飞一边把多余的收掉——工具栏左右两组贴着最近的角缩小、淡出，描边与阴影跟着形状收回，草稿里的字跟着变窄的形状一行一行重新排——落地时正好就是那条真实气泡；真实气泡在飞行期间藏着，落定后原位出现。设置页的「动画效果」选了「减弱」、两端不在同一屏、或起点读不到（快捷键与程序化提交）时都不飞；页面切到后台时另有定时器兜底，藏起来的消息一定会放出来。开关在设置页的「对话」页，默认开启。
+- **文件变更行**：从 run_code 程序里派发出去的写入与编辑按直接调用的样子显示——行尾带 `+n -m`，展开是改动卡片，路径可点开文件；失败与中断的行保留裁决信息、不再给路径链接，状态另有给读屏的说明。改动内容无法从参数推出的调用保留系统的输入 / 输出卡片。开关在设置页的「对话」页，默认开启。
+- **新到的文字先淡后实**：流式回答里新出现的字符从两成不透明度开始，约 0.12 秒内坐实到它自己的颜色，并按到达次序略作错开，读起来像文字正被写下。整段一次到达的内容（切会话、翻历史）、一次几千字的突发、以及刚被折叠重排过的文字都保持本色；主线程忙不过来时它自己让路，闲下来再继续。开关在设置页的「对话」页，默认开启。
+- **折叠不再瞬间切换，展开体像卷帘门一样拉下来**：读者点开或收起一行（工具卡片、思考行、命令卡片）或一个过程组时，高度逐帧变化，下方内容被真的推开或收回。门只走读者看得见的那一段，两千像素的展开体和两万像素的展开体在眼前的速度一样；展开体里是多张卡片时（代码卡片加输出卡片）整扇门一起走，不会先挤没能缩的那一张。主线程卡住时门停一下再接着走，不会跳变；读者自己滚动离开底部之后，收尾不会把他拽回去。它与展开体的入场淡入一起挂在「思考与过程自动开合」这个开关上（默认开启），关掉后读者点开收起恢复系统原来的瞬开瞬收。
+- **思考行与过程组自动开合**：模型还在思考时思考行自动开着，思考停下就收回去；运行中的过程组自动展开，这一段过程结束再收起，组体展开时组头的标签仍带实时细节的流光。读者自己按过的行或组，在当时的阶段里不再被改动；「详细」与「完全展开」两档不收纳组体，插件不碰它们。开关在设置页的「对话」页，默认开启。
+- **输入框插入符动效**：输入框里的光标改由插件自己绘制，移动时带一段位移过渡；提问卡片的作答框与排队消息的行内编辑框同样覆盖。设置页的「对话」页新增三档：每一格（默认，连打字也滑）、只在移动时（方向键与点击才滑，打字瞬时）、关闭（完全不动手，用浏览器自己的光标）。任何一次测量失败都会把原生光标还回来，不会出现光标看不见的情况。
+- **聊天区跟随交给系统自己的跟随，封顶的工作过程不再掉队**：思考行收起、工具调用行出现这些结构时刻，贴着底部的读者现在被交还给系统自己的跟随，内容成片到达时不再停在离底部几十像素的地方；「标准」与「简洁」档里封顶的过程组（思考与工具输出收在一个带滚动条的组体里）同样补到底部，最新两行不再长期悬在下方。读者自己滚动离开底部之后，插件不再插手，直到他自己回到底部。开关在设置页的「对话」页，默认开启。
+- **与 dsh-chat-ux 共存**：本机同时装着 [dsh-chat-ux](https://github.com/alm-allen/dsh-chat-ux) 时，上面这六项整体让位——那个插件实现了同一批交互，两套同时生效会互相拦点击、抢同一批按钮、往宿主同一个座位键位按同一优先级注册。设置页的「对话」页把这几行显示为关闭并禁用，并写明由它接管；读者自己存下的选择不被改写，那个插件中途装卸也照常跟随。它不在时这六项按本插件自己的开关运行。
+
 <h3 id="cn-unreleased">体验优化</h3>
 
 - **权限菜单在窗口上方放不下时改为在控件下方展开**：权限分段控件的卡片固定朝上展开，窗口很矮时它的上缘顶出屏幕外，最上面几项点不到。现在上方容不下整张卡片时，它在控件下方展开。
+- **上述动效跟随「动画效果」设置**：卷帘门过渡、聊天气泡动效、新文字淡入、插入符的滑动与闪烁、组头的流光此前只认系统的「减少动态效果」：设置页选「减弱」关不掉它们，选「总是」在系统开着减弱时也照样不动。现在它们读的是设置页解析出的那一档。
 
 <h3 id="cn-unreleased">问题修复</h3>
 
+- **「文件变更行」的开关此前不起作用**：关掉它之后，run_code 程序里派发出去的写入与编辑仍然按新的样式显示。现在关掉即交还系统原来的行，打开即时接管，不需要刷新页面。
 - **拖入附件后，输入区工具栏打开的面板不再被附件区域遮住**：附件存在时，从输入区工具栏按钮打开的面板（模型选择、思考强度等）中间被上方那块附件区域盖住一大截，只在卡片上方和输入框下方各露出一条边，面板里的行点不到。现在这类面板完整显示。
 - **侧栏账号区因故障停用后，设置快捷键不再失灵**：插件的侧栏账号区出错退役后，按 Ctrl+,（macOS 为 ⌘,，网页版宿主为 Ctrl+Alt+,）什么都不打开。现在按键交还宿主，宿主自己的设置快捷键照常打开设置。
 
@@ -19,12 +32,25 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 - **昵称与封号页语言只存在设置里**：早先在宿主半边不认这两个字段时存进浏览器本地的值，会在打开页面后写进插件设置，本地那份随后删除；此后两项与其他设置一样只保存在宿主的设置表单里。
 
+<h3 id="en-unreleased">New Features</h3>
+
+- **Send flight**: on submission the composer card lifts as it is and sheds what is extra on the way — the toolbar's two groups shrink and fade into their nearest corners, the hairline and shadow shrink with the shape, the words in the draft re-flow into the narrowing shape a line at a time — landing exactly on the real bubble, which hides while the flight is up and reappears in place when it lands. Nothing flies when the animation choice is Reduced, when the two ends are not on one screen, or when the origin cannot be read (a shortcut or a programmatic submission); a timer releases a hidden message if the page is in the background. The switch sits on the settings page's Conversation tab and is on by default.
+- **File change rows**: a write or edit dispatched from inside a run_code program is shown like a directly called one — the row carries the `+n -m` tail, expands into the diff card and its path opens the file; a failed or interrupted row keeps its verdict, drops the path link and announces its state to a screen reader. A call whose changed text cannot be derived from its arguments keeps the host's IN/OUT card. The switch sits on the settings page's Conversation tab and is on by default.
+- **New text fades in**: characters arriving in a streaming answer start at a fifth opacity and settle to their own colour in about 0.12 s, staggered slightly by arrival order, so the text reads as being written. A block arriving whole (a session switch, a page of history), a burst of thousands of characters and text that just reflowed from a fold all stay solid; when the main thread is too busy the fade gives way and resumes once it is free. The switch sits on the settings page's Conversation tab and is on by default.
+- **Folds no longer snap: a body rolls down like a door**: opening or closing a row (a tool card, a thinking row, a command card) or a process group now moves the height frame by frame, really pushing the content below away or pulling it back. The door only rolls the stretch the reader can see, so a two-thousand-pixel body and a twenty-thousand-pixel one move at the same speed in front of him; a body holding several cards (a code card plus an output card) rolls as one door rather than squeezing away the card that can shrink. A stalled main thread does not make it jump — the door pauses and carries on — and a reader who scrolled away from the bottom is not pulled back when the fold settles. It rides the Automatic folding switch together with the entrance fade of an expanded body (on by default); with that switch off, a reader's own press snaps open and shut the way the host does it.
+- **Thinking rows and process groups open and close by themselves**: a thinking row opens while the model reasons and folds back when it stops; a running process group opens and folds back once that piece of work ends, its header keeping the live-detail sweep while the body is open. A row or group the reader pressed himself keeps what he chose for that phase, and the Detailed and Fully expanded tiers — which do not cap a body — are never touched. The switch sits on the settings page's Conversation tab and is on by default.
+- **Composer caret motion**: the composer's text caret is drawn by the plugin and glides between positions; a question card's answer box and a queued message's inline editor are covered as well. The Conversation tab gains a three-way choice — Every move (the default, typing included), Explicit moves (an arrow key or a click glides, a keystroke lands instantly) and Off. A measurement that fails hands the native caret back, so a caret is never lost.
+- **The chat area's scroll goes back to the host's own follow, and a capped piece of work no longer lags behind**: at the structural moments — a thinking row folding, a tool call row arriving — a reader sitting at the bottom is now handed back to the host's own follow instead of being left tens of pixels short by the burst of content; a process group capped in the Standard and Compact tiers (thinking and tool output kept in one scrolling body) is caught up the same way, so the last two lines no longer hang below the fold. Once the reader scrolls away from the bottom himself, the plugin stays out of it until he returns. The switch sits on the settings page's Conversation tab and is on by default.
+- **Coexisting with dsh-chat-ux**: with [dsh-chat-ux](https://github.com/alm-allen/dsh-chat-ux) installed on the same machine those six effects stand down whole — that plugin implements the same interactions, and two copies intercept each other's clicks, press the same controls and register the same seat key at the same priority. The settings page's Conversation tab shows those rows as off and disabled and says who took them over; the reader's own stored choices are untouched, and the switch follows that plugin being loaded or removed mid-session. With it gone they run on this plugin's own switches as usual.
+
 <h3 id="en-unreleased">Improvements</h3>
 
 - **The permission menu opens below the control when it does not fit above**: the permission control's card always unfolded upward, so in a short window its top edge ran off-screen and the first rows could not be clicked. It now opens below the control when the card does not fit above.
+- **Those animations follow the Animation setting**: the rolling door, the send flight, the token fade, the caret's glide and blink and the header's live-detail sweep used to read the system's reduced-motion query alone, so Reduced on the settings page did not stop them and Always did nothing while the system asked for reduced motion. They now read the resolved choice.
 
 <h3 id="en-unreleased">Bug Fixes</h3>
 
+- **The File change rows switch did nothing**: with it off, a write or edit dispatched from inside a run_code program still drew the new row. Off now hands the host's own row back and on takes it over, without a reload.
 - **A panel opened from the composer's toolbar is no longer covered by the attachment area**: with an attachment in the composer, a panel opened from a toolbar button — the model picker, the reasoning-effort slider — lost its middle to the attachment area above it and showed only a strip above the card and another below the input box, so none of its rows could be clicked. Such panels now draw in full.
 - **The settings shortcut keeps working after the sidebar account area is switched off by a fault**: once the plugin's sidebar account area failed and retired, Ctrl+, (⌘, on macOS, Ctrl+Alt+, in the web host) opened nothing. The keys now go back to the host, and the host's own settings shortcut opens the settings as usual.
 
