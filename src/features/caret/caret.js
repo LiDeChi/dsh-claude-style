@@ -63,6 +63,13 @@
       /** The frame queued; 0 when there is none, so dispose can cancel it. */
       let frameHandle = 0
       /**
+       * The one-off frame that gives the transition back after an instant
+       * landing; 0 when there is none, so dispose can cancel it too — an
+       * untracked frame here would outlive the teardown and write into a
+       * released layer.
+       */
+      let transitionFrame = 0
+      /**
        * After dispose, nothing acts.
        *
        * A frame callback and the two timers behind syncAfterFocusChange can
@@ -274,9 +281,14 @@
         if (instant) layer.caret.style.transitionProperty = 'none'
         layer.caret.style.transform = 'translate(' + left + 'px, ' + top + 'px)'
         layer.caret.style.height = box.height + 'px'
-        if (instant) requestAnimationFrame(() => {
-          layer.caret.style.transitionProperty = ''
-        })
+        if (instant) {
+          if (transitionFrame !== 0) cancelAnimationFrame(transitionFrame)
+          transitionFrame = requestAnimationFrame(() => {
+            transitionFrame = 0
+            if (disposed) return
+            layer.caret.style.transitionProperty = ''
+          })
+        }
         if (fresh) {
           layer.visible = true
           layer.caret.setAttribute(CARET_VISIBLE_ATTR, '')
@@ -388,6 +400,8 @@
           disposed = true
           if (frameHandle !== 0) cancelAnimationFrame(frameHandle)
           frameHandle = 0
+          if (transitionFrame !== 0) cancelAnimationFrame(transitionFrame)
+          transitionFrame = 0
           document.removeEventListener('selectionchange', queue)
           document.removeEventListener('focusin', syncAfterFocusChange)
           document.removeEventListener('focusout', syncAfterFocusChange)
