@@ -273,7 +273,7 @@
       if (typeof ctx.inject !== 'function') return () => {}
       const fiber = ctx.inject(['slots'], scope => {
         const slots = scope.get('slots')
-        if (slots === void 0 || slots === null || typeof slots.inject !== 'function') return
+        if (slots === undefined || slots === null || typeof slots.inject !== 'function') return
         slotsApi = slots
         // 0.1.7 keeps a bundle's own configuration on the plugin's page: the
         // entry is keyed by the bundle's package name and rendered there —

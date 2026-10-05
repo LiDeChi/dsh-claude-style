@@ -112,7 +112,7 @@
         const label = copyLabel('searchPlaceholder', 'Search')
         const text = trigger.children[1]
         if (text.textContent !== label) text.textContent = label
-        if (trigger.getAttribute('aria-label') !== label) trigger.setAttribute('aria-label', label)
+        setAttributeIfChanged(trigger, 'aria-label', label)
         syncTriggerKeys(trigger.children[2])
       }
 

@@ -34,7 +34,7 @@
 
     /** The composer card `node` sits in, or null; `variant` narrows it to one variant. */
     function closestComposerCard(node, variant) {
-      if (variant === void 0) return closestFrom(node, COMPOSER_CARD)
+      if (variant === undefined) return closestFrom(node, COMPOSER_CARD)
       return closestFrom(node, `${COMPOSER_CARD}[data-composer-variant="${variant}"]`)
     }
 
@@ -65,7 +65,7 @@
 
     /** The session id `host` carries, or null when it carries none. */
     function conversationSessionId(host) {
-      if (host === null || host === void 0) return null
+      if (host === null || host === undefined) return null
       const id = host.getAttribute(CONVERSATION_SESSION_ATTR)
       return typeof id === 'string' ? id : null
     }
@@ -94,12 +94,12 @@
 
     function currentSession(ctx) {
       const sessions = ctx.get('sessions')
-      if (sessions === void 0 || sessions === null) return null
+      if (sessions === undefined || sessions === null) return null
       const id = currentSessionId(ctx, sessions)
-      if (id === void 0 || id === null) return null
+      if (id === undefined || id === null) return null
       const binding = sessions.binding(id)
-      if (binding === void 0 || binding === null) return null
-      return binding.session === void 0 ? null : binding.session
+      if (binding === undefined || binding === null) return null
+      return binding.session === undefined ? null : binding.session
     }
 
     /**
@@ -126,7 +126,7 @@
 
     function currentPreset(session) {
       const snapshot = session.projections.faceOf('permissions').getSnapshot()
-      if (snapshot === void 0 || snapshot === null) return null
+      if (snapshot === undefined || snapshot === null) return null
       // dsh 0.2+ projection faces hand back the bare value (e.g. the preset
       // id string); older hosts wrapped it as `{ currentValue }`.
       if (typeof snapshot === 'object' && 'currentValue' in snapshot) return snapshot.currentValue

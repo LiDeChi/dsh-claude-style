@@ -374,7 +374,7 @@
         style.setProperty(`--${PREFIX}-w`, String(sheet.box[2]))
         style.setProperty(`--${PREFIX}-h`, String(sheet.box[3]))
         style.setProperty(`--${PREFIX}-strip-h`, String(sheet.box[3] * Math.ceil(sheet.frames / 8)))
-        if (root.getAttribute('data-animation') !== next.key) root.setAttribute('data-animation', next.key)
+        setAttributeIfChanged(root, 'data-animation', next.key)
         play(next.key, next.mode, now)
         if (!root.hasAttribute('data-ready')) root.setAttribute('data-ready', '')
       }

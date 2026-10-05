@@ -111,18 +111,15 @@
        *   access — the button the permission slot renders (host.js).
        */
       function syncControls(cards) {
-        const mark = (button, role) => {
-          if (button.getAttribute(CONTROL_ATTR) !== role) button.setAttribute(CONTROL_ATTR, role)
-        }
         for (const card of cards) {
           const commands = card.querySelector('[class*="_tools"] button[aria-haspopup="listbox"]')
-          if (commands !== null) mark(commands, 'commands')
+          if (commands !== null) setAttributeIfChanged(commands, CONTROL_ATTR, 'commands')
           for (const button of card.querySelectorAll('[class*="_trailing"] button[class*="_primary"]')) {
-            mark(button, button.querySelector('svg rect') !== null ? 'stop' : 'send')
+            setAttributeIfChanged(button, CONTROL_ATTR, button.querySelector('svg rect') !== null ? 'stop' : 'send')
           }
         }
         const access = findAccessTrigger()
-        if (access !== null) mark(access, 'access')
+        if (access !== null) setAttributeIfChanged(access, CONTROL_ATTR, 'access')
       }
 
       const DRAFT_EMPTY_ATTR = 'data-dsh-claude-draft-empty'
@@ -136,12 +133,7 @@
        * DOM change, so the pass that follows it moves the mark in the same frame.
        */
       function syncDraftState(cards) {
-        for (let i = 0; i < cards.length; i++) {
-          const empty = findComposerPlaceholder(cards[i]) !== null
-          if (empty === cards[i].hasAttribute(DRAFT_EMPTY_ATTR)) continue
-          if (empty) cards[i].setAttribute(DRAFT_EMPTY_ATTR, '')
-          else cards[i].removeAttribute(DRAFT_EMPTY_ATTR)
-        }
+        for (const card of cards) card.toggleAttribute(DRAFT_EMPTY_ATTR, findComposerPlaceholder(card) !== null)
       }
 
       /**
@@ -205,11 +197,11 @@
           meterWidth = 0
         }
         let meter = meterNode
-        if (card === void 0) meter = null
+        if (card === undefined) meter = null
         else if (meter === null) meter = dockedContextMeter(composerDock(card))
         let room = ''
         if (meter !== null) {
-          if (!meter.hasAttribute('data-dsh-claude-context-meter')) meter.setAttribute('data-dsh-claude-context-meter', '')
+          meter.toggleAttribute('data-dsh-claude-context-meter', true)
           const reading = meter.textContent || ''
           // Re-measure when the reading moved or the restyle scope flipped:
           // either can change what the room should be.
@@ -273,10 +265,7 @@
         const cards = findComposerCards()
         heroCard = hero && cards.length > 0 ? cards[0] : null
         syncVariant(cards)
-        if (active !== document.body.hasAttribute(COMPOSER_ATTR)) {
-          if (active) document.body.setAttribute(COMPOSER_ATTR, '')
-          else document.body.removeAttribute(COMPOSER_ATTR)
-        }
+        document.body.toggleAttribute(COMPOSER_ATTR, active)
         syncAttachments(cards)
         syncDraftState(cards)
         syncControls(cards)
@@ -322,7 +311,7 @@
         /** The hero page's composer card as of this pass, or null off the hero page. */
         heroCard() { return heroCard },
         /** Whether the composer restyle applies to the page shown, as of this pass. */
-        isActive() { return active && !composerRestyleRetired },
+        isActive() { return active },
         /** A copy source changed, the composer-scope preference among them: read again now. */
         onCopyChange: readState,
         onPointerDown: focusEditorOnPress,
@@ -336,12 +325,11 @@
       return () => {
         active = false
         heroCard = null
-        if (document.body.hasAttribute(COMPOSER_ATTR)) document.body.removeAttribute(COMPOSER_ATTR)
-        document.body.removeAttribute('data-dsh-claude-composer-hidden')
+        document.body.removeAttribute(COMPOSER_ATTR)
+        document.body.removeAttribute(COMPOSER_HIDDEN_ATTR)
         const marks = ['data-composer-variant', 'data-has-attachments', ATTACHMENT_TILE_ATTR, DRAFT_EMPTY_ATTR, CONTROL_ATTR, 'data-dsh-claude-context-meter']
-        for (let k = 0; k < marks.length; k++) {
-          const marked = document.querySelectorAll(`[${marks[k]}]`)
-          for (let i = 0; i < marked.length; i++) marked[i].removeAttribute(marks[k])
+        for (const mark of marks) {
+          for (const marked of document.querySelectorAll(`[${mark}]`)) marked.removeAttribute(mark)
         }
         if (meterRoom !== '') {
           meterRoom = ''

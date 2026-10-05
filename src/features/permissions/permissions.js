@@ -402,11 +402,7 @@
           const isCurrent = it.getAttribute('data-preset') === preset
           const check = it.querySelector('.dsh-claude-popover-check')
           if (check) check.hidden = !isCurrent
-          if (isCurrent) {
-            it.setAttribute('data-active', '')
-          } else {
-            it.removeAttribute('data-active')
-          }
+          it.toggleAttribute('data-active', isCurrent)
         }
       }
 
@@ -430,7 +426,7 @@
         const session = currentSession(ctx)
         if (session === null) return
         const settled = session.command(`/permission ${preset}`)
-        if (settled === void 0 || typeof settled.then !== 'function') return
+        if (settled === undefined || typeof settled.then !== 'function') return
         settled.then(result => {
           if (result === null || typeof result !== 'object' || result.ok !== true) {
             submitError = new Error(`permission: the /permission ${preset} command was refused`)
@@ -540,13 +536,9 @@
           for (let j = 0; j < segments.children.length; j++) {
             const item = segments.children[j]
             if (item.disabled !== coldStart) item.disabled = coldStart
-            if (item.getAttribute('data-preset') === preset) {
-              item.setAttribute('data-active', '')
-              item.setAttribute('aria-checked', 'true')
-            } else {
-              item.removeAttribute('data-active')
-              item.setAttribute('aria-checked', 'false')
-            }
+            const isCurrent = item.getAttribute('data-preset') === preset
+            item.toggleAttribute('data-active', isCurrent)
+            setAttributeIfChanged(item, 'aria-checked', String(isCurrent))
           }
           segmentPill.sync(segments)
         } else {

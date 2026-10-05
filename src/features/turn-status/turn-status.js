@@ -49,7 +49,7 @@
         })
         nextAttrs.forEach((values, element) => {
           values.forEach((value, attr) => {
-            if (element.getAttribute(attr) !== value) element.setAttribute(attr, value)
+            setAttributeIfChanged(element, attr, value)
           })
         })
         orderMarks.forEach((order, element) => {

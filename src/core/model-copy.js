@@ -89,5 +89,5 @@
 
     /** Fold case and separators so `glm-5.3-flash` and `glm-5-3-flash` agree. */
     function normalizeModelId(id) {
-      return String(id === void 0 || id === null ? '' : id).toLowerCase().replace(/[^a-z0-9]/g, '')
+      return String(id === undefined || id === null ? '' : id).toLowerCase().replace(/[^a-z0-9]/g, '')
     }

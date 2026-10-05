@@ -318,7 +318,7 @@
         const labelEl = effortBtn.querySelector('.dsh-claude-effort-btn-label')
         if (labelEl !== null && labelEl.textContent !== info.label) labelEl.textContent = info.label
         const aria = `${copyLabel('effortLabel', MODEL_EFFORT_LABEL)} ${info.label}`
-        if (effortBtn.getAttribute('aria-label') !== aria) effortBtn.setAttribute('aria-label', aria)
+        setAttributeIfChanged(effortBtn, 'aria-label', aria)
         if (effortSlider !== null) effortSlider.update()
         positionEffortTrigger()
 

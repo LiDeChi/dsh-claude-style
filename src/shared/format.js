@@ -12,7 +12,7 @@
      * built from an absent provider, model or session still forms a string.
      */
     function textOf(value) {
-      return value === void 0 || value === null ? '' : String(value)
+      return value === undefined || value === null ? '' : String(value)
     }
 
     /**

@@ -14,7 +14,7 @@
      */
     function modelBrand(modelId) {
       if (modelCopy !== null) {
-        const id = String(modelId === void 0 || modelId === null ? '' : modelId).toLowerCase()
+        const id = String(modelId === undefined || modelId === null ? '' : modelId).toLowerCase()
         for (let i = 0; i < modelCopy.brandRules.length; i++) {
           if (modelCopy.brandRules[i].re.test(id)) return modelCopy.brandRules[i].brand
         }
@@ -37,7 +37,7 @@
     function modelCombine(brand, name) {
       if (brand === null || !COMBINE_SVGS[brand]) return null
       const word = COMBINE_WORDS[brand]
-      const at = word === void 0 ? -1 : name.toLowerCase().indexOf(word.toLowerCase())
+      const at = word === undefined ? -1 : name.toLowerCase().indexOf(word.toLowerCase())
       return { id: brand, word, svg: COMBINE_SVGS[brand], at }
     }
 

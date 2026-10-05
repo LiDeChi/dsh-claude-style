@@ -120,7 +120,7 @@
           if (headCanvas.parentElement !== null) headCanvas.parentElement.removeChild(headCanvas)
           avatarEl.appendChild(headCanvas)
         }
-        if (!avatarEl.hasAttribute('data-dsh-claude-skin')) avatarEl.setAttribute('data-dsh-claude-skin', '')
+        avatarEl.toggleAttribute('data-dsh-claude-skin', true)
       }
 
       /**

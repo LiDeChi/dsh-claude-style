@@ -57,13 +57,8 @@
       // The flag lives on <html> AND <body> so the suppression selector can
       // out-specify the gated composer rules it can (html[flag] body[skin][flag] *).
       function setFlag(on) {
-        if (on) {
-          root.setAttribute(THEME_FLIP_ATTR, '')
-          body.setAttribute(THEME_FLIP_ATTR, '')
-        } else {
-          root.removeAttribute(THEME_FLIP_ATTR)
-          body.removeAttribute(THEME_FLIP_ATTR)
-        }
+        root.toggleAttribute(THEME_FLIP_ATTR, on)
+        body.toggleAttribute(THEME_FLIP_ATTR, on)
       }
 
       function cancelThemeTransitions() {

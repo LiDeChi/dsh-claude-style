@@ -118,7 +118,7 @@
        * for a commit that never lands) ends the wait.
        */
       let pendingEcho = false
-      let pendingId = void 0
+      let pendingId = undefined
       let pendingTimer = 0
       /** Longest a commit waits for its echo before the host is trusted again.
           Host selections have been measured at up to ~8s on slow providers. */
@@ -137,7 +137,7 @@
         const list = []
         let index = -1
         if (effort !== null) {
-          if (effort.reasoning.defaultEffort === void 0) list.push({ id: void 0, name: MODEL_EFFORT_DEFAULT })
+          if (effort.reasoning.defaultEffort === undefined) list.push({ id: undefined, name: MODEL_EFFORT_DEFAULT })
           for (let i = 0; i < effort.reasoning.efforts.length; i++) {
             list.push({ id: effort.reasoning.efforts[i].id, name: effort.reasoning.efforts[i].name })
           }
@@ -355,7 +355,7 @@
         if (labelEl.textContent !== labels.label) labelEl.textContent = labels.label
         if (fasterEl.textContent !== labels.faster) fasterEl.textContent = labels.faster
         if (smarterEl.textContent !== labels.smarter) smarterEl.textContent = labels.smarter
-        if (track.getAttribute('aria-label') !== labels.label) track.setAttribute('aria-label', labels.label)
+        setAttributeIfChanged(track, 'aria-label', labels.label)
         if (steps.length === 0) {
           root.setAttribute('data-empty', '')
           track.setAttribute('aria-disabled', 'true')
@@ -381,7 +381,7 @@
           pendingTimer = 0
         }
         pendingEcho = false
-        pendingId = void 0
+        pendingId = undefined
       }
 
       /** Commit one level, once: the host is told only when the level moved. */
@@ -555,7 +555,7 @@
           clearPending()
         }
         /* The echo test: the snapshot now names the level we committed. */
-        if (pendingEcho && next.index >= 0 && next.steps[next.index] !== void 0 && next.steps[next.index].id === pendingId) {
+        if (pendingEcho && next.index >= 0 && next.steps[next.index] !== undefined && next.steps[next.index].id === pendingId) {
           clearPending()
         }
         if (!pressed && !pendingEcho) {

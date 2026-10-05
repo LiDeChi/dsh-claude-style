@@ -167,7 +167,7 @@
         const snap = modelCatalog.snapshot()
         if (dir === null || !snap || snap.current === null) return
         const selection = { provider: snap.current.provider, model: snap.current.model }
-        if (effort !== void 0) selection.reasoningEffort = effort
+        if (effort !== undefined) selection.reasoningEffort = effort
         // A rejected selection is reported by the host's toast (see pickModel).
         const pending = dir.select(selection)
         if (pending && typeof pending.catch === 'function') pending.catch(() => {})
@@ -467,9 +467,7 @@
         removeStrayNodes(slot, '.dsh-claude-model-btn', [modelBtn])
         removeStrayNodes(document, 'body > .dsh-claude-model-popover', [modelPop, modelSubPop])
         const hostRoot = slot.firstElementChild
-        if (hostRoot !== null && !hostRoot.hasAttribute('data-dsh-claude-model-host')) {
-          hostRoot.setAttribute('data-dsh-claude-model-host', '')
-        }
+        if (hostRoot !== null) hostRoot.toggleAttribute('data-dsh-claude-model-host', true)
         if (modelBtn === null || modelBtn.parentElement !== slot) {
           if (modelBtn !== null && modelBtn.parentElement !== null) modelBtn.parentElement.removeChild(modelBtn)
           modelBtn = document.createElement('button')
@@ -521,7 +519,7 @@
         const staleEffortEl = modelBtn.querySelector('.dsh-claude-model-btn-effort')
         if (staleEffortEl !== null) staleEffortEl.parentElement.removeChild(staleEffortEl)
         const triggerAria = copyLabel('triggerLabel', MODEL_TRIGGER_LABEL, { model: label })
-        if (modelBtn.getAttribute('aria-label') !== triggerAria) modelBtn.setAttribute('aria-label', triggerAria)
+        setAttributeIfChanged(modelBtn, 'aria-label', triggerAria)
         modelBtn.disabled = false
 
         renderModelBody()
