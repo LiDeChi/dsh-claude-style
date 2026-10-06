@@ -1,10 +1,7 @@
     /**
      * The host's access-mode trigger: the button its permission slot renders.
-     * Every slot render site carries a `[data-slot="<key>"]` wrapper — the
-     * host renderer's anchor contract for outside styles (ui-renderer
-     * scoped-slots) — so this reads the same in every shell language. The
-     * permission control inserts its own buttons beside the host's inside
-     * that wrapper, so the skin's are skipped.
+     * Every slot render site carries a `[data-slot="<key>"]` wrapper (D19), and
+     * the skin inserts its own buttons inside that wrapper, so those are skipped.
      */
     function findAccessTrigger() {
       return document.querySelector('[data-slot="conversation.input.permission"] button:not([class*="dsh-claude"])')
@@ -16,10 +13,9 @@
     }
 
     /**
-     * The host's composer card — the element the skin's composer rules hang on
-     * — and the placeholder its editor draws while the draft is empty. The
-     * card's variant is the skin's own marking (D9); the rest is the host's
-     * markup. Every reader goes through these, so the selectors live once.
+     * The host's composer card — the element the skin's composer rules hang on —
+     * and the placeholder its editor draws. The card's variant is the skin's own
+     * marking (D9); every reader goes through these, so the selectors live once.
      */
     const COMPOSER_CARD = '[data-composer-card]'
     const COMPOSER_PLACEHOLDER = '[data-composer-placeholder]'
@@ -46,12 +42,7 @@
       return card.querySelector(COMPOSER_PLACEHOLDER)
     }
 
-    /**
-     * The shown conversation: the element carrying its session id (the active
-     * conversation area's own wrapper) and the id itself. The whale's stand,
-     * the turn status line and the context meter's stats all name the
-     * conversation on screen through these.
-     */
+    /** The shown conversation: the element carrying its session id, and the id itself. */
     const CONVERSATION_SESSION_ATTR = 'data-conversation-session'
     const CONVERSATION_SESSION = `[${CONVERSATION_SESSION_ATTR}]`
 
@@ -71,19 +62,16 @@
     }
 
     /**
-     * The host's composer stack (ui-conversation's `.composerStack`): the
-     * composer card with the cards stacked above it, and on the new-session
-     * page the hero around them (`_composerHero` beside it there).
+     * The host's composer stack (ui-conversation's `.composerStack`): the composer
+     * card with the cards stacked above it, and on the new-session page the hero
+     * around them.
      */
     const COMPOSER_STACK = '[class*="_composerStack"]'
 
     /**
-     * The current-session selection left the Session Controller in dsh 0.2:
-     * the list snapshot no longer carries `current`, and the main-view
-     * selection is projected by the `uiSession` service as a binding source
-     * whose `value.key` is the selected session id (`undefined` when no
-     * session is materialized). Read the new source first and fall back to
-     * the legacy `list.current` so older hosts keep working.
+     * The selected session id. dsh 0.2 moved it off the list snapshot onto the
+     * `uiSession` service; the legacy `list.current` is read as a fallback so
+     * older hosts keep working.
      */
     function currentSessionId(ctx, sessions) {
       const uiSession = ctx.get('uiSession')
@@ -103,12 +91,11 @@
     }
 
     /**
-     * One session's chat target (ui-chat's `chat` target of uiConversation):
-     * the loaded window's nodes, turns and turn navigation, as the host's own
-     * chat view reads them. Null while the conversation service is absent or
-     * the session has no binding. The host builds the target only for a
-     * subscriber or while the shell shows that session's chat view, so a bare
-     * read on the trajectory view sees nothing.
+     * One session's chat target (ui-chat's `chat` target of uiConversation): the
+     * loaded window's nodes, turns and turn navigation, as the host's own chat
+     * view reads them. The host builds the target only for a subscriber or while
+     * the shell shows that session's chat view, so a bare read on the trajectory
+     * view sees nothing.
      */
     function findChatTarget(ctx, sessionId) {
       const conversation = ctx.get('uiConversation')
@@ -117,12 +104,10 @@
     }
 
     /**
-     * What an open turn is doing, read off the host's chat snapshot (ui-chat's
-     * `chat` target of uiConversation): its newest step's assistant output
-     * while that streams — `{ kind: 'assistant', assistant, newest }`, with
-     * `newest` the kind of its newest block, null before the first — else
-     * `{ kind: 'tools' }` while one of the turn's tool calls runs, else null:
-     * the turn waits on the model.
+     * What an open turn is doing, read off the host's chat snapshot: its newest
+     * step's assistant output while that streams (`newest` is the kind of its
+     * newest block, null before the first), else `{ kind: 'tools' }` while one of
+     * the turn's tool calls runs, else null — the turn waits on the model.
      */
     function readTurnActivity(snapshot, turn) {
       const step = turn.steps.length === 0 ? undefined : turn.steps[turn.steps.length - 1]
@@ -141,25 +126,16 @@
     function currentPreset(session) {
       const snapshot = session.projections.faceOf('permissions').getSnapshot()
       if (snapshot === undefined || snapshot === null) return null
-      // dsh 0.2+ projection faces hand back the bare value (e.g. the preset
-      // id string); older hosts wrapped it as `{ currentValue }`.
+      // dsh 0.2+ projection faces hand back the bare value; older hosts wrapped it.
       if (typeof snapshot === 'object' && 'currentValue' in snapshot) return snapshot.currentValue
       return snapshot
     }
 
     /**
-     * Who the skin shows: one nickname and one picture, each resolved down a
-     * fixed order.
-     *
-     * Nickname: the custom nickname (settings), the signed-in account's name,
-     * the HDSL launcher's account name, the cached OS-user probe, the fresh
-     * probe, then `User`. Picture: the signed-in account's avatar, the HDSL
-     * launcher's avatar, then the brand mark the stylesheet draws underneath.
-     *
-     * Only the probe is resolved here. The account profile
-     * (features/account/profile.js) and the HDSL contract push their values in
-     * through the setters below, so the greeting, the account row and the hold
-     * screen all read this one place.
+     * Who the skin shows. Nickname: the custom nickname, the signed-in account's
+     * name, the HDSL launcher's account name, the cached OS-user probe, the fresh
+     * probe. Picture: the signed-in account's avatar, the HDSL launcher's avatar,
+     * then nothing, which lets the brand mark show (D15).
      */
     let accountName = ''
     let accountAvatar = ''
@@ -171,12 +147,9 @@
     }
 
     /**
-     * Host-resolved username.
-     *
-     * The host half owns the OS user (`os.userInfo().username`); this side
-     * fetches it once and caches it, and mirrors the answer into local storage
-     * so a reload shows the name from the first frame instead of `User`. No
-     * workspace parsing, no polling.
+     * The host half owns the OS user (`os.userInfo().username`); this side fetches
+     * it once, caches it and mirrors the answer into local storage so a reload
+     * shows the name from the first frame. No workspace parsing, no polling.
      */
     let usernameFromHost = ''
 
@@ -192,10 +165,7 @@
       if (value) localStorage.setItem(PROBED_USERNAME_KEY, value)
     }
 
-    /**
-     * The host half's OS user. An answer the contract does not carry is not
-     * adopted: the cached probe or 'User' stays.
-     */
+    /** The host half's OS user; an answer the contract does not carry is not adopted. */
     const usernameResource = createHostResource(USERNAME_ROUTE, (data) => {
       if (!data || data.ok !== true || typeof data.username !== 'string') return undefined
       usernameFromHost = data.username.trim().slice(0, USERNAME_MAX)
@@ -219,9 +189,9 @@
     let hdslAvatar = false
 
     /**
-     * The HDSL launcher's account contract, when this instance was launched by
-     * it. An answer that is no contract is not adopted: the chain skips the
-     * launcher.
+     * The HDSL launcher's account contract, when this instance was launched by it.
+     * An answer that is no contract is not adopted, so the chain skips the
+     * launcher (D15).
      */
     const hdslResource = createHostResource(HDSL_ROUTE, (data) => {
       if (!data || data.ok !== true || data.contract !== true) return undefined
@@ -239,10 +209,7 @@
       hdslResource.load()
     }
 
-    /**
-     * The nickname every skin surface shows, or '' when nothing resolved.
-     * @returns the winning name, without the `User` default.
-     */
+    /** The nickname every skin surface shows, or '' when nothing resolved. */
     function resolveDisplayName() {
       const custom = readPrefs().username
       if (custom) return custom
@@ -256,27 +223,19 @@
       return resolveDisplayName() || 'User'
     }
 
-    /**
-     * The picture every skin surface shows, or '' to let the brand mark show.
-     * @returns the winning avatar address.
-     */
+    /** The picture every skin surface shows, or '' to let the brand mark show. */
     function resolveAvatarUrl() {
       if (accountAvatar) return accountAvatar
       if (hdslContract && hdslAvatar) return HDSL_SKIN_ROUTE
       return ''
     }
 
-    /**
-     * Host context reference for services that need to read host state
-     * (e.g. locale) outside of apply(ctx)'s direct call stack.
-     */
+    /** Host context reference for services that read host state outside apply(ctx)'s call stack. */
     let hostCtx = null
     function setHostContext(ctx) {
       hostCtx = ctx
-      // A new host context means a new OS user and a new launcher: the next
-      // apply resolves once again rather than reusing the previous host's
-      // answers. The probe cache survives on purpose — it is the same machine
-      // until something says otherwise.
+      // A new host context means a new OS user and a new launcher, so the next
+      // apply resolves again. The probe cache survives on purpose: same machine.
       usernameResource.reset()
       usernameFromHost = ''
       hdslResource.reset()

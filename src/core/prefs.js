@@ -1,28 +1,13 @@
     /**
-     * Skin preferences.
-     *
-     * The authoritative store is the host settings namespace, reached through
-     * `ctx.configForms`: it serves every registered namespace to the browser,
-     * and its per-entry controller carries the values, the write queue and the
-     * revision fence. The namespace is this plugin's profile entry id and its
-     * schema is the Config `host/settings.js` exports.
-     *
-     * Every value is mirrored onto the document as an attribute, so the
-     * stylesheet — not this module — decides what a preference means visually.
-     * Until the first read settles (and if it fails) PREF_DEFAULTS holds, which
-     * is exactly the shipped behaviour.
+     * Skin preferences: the host settings namespace is the store, and every
+     * value is mirrored onto the document as an attribute so the stylesheet
+     * decides what it means (D10, D11). Until the first read settles — and if
+     * it fails — PREF_DEFAULTS holds.
      */
     let prefs = normalizePrefs({})
     const prefsListeners = []
 
-    /**
-     * The official settings form.
-     *
-     * `ctx.configForms.get(entryId)` hands back a controller carrying the
-     * values, a write queue and a revision fence, and the namespace is this
-     * plugin's profile entry id. It stays null until the service serves that
-     * namespace; until then the defaults hold.
-     */
+    /** The official settings form; null until the service serves the namespace. */
     let prefsForm = null
     /** Disposer for the bound form's own change subscription. */
     let prefsFormUnsubscribe = null
@@ -31,13 +16,7 @@
     /** Whether the served-namespace directory is already being watched. */
     let prefsBinding = false
 
-    /**
-     * Candidate namespaces, best first: the running loader entry id (host
-     * halves report "<kind>:<id>", so the kind prefix is stripped), the package
-     * name (the `plugins.bundle.config` key), and the id `cordis.patch.yml`
-     * inserts — which is what the host half actually registers the namespace
-     * as.
-     */
+    /** Namespaces to try, best first: loader entry id, package name, inserted id. */
     function settingsNamespaceCandidates(ctx) {
       // The dynamic façade can hide the fiber; the other two candidates remain.
       const id = ctx?.fiber?.entry?.id
@@ -48,15 +27,9 @@
     /**
      * The namespace the host actually serves, picked from the candidates.
      *
-     * The browser cannot trust its own loader entry id: `dsh-client-modules`
-     * creates each boot entry with only `name`, so the loader mints a RANDOM
-     * id. Asking `configForms.get()` for that id hands back a controller for a
-     * namespace no one owns — reads stay at the defaults and every write is
-     * refused ("No configurable plugin entry"). The served list is the truth.
-     *
-     * @param forms - the `configForms` service.
-     * @param candidates - namespace ids, best first.
-     * @returns the first served candidate, or null when none is served yet.
+     * The loader mints a random id for each boot entry, so asking for our own
+     * entry id hands back a controller for nobody's namespace: reads stay at the
+     * defaults and every write is refused. The served list is the truth.
      */
     function servedNamespace(forms, candidates) {
       const namespaces = forms.describe?.()?.getSnapshot?.()?.view?.namespaces
@@ -81,20 +54,8 @@
       return snapshot.value && typeof snapshot.value === 'object' ? snapshot.value : null
     }
 
-    /**
-     * Bind one namespace the host already serves.
-     *
-     * The controller waits for its own snapshot, so binding is the only step
-     * here; the value is read once the controller carries it.
-     *
-     * @param forms - the `configForms` service.
-     * @param ctx - the owning context, for the namespace candidates.
-     * @returns whether the form was bound.
-     */
+    /** Bind one namespace the host already serves; the controller waits for its own snapshot. */
     function bindServedForm(forms, ctx) {
-      // Only bind a namespace the host actually serves; a generated loader id
-      // would yield a controller for nobody's namespace (reads stuck at the
-      // defaults, every write refused).
       const namespace = servedNamespace(forms, settingsNamespaceCandidates(ctx))
       if (namespace === null) return false
       const form = forms.get(namespace)
@@ -106,14 +67,8 @@
     }
 
     /**
-     * Watch the served-namespace directory until this plugin's namespace lands.
-     *
-     * The directory is a wire read: on a cold page it can answer after this
-     * plugin has applied, so the mirror is subscribed and asked for its first
-     * read, and the form binds whenever the answer arrives.
-     *
-     * @param forms - the `configForms` service.
-     * @param ctx - the owning context, for the namespace candidates.
+     * Watch the served-namespace directory until this plugin's namespace lands:
+     * on a cold page the directory can answer after this plugin has applied.
      */
     function watchNamespace(forms, ctx) {
       if (prefsBinding) return
@@ -134,12 +89,10 @@
     }
 
     /**
-     * Bind the official form.
-     *
-     * Called once per install, before the first read, and again when the
-     * settings page installs — the service may mount after this plugin. A
-     * namespace the host does not serve yet leaves `prefsForm` null and the
-     * defaults in place, so this never blocks or fails the skin.
+     * Bind the official form. Called once per install, before the first read, and
+     * again when the settings page installs — the service may mount after this
+     * plugin. A namespace the host does not serve yet leaves `prefsForm` null and
+     * the defaults in place, so this never blocks or fails the skin.
      */
     function adoptSettingsForm(ctx) {
       if (prefsForm === null) {
@@ -167,11 +120,10 @@
     }
 
     /**
-     * Runtime overrides that outrank the stored preferences. A feature that is
-     * switched off after failing (src/entry.js) hands its surface back to the
-     * host whatever the preference says: the footer takeover and the composer
-     * restyle both HIDE host controls, and a takeover whose replacement is gone
-     * would leave nothing in their place.
+     * Runtime overrides that outrank the stored preferences: a feature retired
+     * after failing hands its surface back to the host, because both of these
+     * HIDE host controls and a takeover whose replacement is gone would leave
+     * nothing in their place.
      */
     let footerTakeoverRetired = false
     let composerRestyleRetired = false
@@ -202,14 +154,9 @@
       }
     }
 
-    /**
-     * Adopt a preference set: mirror it onto the document, then notify.
-     * @param next - resolved preferences from the host.
-     */
+    /** Adopt a preference set: mirror it onto the document, then notify. */
     function adoptPrefs(next) {
       prefs = next
-      // The brand is one attribute write; the other preferences gate rules the
-      // stylesheet and the scheduler read directly.
       document.body.setAttribute(BRAND_ATTR, next.brand)
       document.body.setAttribute(PALETTE_ATTR, next.palette)
       document.body.setAttribute(TYPEFACE_ATTR, next.typeface)
@@ -225,13 +172,9 @@
     }
 
     /**
-     * Resolve the animation choice onto the document.
-     *
-     * Only the two answers the rest of the plugin acts on reach the attribute:
-     * a stylesheet cannot rewrite its own media queries, so "always play" has to
-     * be expressible as a value the rules can test.
-     *
-     * @param mode - one of MOTION_MODES.
+     * Resolve the animation choice onto the document. Only the two answers the
+     * rest of the plugin acts on reach the attribute: a stylesheet cannot rewrite
+     * its own media queries, so "always play" has to be a value the rules test.
      */
     function writeMotionAttribute(mode) {
       const reduced = mode === MOTION_REDUCED || (mode !== MOTION_FULL && systemPrefersReducedMotion())
@@ -239,16 +182,9 @@
     }
 
     /**
-     * Re-resolve the current choice. The scheduler calls this when the system's
-     * own setting flips, which "follow the system" has to pick up mid-session.
-     *
-     * The listeners are notified when the resolved answer really moved, because
-     * "the environment changed" is what several features act on and not every
-     * one of them reads the value lazily: the token reveal installs and
-     * withdraws a whole engine on it, and without the notification that engine
-     * keeps running (or stays down) though the answer has flipped. A choice of
-     * "always", or "reduced", does not move when the system flips, and nothing
-     * is re-run then.
+     * Re-resolve the current choice when the system's own setting flips. The
+     * listeners hear about it only when the resolved answer really moved, because
+     * features act on that answer rather than reading it lazily (D26).
      */
     function refreshMotionAttribute() {
       const before = document.body.getAttribute(MOTION_ATTR)
@@ -257,26 +193,17 @@
     }
 
     /**
-     * Re-run everything that asked to hear about the environment, without the
-     * stored preferences having changed.
-     *
-     * One caller: the other chat plugin appearing or leaving the page
-     * (src/shared/peer-plugin.js). Features that stand down while it is there
-     * subscribe to the preference stream, so the same notification that carries
-     * a stored value carries this too.
+     * Re-run everything that asked to hear about the environment without the
+     * stored preferences having changed: the other chat plugin appearing or
+     * leaving (src/shared/peer-plugin.js, D32).
      */
     function notifyEnvironmentChange() {
       notifyAll(prefsListeners, prefs)
     }
 
     /**
-     * Whether the skin must hold its animations still, right now.
-     *
-     * The mascots ask this instead of the media query: the query cannot express
-     * "always play" while the system asks for reduced motion, and the resolved
-     * attribute can. Before the first adoption (or with no settings store at
-     * all) the shipped answer is the system's, which is what the attribute is
-     * written with at install.
+     * Whether the skin must hold its animations still, right now. The mascots ask
+     * this instead of the media query, which cannot express "always play".
      */
     function motionReduced() {
       const resolved = document.body.getAttribute(MOTION_ATTR)
@@ -297,11 +224,7 @@
       moveLocalPrefs(value)
     }
 
-    /**
-     * Clamp the hover-open preference. It used to be a boolean, and a value
-     * stored in that shape still has to land on a scope: `true` meant every
-     * popover, `false` meant click-only.
-     */
+    /** Clamp the hover-open preference; the earlier boolean shape still lands. */
     function normalizeAutoPopover(value) {
       if (value === true) return AUTO_POPOVER_ALL
       if (value === false) return AUTO_POPOVER_OFF
@@ -309,12 +232,9 @@
     }
 
     /**
-     * The provider ids the picker's first level carries. Ids rather than names:
-     * a provider can be renamed by the catalog at any time, and the stored
-     * selection has to survive that. Order is the caller's, duplicates dropped.
-     * The official service is the picker's default, not a choice, so a stored
-     * id for it is dropped: the first level shows it whenever nothing else is
-     * picked, which is what "default" means.
+     * The provider ids the picker's first level carries: ids rather than names, so
+     * a catalog rename does not lose the stored selection. The official service is
+     * the picker's default rather than a choice, so a stored id for it is dropped.
      */
     function normalizeQuickProviders(value) {
       if (!Array.isArray(value)) return []
@@ -328,23 +248,13 @@
       return out
     }
 
-    /**
-     * Clamp the brand: DeepSeek, or Claude. A value stored by an earlier build
-     * under the DeepSeek choice's old name reads as that choice, and the retired
-     * third choice (`anthropic`) reads as Claude, whose marks and palette it
-     * shared.
-     */
+    /** Clamp the brand; values stored by earlier builds under older names land on their choice. */
     function normalizeBrand(value) {
       if (value === BRAND_DEEPSEEK) return value
       return value === BRAND_DEEPSEEK_LEGACY ? BRAND_DEEPSEEK : BRAND_CLAUDE
     }
 
-    /**
-     * The mascot actually on the page: `brand` resolves through the brand (the
-     * crab under Claude, Deepy under DeepSeek); the other choices stand as
-     * they are.
-     * @returns MASCOT_CRAB, MASCOT_DEEPY or MASCOT_OFF.
-     */
+    /** The mascot actually on the page: `brand` resolves through the brand. */
     function resolveMascot(current) {
       if (current.mascot !== MASCOT_BRAND) return current.mascot
       return current.brand === BRAND_DEEPSEEK ? MASCOT_DEEPY : MASCOT_CRAB
@@ -352,9 +262,9 @@
 
     /**
      * Clamp one host value into the preference shape, field by field off
-     * PREF_DEFAULTS: a boolean stays on unless stored as `false`, a choice
-     * outside its set reads as its default, and the four fields with a shape
-     * of their own have their own clamps.
+     * PREF_DEFAULTS: a boolean stays on unless stored as `false`, a choice outside
+     * its set reads as its default, and the four fields with a shape of their own
+     * have their own clamps.
      */
     function normalizePrefs(value) {
       const section = value && typeof value === 'object' ? value : {}
@@ -372,11 +282,9 @@
     }
 
     /**
-     * Values an earlier build kept in this browser's local storage, by
-     * preference: it stored them there while the running host half refused the
-     * field. The first time the form carries values, each one the form does not
-     * hold yet is written through the form; the local copy is dropped once the
-     * form holds a value of its own.
+     * Values an earlier build kept in this browser's local storage, by preference:
+     * the first time the form carries values, each field the form does not hold
+     * yet is written through the form and the local copy dropped.
      */
     const LOCAL_PREF_KEYS = {
       username: 'dsh-claude-style.username',
@@ -403,16 +311,12 @@
     }
 
     /**
-     * Write a partial preference change through the official form.
+     * Write a partial preference change through the official form: one `set()` per
+     * field, chained, because the controller owns the write queue and takes its
+     * revision fence from the last settlement.
      *
-     * One `set()` per field, chained: the controller owns the write queue and
-     * takes its revision fence from the last settlement, so a burst of toggles
-     * cannot interleave or lose a field. `set()` also validates the field path
-     * against the entry's Config before anything crosses the wire.
-     *
-     * @param patch - preference keys to change.
-     * @returns a promise for the resolved preferences, or null when the form
-     *          does not carry values yet or refused the change.
+     * @returns a promise for the resolved preferences, or null when the form does
+     *          not carry values yet or refused the change.
      */
     function savePrefs(patch) {
       if (readFormValue() === null) return Promise.resolve(null)
@@ -422,9 +326,9 @@
         try {
           pending = prefsForm.set(name, patch[name])
         } catch (error) {
-          // set() refuses a field path the entry's Config does not carry by
-          // throwing before anything crosses the wire: that is a refusal, which
-          // the caller answers with a re-read and the page's notice.
+          // set() refuses a field path this Config does not carry by throwing
+          // before anything crosses the wire: a refusal, answered with a re-read
+          // (D12).
           return false
         }
         return pending && typeof pending.then === 'function'
