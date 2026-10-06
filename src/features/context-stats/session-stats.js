@@ -60,21 +60,6 @@
        */
       const HOST_STATS_DIALOGS = '[data-session-stats-details], [data-session-stats-usage], [data-turn-usage-details]'
 
-      // The block and the panel marks a generation before this one left on a
-      // dialog that is not the host's panel: a client hot reload drops the
-      // previous generation's disposals without running them, so they would
-      // stay on that node for good. Everything except the host's panel goes,
-      // and the pass that follows fills the panel again.
-      const hostPanel = contextPanel()
-      const keptBlock = hostPanel === null ? null : hostPanel.querySelector(`[${CONTEXT_STATS_ATTR}]`)
-      removeStrayNodes(document, `[${CONTEXT_STATS_ATTR}]`, [keptBlock])
-      const strayPanels = document.querySelectorAll(`[${CONTEXT_PANEL_ATTR}]`)
-      for (let i = 0; i < strayPanels.length; i++) {
-        if (strayPanels[i] === hostPanel) continue
-        strayPanels[i].removeAttribute(CONTEXT_PANEL_ATTR)
-        strayPanels[i].removeAttribute(CONTEXT_PANEL_ALIGNED_ATTR)
-      }
-
       /** The projection keys this page is following, and how to stop. */
       let watch = null
       /** The block's last written content, so an unchanged pass writes nothing. */
@@ -377,6 +362,25 @@
       }
 
       /**
+       * Take the block and the panel marks off the dialogs a generation before
+       * this one wrote them on: a client hot reload drops the previous
+       * generation's disposals without running them, so what it left on a node
+       * it wrongly took for the panel would stay there for good. The host's
+       * panel keeps the block it holds, and the pass that follows fills it.
+       */
+      function clearStrayContextNodes() {
+        const panel = contextPanel()
+        const kept = panel === null ? null : panel.querySelector(`[${CONTEXT_STATS_ATTR}]`)
+        removeStrayNodes(document, `[${CONTEXT_STATS_ATTR}]`, [kept])
+        const marked = document.querySelectorAll(`[${CONTEXT_PANEL_ATTR}]`)
+        for (let i = 0; i < marked.length; i++) {
+        if (marked[i] === panel) continue
+        marked[i].removeAttribute(CONTEXT_PANEL_ATTR)
+        marked[i].removeAttribute(CONTEXT_PANEL_ALIGNED_ATTR)
+        }
+      }
+
+      /**
        * Whether the host rendered its DETAILED statistics row, which is the
        * host's own answer to how much of these numbers it shows: detailed gets
        * the whole set, compact the four figures the compact row leaves out.
@@ -641,6 +645,8 @@
         bindContextPanel(panel)
         renderContextStats()
       }
+
+      clearStrayContextNodes()
 
       return {
         /** One pass: keep the panel filled while it is open. */
