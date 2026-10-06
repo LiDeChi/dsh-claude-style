@@ -121,6 +121,8 @@
       let glideScroller = null
       /** The flow column the glide's resize observer watches. */
       let glideColumn = null
+      /** The resize observer made for glideColumn (see glideSync). */
+      let glideResize = null
       /** The column's height as the glide last saw it; the growth a frame is measured against. */
       let glideHeight = 0
       /** The host's own button while the glide keeps it out of sight. */
@@ -191,24 +193,45 @@
         }
       }
 
-      /** Watch the flow column the glide reads growth from; a session switch replaces it. */
+      /**
+       * Watch the flow column the glide reads growth from; a session switch
+       * replaces it.
+       *
+       * The observer is made anew for every column. Resize observer callbacks
+       * run in the order the observers were made, and the host makes the one it
+       * pins the end from when it mounts the column (ChatViewport.attach): it
+       * watches the column, the scroller and the composer seat. Made after it,
+       * this one runs after the pin in the same frame and takes it back before
+       * it paints; one made at install runs first, and every pin paints. It
+       * watches the same three elements, so no resize the host pins on goes
+       * unseen.
+       */
       const glideSync = () => {
         const column = document.querySelector(CHAT_FLOW_SELECTOR)
         if (column === glideColumn) return
-        if (glideColumn !== null) glideResize.unobserve(glideColumn)
+        glideResize?.disconnect()
+        glideResize = null
         glideColumn = column
-        // A fresh column has no height to compare against; the first growth on
-        // it falls back to the last position seen.
-        glideHeight = 0
-        if (column !== null) glideResize.observe(column)
+        if (column === null) return
+        glideResize = new ResizeObserver(onGlideResize)
+        // The observer's first report is the column as it is now, which is no
+        // growth.
+        glideHeight = column.offsetHeight
+        glideResize.observe(column)
+        const scroller = column.closest(CONVERSATION_SCROLL_SELECTOR)
+        if (scroller === null) return
+        glideResize.observe(scroller)
+        const composer = scroller.querySelector(COMPOSER_SELECTOR)
+        if (composer !== null) glideResize.observe(composer)
       }
 
       /**
        * Hold the position through one frame of streaming.
        *
        * This runs from the resize observer below, which the browser calls after
-       * the host's own, so a pin written this frame is still taken back before
-       * it paints: the distance it added stays with the spring. The reference is
+       * the host's own (see glideSync), so a pin written this frame is still
+       * taken back before it paints: the distance it added stays with the
+       * spring. The reference is
        * the spring's own last write while it is easing, and the last position
        * the glide saw otherwise. Only a move *down* is undone — an upward one is
        * the reader, or the host going somewhere else, and neither is the glide's
@@ -267,22 +290,24 @@
        * reported after the host's callback in the same step, so the growth read
        * here is the distance the host's pin added this frame. Growth that leaves
        * the column's box alone (a text node only) still arrives through the page
-       * observer below, where the spring's own last write is the reference.
+       * observer below, where the spring's own last write is the reference. The
+       * scroller and the composer seat carry no growth to read; the host pins on
+       * them too, and that pin is taken back the same way.
        */
-      const glideResize = new ResizeObserver((entries) => {
-        const entry = entries[entries.length - 1]
-        if (entry === undefined) {
-          glideCheck(0)
-          return
+      const onGlideResize = (entries) => {
+        let grew = 0
+        for (const entry of entries) {
+          if (entry.target !== glideColumn) continue
+          const size = entry.borderBoxSize
+          const box = size !== undefined && size.length > 0 ? size[0].blockSize : entry.contentRect.height
+          const delta = box - glideHeight
+          glideHeight = box
+          // A growth wider than the longest stretch the ease glides is a replaced
+          // column, not a burst, and is no reading to measure against.
+          if (delta > 0 && delta <= SCROLL_EASE_LEAD_PX) grew = delta
         }
-        const size = entry.borderBoxSize
-        const box = size !== undefined && size.length > 0 ? size[0].blockSize : entry.contentRect.height
-        const grew = box - glideHeight
-        glideHeight = box
-        // A growth wider than the longest stretch the ease glides is a replaced
-        // column, not a burst, and is no reading to measure against.
-        glideCheck(grew > 0 && grew <= SCROLL_EASE_LEAD_PX ? grew : 0)
-      })
+        glideCheck(grew)
+      }
 
       /**
        * Hand this round's follow back. Three gates have to open: the position,
@@ -441,7 +466,8 @@
         observer.disconnect()
         for (const type of FOLLOW_INTENT_TYPES) document.removeEventListener(type, noteReaderIntent, true)
         window.removeEventListener('scroll', noteGlideScroll, true)
-        glideResize.disconnect()
+        glideResize?.disconnect()
+        glideResize = null
         unhideGlideButton()
         // The glide's own easing stops with the feature; a hand-back in flight
         // elsewhere on the page is not this teardown's business.
