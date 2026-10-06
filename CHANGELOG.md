@@ -23,6 +23,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - **装卸或更新别的插件之后，本插件的界面不再失去样式**：此前别的插件加载、重新加载或更新之后，本插件的整个界面有时会变回宿主原本的样子，插件的标记却还留在页面上。现在无论别的插件如何装卸，本插件的外观都保持不变。
 - **同时装着的别的插件不再丢失样式**：一个插件自己挂上去、没有归属标记的样式表，会被下一个加载的插件记在自己名下，并在那个插件重新加载时被删掉——同时装着的表情包插件就曾这样整份失去样式，只能刷新页面恢复。现在这类样式表在本插件看到它的当时就被标记为无主，之后任何插件的加载、重新加载与更新都不再碰它。
 - **小鲸鱼帧图顶端的灰线消失**：Deepy 演某几段动画时，帧图最上方有时会闪出一条约 1 像素高的灰线，站在哪里、窗口多大不同就时有时无。现在任何站位、任何一段动画都不再出现，小鲸鱼的样貌与动作不变。
+- **子智能体工作室的节点详情小窗不再把会话统计与 Token 用量带走**：打开工作室、点开一个子智能体的节点详情小窗之后，输入区上下文面板里的「会话统计」与「Token 用量」两段画到了那个小窗下面，没有底色地压在对话内容上，上下文面板只剩宿主自己的三行。现在两段仍留在上下文面板里。
 
 <h3 id="en-unreleased">New Features</h3>
 
@@ -41,6 +42,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - **Loading, reloading or updating another plugin no longer strips this plugin's styling**: after another plugin was loaded, reloaded or updated, the whole interface could fall back to the host's own look with this plugin's markers still on the page. The plugin's appearance now survives any other plugin being loaded, reloaded or removed.
 - **Another plugin installed beside this one no longer loses its styling**: a stylesheet a plugin mounts without an ownership tag is taken into whichever package loads next and deleted when that package reloads — the meme plugin lost its entire styling that way, and only a page refresh brought it back. Such a sheet is now marked as unowned the moment this plugin sees it, and no plugin's load, reload or update touches it afterwards.
 - **A grey line no longer flashes along the top of Deepy's frames**: while some animations played, a line about one pixel tall could appear at the top of the frame and vanish again, depending on where the whale stood and how large the window was. It no longer appears in any position or animation, and the whale looks and animates exactly as before.
+- **A node detail in the subagent studio no longer takes the session statistics and the token usage with it**: with the studio open and a subagent node's detail popped up, the session statistics and the token usage sections drew under that popup with no surface of their own, over the conversation, leaving the composer's context panel with only the host's three rows. Both sections stay in the context panel now.
 
 ## [0.10.6] - 2026-10-05
 
