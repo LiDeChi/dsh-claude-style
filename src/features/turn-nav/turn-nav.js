@@ -39,6 +39,12 @@
       const TURN_NAV_POPOVER = 'turnNav'
       /** One turn's height on the rail and in the card: the two have to match for a row to sit on its mark. */
       const TURN_NAV_PITCH = 24
+      /**
+       * The last stretch of a jump that is glided: about a third of a second on
+       * the scroll curve. Neighbouring turns sit a screen or more apart, and
+       * gliding the whole way kept the reader waiting most of a second.
+       */
+      const TURN_NAV_GLIDE_LEAD_PX = 480
       /** How long the landing line stays: its animation (turn-nav.css) plus a frame. */
       const LANDED_MS = 1500
       /** How long a jump to a turn outside the loaded window may take to bring its rows in. */
@@ -79,6 +85,8 @@
       let landing = null
       let landedRow = null
       let landedTimer = null
+      /** Set by the teardown: a glide in flight gives way. */
+      let stopped = false
 
       /* ---------- the rail ---------- */
 
@@ -203,7 +211,6 @@
         card.addEventListener('mouseleave', () => { hoverIntent.scheduleClose() })
         list.addEventListener('click', onRowClick)
         list.addEventListener('scroll', () => { if (open) setOffset(list.scrollTop) }, { passive: true })
-        document.body.appendChild(card)
       }
 
       /**
@@ -235,15 +242,24 @@
        * box and scrolled as far as the rail's track, each row's dash on its
        * mark — a mark is drawn against the rail's right edge, a row's dash
        * against the row's right padding inside the card's padding and border.
+       *
+       * The card hangs in the rail's own slot, inside the conversation pane:
+       * a pointer on it is a pointer on the pane, so everything the pane
+       * reveals on hover (the Chat / Trajectory tabs among them) stays up while
+       * the card is read. The slot is the card's containing block, so the seat
+       * is measured from the slot's box.
        */
       function placeCard() {
+        const slot = rail.parentElement
+        if (card.parentElement !== slot) slot.appendChild(card)
+        const frame = slot.getBoundingClientRect()
         const box = rail.getBoundingClientRect()
         const cardStyle = getComputedStyle(card)
         const row = list.firstElementChild
         const rowInset = row === null ? 0 : parseFloat(getComputedStyle(row).paddingRight)
         // Unrounded: the rail sits on a half pixel whenever the band's height is odd.
-        const right = `${window.innerWidth - box.right - parseFloat(cardStyle.borderRightWidth) - parseFloat(cardStyle.paddingRight) - rowInset}px`
-        const top = `${box.top - parseFloat(cardStyle.borderTopWidth) - parseFloat(cardStyle.paddingTop)}px`
+        const right = `${frame.right - box.right - parseFloat(cardStyle.borderRightWidth) - parseFloat(cardStyle.paddingRight) - rowInset}px`
+        const top = `${box.top - frame.top - parseFloat(cardStyle.borderTopWidth) - parseFloat(cardStyle.paddingTop)}px`
         const height = `${box.height}px`
         if (card.style.right !== right) card.style.right = right
         if (card.style.top !== top) card.style.top = top
@@ -288,9 +304,33 @@
 
       /* ---------- the jump and its landing ---------- */
 
-      /** Press the host's mark for one turn, then line the landed turn. */
+      /**
+       * Walk the conversation from where it was to where the host just put it,
+       * on the skin's scroll curve (shared/scroll-ease.js).
+       *
+       * The host lands a loaded turn inside the press itself, writing the
+       * position in one frame; that write is taken back before the frame paints
+       * and the distance glided. A turn outside the loaded window is landed later,
+       * after its history arrives, and that landing stays the host's. The glide
+       * gives way the moment anybody else moves the position — the reader's
+       * wheel, the host correcting for a row that changed size.
+       */
+      function glideLanding(scroller, before) {
+        if (scroller === null || before === null || motionReduced()) return
+        const landed = scroller.scrollTop
+        if (Math.abs(landed - before) <= 1) return
+        scroller.scrollTop = before
+        easeScroll(scroller, () => landed, () => {
+          if (stopped) return false
+          const written = scrollEasePosition(scroller)
+          return written === null || Math.abs(scroller.scrollTop - written) <= 1.5
+        }, TURN_NAV_GLIDE_LEAD_PX)
+      }
+
+      /** Press the host's mark for one turn, glide to where it lands, and line the landed turn. */
       function jumpTo(turn) {
-        host.jumpToTurn(turn, () => {
+        host.jumpToTurn(turn, (scroller, before) => {
+          glideLanding(scroller, before)
           landing = { turn, since: Date.now() }
           // A loaded turn has landed by now; one outside the window lands when
           // its rows arrive, which a pass sees.
@@ -408,6 +448,7 @@
       }
 
       return () => {
+        stopped = true
         host.stop()
         if (refreshFrame !== 0) cancelAnimationFrame(refreshFrame)
         refreshFrame = 0

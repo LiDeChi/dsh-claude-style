@@ -94,11 +94,13 @@ body[data-dsh-claude-style] .dsh-claude-turn-nav-row[data-current] .dsh-claude-t
   transform: none !important;
 }
 
-/* The card: the shared shell, laid over the rail by turn-nav.js. It fades in
-   and out in place — the shell's rise would carry the rows off their marks. */
+/* The card: the shared shell, laid over the rail by turn-nav.js from inside the
+   rail's slot, so it counts as the conversation pane under the pointer. It
+   fades in and out in place — the shell's rise would carry the rows off their
+   marks. */
 body[data-dsh-claude-style] .dsh-claude-turn-nav,
 body[data-dsh-claude-style] .dsh-claude-turn-nav[data-open="true"] {
-  position: fixed !important;
+  position: absolute !important;
   left: auto !important;
   width: 288px !important;
   max-width: calc(100vw - 16px) !important;

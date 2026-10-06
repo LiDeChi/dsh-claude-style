@@ -119,7 +119,8 @@
        * longer describes, and is said loudly.
        *
        * @param turn - the turn to jump to.
-       * @param onPressed - called right after the mark is pressed.
+       * @param onPressed - called right after the mark is pressed, with the
+       *     conversation's scroller and its position just before the press.
        */
       function jumpToTurn(turn, onPressed) {
         const generation = ++jumpGeneration
@@ -139,8 +140,10 @@
           if (railMarkCount(found) === list.length) {
             const mark = found.querySelector(`${TURN_RAIL_MARK_SELECTOR}[data-index="${index}"]`)
             if (mark !== null) {
+              const scroller = closestFrom(found, CONVERSATION_SCROLL_SELECTOR)
+              const before = scroller === null ? null : scroller.scrollTop
               mark.click()
-              onPressed()
+              onPressed(scroller, before)
               return
             }
             if (!scrolled) {
