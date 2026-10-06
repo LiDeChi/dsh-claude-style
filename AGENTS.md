@@ -53,7 +53,10 @@
 
 ```sh
 npm run build            # src/ → lib/client.js; checks listed files, %%TOKEN%%, composer gate, :has() placement, preference defaults across both halves, syntax, model copy; prints the build id
-npm run smoke            # lib/ against a stand-in host: private-route fences; in headless Chrome: startup, 0 idle passes, no markup injection, Enter stays with the host, feature isolation, no uncaught errors, clean teardown
+npm run smoke            # the full run: every browser case, every check; lib/ against a stand-in host: private-route fences; in headless Chrome: startup, 0 idle passes, no markup injection, Enter stays with the host, feature isolation, no uncaught errors, clean teardown
+npm run smoke -- --quick --feature <dir>   # the iteration run: the quick tier (leaves out the cases and checks that watch motion) and the cases covering one directory under src/features/; the Node host half runs either way
+npm run smoke -- --case <name>[,<name>…]   # the named browser cases alone
+npm run smoke -- --feature <dir>[,<dir>…]  # the cases covering those directories under src/features/ (the table is FEATURE_CASES in scripts/smoke/shared.cjs); cases that share a stand-in configuration and a markup run in one page load (PAGES in the same file)
 node scripts/probe.cjs --token <launch-token>          # composer invariants against a running `dsh web`
 node scripts/probe-timing.cjs --token <launch-token>   # itemized timing: startup, model catalog readiness, open latency, heap
 node scripts/shoot.cjs --token <launch-token> --brand <claude|deepseek> --scene <home|conversation>   # re-shoot one pair of README screenshots (docs/<brand>-<scene>-light.png / -dark.png)
@@ -77,7 +80,7 @@ Read the running GUI before starting a probe:
 The assembly order lives in `scripts/build.mjs` (`FRAGMENTS` / `STYLE_FILES`) and the feature list in `src/entry.js` (`FEATURES`); those lists are authoritative and the build refuses a source file neither list names. The layout (docs/architecture.md D18):
 
 - `src/core/` — host accessors (`host.js`), the preference store, model copy, i18n, the scheduler.
-- `src/shared/` — parts more than one feature uses, JS beside CSS: `dom.js` (`buildElement`, `createStamp`), `notify.js` (`notifyAll`), `popover.*` (anchoring, hover intent, the popover registry, the card shell and rows), `sliding-pill.*` (the segmented controls' sliding highlight).
+- `src/shared/` — parts more than one feature uses, JS beside CSS: `dom.js` (`buildElement`, `createStamp`), `notify.js` (`notifyAll`), `popover.*` (anchoring, hover intent, the popover registry, the card shell and rows), `sliding-pill.*` (the segmented controls' sliding highlight), `scroll-ease.js` (the spring that walks a scroll position: the chat follow and the conversation navigator).
 - `src/theme/` — the global look no single feature owns (tokens, typography, chrome, hero brand, sidebar, third-party fixes).
 - `src/features/<feature>/` — one feature's installer, its helper factories and its stylesheets, side by side; the main file carries the feature's name.
 - `src/constants.js` is evaluated at build time to fill `%%TOKEN%%` placeholders; `src/model-descriptions.json` is model copy data plus the `brands` bindings; `src/assets/brand/*.svg` are brand marks inlined as CSS data URIs; `src/assets/mascot/crab/*.png` are the composer crab's animation sheets and ink masks (one pixel per cell), drawn by `scripts/draw-crab.py` from the drawings it carries and Claude Code's laptop frames (`src/assets/mascot/crab-laptop-*.png`), inlined as data URIs; `src/assets/mascot/deepy/*.png` are Deepy's animation sheets (the DeepSeek brand's whale), copied to `lib/deepy/` and served by the host half; `src/assets/icons/combine/*.svg` are vendor lockups inlined as a JS markup table; `src/assets/icons/*.svg` are hand-provided lockup assets that take priority over network fetching during vendoring.
@@ -106,9 +109,6 @@ Full rules in docs/architecture.md D3 and D19. In short: prefer the host's contr
 
 All fragments share one factory scope: no import/export, 4-space base indentation, modern syntax (`const`/`let`, arrow functions, optional chaining). React comes from the build's header (`require('react')`); other host packages are `require`d directly where they are used. Helper fragments export top-level `createX(...)` factories named after their feature; features are installed and ordered through `src/entry.js`'s FEATURES table (docs/architecture.md D13). Reach for the shared parts before writing a local version: `buildElement`, `createStamp`, `notifyAll`, `createSlidingPill`, the popover utilities.
 
-### Model Copy Is Data, Not Bundle
-
-- `src/model-descriptions.json` is validated at build time and **copied** to `lib/`; the browser side fetches it through the host route the first time it renders a picker. Extending the copy table requires no JS change.
 ### Comments
 
 Code comments carry only what a reader needs to keep the code honest, and nothing else:
@@ -119,6 +119,9 @@ Code comments carry only what a reader needs to keep the code honest, and nothin
 - When a rule's reason is already in a document, the comment is one line pointing at that document.
 - Reviewers may delete a comment that says nothing a reader could act on.
 
+### Model Copy Is Data, Not Bundle
+
+- `src/model-descriptions.json` is validated at build time and **copied** to `lib/`; the browser side fetches it through the host route the first time it renders a picker. Extending the copy table requires no JS change.
 - Each entry is `{ locale: text }`; lookup degrades through: exact entry → family rule → tier rule → catalog's own text.
 - The copy is product-line copy: mapped by name pattern, unchanged across version iterations and retirements; never add self-invented tier prefixes (like "Flagship tier:"); never repeat the model name already in the row.
 - Family rules are ordered and must be anchored (e.g. the `flash` rule is scoped to deepseek); **never write superlatives like "strongest/flagship"** — superlatives are only allowed in exact entries bound to a concrete version number. Full policy in docs/architecture.md D5.
@@ -131,17 +134,17 @@ Code comments carry only what a reader needs to keep the code honest, and nothin
 
 1. Change `src/` (or `host/`); never touch `lib/`.
 2. `npm run build` to regenerate the artifacts and pass the build's checks.
-3. `npm run smoke`; with a `dsh web` instance running, also `node scripts/probe.cjs --token <token>` (composer pinned to the bottom, starts single-line, grows with content, restores when cleared). Check the live page too (see Live inspection), including after a hot reload.
+3. `npm run smoke -- --quick --feature <dir>` while iterating: the quick tier leaves out the cases and checks that watch motion, and `--feature` picks the cases covering the directory you changed. The full `npm run smoke` runs at release, not on every change. With a `dsh web` instance running, also `node scripts/probe.cjs --token <token>` (composer pinned to the bottom, starts single-line, grows with content, restores when cleared). Check the live page too (see Live inspection), including after a hot reload.
 4. Visual changes are checked by the user in both light and dark modes; when README screenshots go stale, re-shoot them with `shoot.cjs`.
 5. Sync documentation: the bilingual READMEs (`README.md` Chinese / `README.en.md` English) change together; behavioral changes go into `CHANGELOG.md`'s `[Unreleased]` section — format in "Git and Release"; a changed decision goes into docs/architecture.md.
-6. A feature is done when all gates pass and behavior is verified correct; if a gate fails, keep fixing — never hand it to the user for testing.
+6. A feature is done when the build and the quick tier pass and behavior is verified correct; the full smoke run is the release gate. If a gate fails, keep fixing — never hand it to the user for testing.
 
 ## Git and Release
 
 - Use conventional commit prefixes (`fix(scope):` / `refactor(scope):` / `docs(scope):` / `chore(release):` etc.); one logical change per commit, no WIP commits, no unrelated changes mixed in. A commit that only moves files is kept apart from commits that change logic.
 - Required before committing: `npm run build` succeeds and the working tree has no stray files. `lib/` artifacts are **not** committed with the source; at release the complete artifacts are rebuilt from `src/` and committed with the release commit — users consume versions, not commits.
 - Another session may be editing the same working tree. Commit only your own changes: stage whole files only when every change in them is yours, otherwise stage your hunks alone (`git apply --cached` of the filtered hunks). Before committing, export the index (`git checkout-index -a --prefix=.debug/<dir>/`) and run the build and smoke there, so the commit is checked exactly as it will be stored.
-- Release flow: update CHANGELOG → `npm version patch|minor` → `npm run build` and commit the rebuilt `lib/` artifacts → tag → `npm publish` (`prepublishOnly` re-runs the build automatically) → GitHub Release, with release notes taken from the CHANGELOG section for that version.
+- Release flow: update CHANGELOG → `npm run smoke` (the full run; it is the only place the motion cases and the timing checks run) → `npm version patch|minor` → `npm run build` and commit the rebuilt `lib/` artifacts → tag → `npm publish` (`prepublishOnly` re-runs the build automatically) → GitHub Release, with release notes taken from the CHANGELOG section for that version.
 - CHANGELOG format (same spec as dsh upstream release notes):
   - Version sections: `## [x.y.z] - YYYY-MM-DD`, newest on top; in-development changes go under `## [Unreleased]`.
   - Each section is bilingual on one page: first a `[中文](#cn-x.y.z) | [English](#en-x.y.z)` language-switch line, then two anchors `<h3 id="cn-x.y.z">新增功能</h3>` (Chinese) and `<h3 id="en-x.y.z">New Features</h3>` (English) — anchor ids must carry the version number to avoid same-name collisions across sections on the page; further groups within each language use plain `###` headings.
