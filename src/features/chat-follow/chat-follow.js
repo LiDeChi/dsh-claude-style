@@ -109,7 +109,7 @@
       // build: the position never sat more than three pixels off the end, so the
       // text above the last line was pushed up in one frame on every burst. The
       // glide takes that write back before the frame paints and hands the
-      // distance to the spring (scroll-ease.js, the same walk the catch-up and
+      // distance to the spring (shared/scroll-ease.js, the same walk the catch-up and
       // the hand-back use), so the position travels there instead.
       //
       // Every reading is an element read plus at most one style write, and all of
@@ -279,9 +279,9 @@
         const box = size !== undefined && size.length > 0 ? size[0].blockSize : entry.contentRect.height
         const grew = box - glideHeight
         glideHeight = box
-        // A growth wider than the ease's own "somewhere else entirely" line is a
-        // replaced column, not a burst, and is no reading to measure against.
-        glideCheck(grew > 0 && grew <= SCROLL_EASE_JUMP_PX ? grew : 0)
+        // A growth wider than the longest stretch the ease glides is a replaced
+        // column, not a burst, and is no reading to measure against.
+        glideCheck(grew > 0 && grew <= SCROLL_EASE_LEAD_PX ? grew : 0)
       })
 
       /**

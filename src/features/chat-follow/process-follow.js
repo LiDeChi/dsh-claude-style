@@ -15,7 +15,7 @@
      * Together they leave the position 20 to 50 px off the end — exactly the
      * last two lines. Nothing here changes the host's own state: past
      * CATCH_UP_GAP_PX the catch-up walks the body's scrollTop to its end on a
-     * curve (scroll-ease.js, so the text above the last line is pushed up
+     * curve (shared/scroll-ease.js, so the text above the last line is pushed up
      * smoothly rather than in a jump), and inside that threshold it leaves the
      * host's smooth scroll alone, which is the pleasant one while it keeps up.
      * The reader scrolling inside a body hands that body over until he comes
@@ -82,7 +82,7 @@
         // Written outright, the catch-up lands as a jump of forty-odd pixels
         // several times a second while text streams, which reads as the
         // paragraph above the last line snapping upward; the position is eased
-        // there instead (scroll-ease.js). The reader's animation choice still
+        // there instead (shared/scroll-ease.js). The reader's animation choice still
         // means "no animation", so reduced motion keeps the direct write.
         if (motionReduced()) {
           body.scrollTop = body.scrollHeight

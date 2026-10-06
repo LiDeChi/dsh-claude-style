@@ -15,7 +15,7 @@
      * lights the follow up again and reaches the end at once. Both ways are
      * used here, in this order:
      *
-     *   pin     the position is walked to the end on a curve (scroll-ease.js),
+     *   pin     the position is walked to the end on a curve (shared/scroll-ease.js),
      *           so the text above the last line is pushed up smoothly rather
      *           than snapping. Any displacement at all makes the host's own
      *           onScroll take the "reader reached the end" branch — which does
@@ -93,7 +93,7 @@
       // "follow is on, it just fell behind" case: the host reads the move as the
       // reader reaching the end, lights the follow up and clears its window.
       // Walked in on a curve rather than written outright, so the text above the
-      // last line is pushed up smoothly instead of snapping (scroll-ease.js);
+      // last line is pushed up smoothly instead of snapping (shared/scroll-ease.js);
       // the reader's animation choice still means "no animation".
       if (scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop > 0.5) {
         if (motionReduced()) scroller.scrollTop = scroller.scrollHeight
