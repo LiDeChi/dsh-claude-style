@@ -2,11 +2,11 @@
 
 All notable changes to `dsh-claude-style` are documented here, newest first.
 
-## [Unreleased]
+## [0.11.0] - 2026-10-06
 
-[中文](#cn-unreleased) | [English](#en-unreleased)
+[中文](#cn-0.11.0) | [English](#en-0.11.0)
 
-<h3 id="cn-unreleased">新增功能</h3>
+<h3 id="cn-0.11.0">新增功能</h3>
 
 - **对话导航**：对话区右侧的轮次短横线改由插件绘制，间距与展开后的列表行高一致。鼠标碰到它立刻展开成一张列表，每一轮一行，写着开启这一轮的那条消息，每一行正好落在它那条短横线原来的位置上，正在读的那一轮保持原位；滚轮上下翻，点一行页面滑到那一轮（只滑最后一小段，约三分之一秒），还没加载的早期对话先加载再跳；指针停在列表上时，对话区顶部的对话 / 轨迹标签照常显示。Alt+↑ / Alt+↓ 跳到上一轮或下一轮，连按会接着走，输入框里有草稿时不接管；跳到的那一轮开头闪一条短横线。同时装着 dsh-plugin-msg-nav 时 Alt+↑ / Alt+↓ 留给它。设置页「对话」页新增「对话导航」开关，默认开启，关闭后恢复系统原来的轮次短横线与悬停预览。
 
@@ -25,7 +25,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - **小鲸鱼帧图顶端的灰线消失**：Deepy 演某几段动画时，帧图最上方有时会闪出一条约 1 像素高的灰线，站在哪里、窗口多大不同就时有时无。现在任何站位、任何一段动画都不再出现，小鲸鱼的样貌与动作不变。
 - **子智能体工作室的节点详情小窗不再把会话统计与 Token 用量带走**：打开工作室、点开一个子智能体的节点详情小窗之后，输入区上下文面板里的「会话统计」与「Token 用量」两段画到了那个小窗下面，没有底色地压在对话内容上，上下文面板只剩宿主自己的三行。现在两段仍留在上下文面板里。
 
-<h3 id="en-unreleased">New Features</h3>
+<h3 id="en-0.11.0">New Features</h3>
 
 - **Conversation navigator**: the turn marks at the conversation's right edge are drawn by the plugin, spaced at the height of the list they open into. Reaching them with the pointer opens that list at once, one row per turn carrying the message that started it, each row exactly where its mark was and the turn being read left in place; the wheel scrolls the list and a click glides the page to the turn (only the last stretch, about a third of a second), loading earlier history first when it is not loaded yet; the Chat / Trajectory tabs at the top of the conversation stay up while the pointer is on the list. Alt+↑ / Alt+↓ jump to the previous or the next turn and keep stepping when repeated, leaving the keys alone while the composer holds a draft; the turn you land on flashes a short line over its start. With dsh-plugin-msg-nav installed too, Alt+↑ / Alt+↓ stay with it. A Conversation navigator switch on the settings page's Conversation tab, on by default; off restores the host's own turn marks and hover preview.
 
@@ -43,6 +43,8 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - **Another plugin installed beside this one no longer loses its styling**: a stylesheet a plugin mounts without an ownership tag is taken into whichever package loads next and deleted when that package reloads — the meme plugin lost its entire styling that way, and only a page refresh brought it back. Such a sheet is now marked as unowned the moment this plugin sees it, and no plugin's load, reload or update touches it afterwards.
 - **A grey line no longer flashes along the top of Deepy's frames**: while some animations played, a line about one pixel tall could appear at the top of the frame and vanish again, depending on where the whale stood and how large the window was. It no longer appears in any position or animation, and the whale looks and animates exactly as before.
 - **A node detail in the subagent studio no longer takes the session statistics and the token usage with it**: with the studio open and a subagent node's detail popped up, the session statistics and the token usage sections drew under that popup with no surface of their own, over the conversation, leaving the composer's context panel with only the host's three rows. Both sections stay in the context panel now.
+
+**Full Changelog**: [v0.10.6...v0.11.0](https://github.com/Nwflower/dsh-claude-style/compare/v0.10.6...v0.11.0)
 
 ## [0.10.6] - 2026-10-05
 
