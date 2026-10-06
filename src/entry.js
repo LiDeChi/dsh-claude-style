@@ -194,6 +194,7 @@
         { name: 'workspace', pref: 'workspaceView', install() { return installWorkspaceView(ctx, ui) } }, // 侧栏工作区：进行中 / 已归档 分段 + 归档行删除
         { name: 'search', pref: 'sidebarSearch', install() { return installSearch(ctx, ui) } }, // 侧栏品牌行的搜索框 + 搜索面板（会话、项目、插件、Skill、快捷键）
         { name: 'turnStatus', pref: 'turnStatus', install() { return installTurnStatus(ctx, ui) } }, // 进行中、已停止与失败轮次的状态行：移到这一轮工作的末尾，火花 + 用时 · 输出 tokens · 当前动作（或已停止 / 处理失败）
+        { name: 'turnNav', pref: 'turnNav', install() { return installTurnNav(ctx, ui) } }, // 对话导航：宿主的轮次导航条在指针停留时展开成整列提问，Alt+↑ / Alt+↓ 跳到上一轮或下一轮，跳到的那一轮开头闪一条横线
         { name: 'chatFollow', pref: 'chatAnimations', install() { return installChatFollow(ctx, ui) } }, // 聊天区跟随：结构时刻把滚动交还给宿主跟随，封顶过程组里不让最新两行悬着
         { name: 'chatFold', pref: 'chatAnimations', install() { return installChatFold(ctx, ui) } }, // 思考行与过程组自动开合，读者点击一行时的卷帘门过渡
         { name: 'chatReveal', pref: 'chatAnimations', install() { return installChatReveal(ctx, ui) } }, // token 淡入：新到的字先淡后实，按到达次序错开相位

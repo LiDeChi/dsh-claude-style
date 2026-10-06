@@ -266,6 +266,11 @@
       "zh": "把进行中、已停止和失败轮次的状态移到这一轮内容的末尾，显示用时、输出 token 数和当前动作。关闭后恢复系统的轮次状态。",
       "en": "Move the status of a running, stopped or failed turn to the end of the turn's work, with the elapsed time, the output tokens and what the model is doing. Off restores the host's turn status."
     },
+    "turnNavTitle": { "zh": "对话导航", "en": "Conversation navigator" },
+    "turnNavDesc": {
+      "zh": "鼠标停在对话区右侧那列轮次短横线上时，它会展开成一张列表，每一轮一行，写着开启这一轮的那条消息；滚轮可以上下翻，点一行就跳到那一轮。Alt+↑ 和 Alt+↓ 跳到上一轮或下一轮，跳到的那一轮开头会闪一条短横线。关闭后恢复系统原来的轮次短横线。",
+      "en": "Rest the pointer on the turn marks at the conversation's right edge and they open into a list of every turn, one line each with the message that started it; the wheel scrolls the list and a click jumps to that turn. Alt+↑ and Alt+↓ jump to the previous or the next turn, and the turn you land on is marked with a short line. Off restores the host's turn marks."
+    },
     "chatAnimationsTitle": { "zh": "聊天区动画效果", "en": "Chat-area animations" },
     "chatAnimationsDesc": {
       "zh": "对话区的动画合成一个开关。回答变长时画面跟着新出现的一行往下走，思考和工具输出收在可滚动的框里时也照样跟到底，跟上去是一段平滑的滚动，不是一下跳过去；模型思考时「思考」一行自动展开、结束收起，正在进行的步骤也同样开合，你自己点开或收起一行时高度是一段一段走完的；回答是一个字一个字淡入的，新到的字先很淡，再落到本色；程序内部执行的写入和编辑，行尾标出 +n -m，展开就是改动的行；发出消息时输入框浮起来，一边飞一边收成刚发出的那条气泡。关闭后这几项一起停，恢复系统原来的行为。设置页的「动画效果」选「减弱」时这些动作一并停下。",

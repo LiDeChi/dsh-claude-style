@@ -34,6 +34,7 @@ export const PREFS_DEFAULT = Object.freeze({
   workspaceView: true,
   sidebarSearch: true,
   turnStatus: true,
+  turnNav: true,
   viewTabs: true,
   chatAnimations: true,
   caretMotion: 'typing',

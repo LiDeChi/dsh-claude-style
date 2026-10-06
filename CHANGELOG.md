@@ -2,6 +2,18 @@
 
 All notable changes to `dsh-claude-style` are documented here, newest first.
 
+## [Unreleased]
+
+[中文](#cn-unreleased) | [English](#en-unreleased)
+
+<h3 id="cn-unreleased">新增功能</h3>
+
+- **对话导航**：对话区右侧的轮次短横线改由插件绘制，间距与展开后的列表行高一致。鼠标碰到它立刻展开成一张列表，每一轮一行，写着开启这一轮的那条消息，每一行正好落在它那条短横线原来的位置上，正在读的那一轮保持原位；滚轮上下翻，点一行跳到那一轮，还没加载的早期对话先加载再跳。Alt+↑ / Alt+↓ 跳到上一轮或下一轮，连按会接着走，输入框里有草稿时不接管；跳到的那一轮开头闪一条短横线。同时装着 dsh-plugin-msg-nav 时 Alt+↑ / Alt+↓ 留给它。设置页「对话」页新增「对话导航」开关，默认开启，关闭后恢复系统原来的轮次短横线与悬停预览。
+
+<h3 id="en-unreleased">New Features</h3>
+
+- **Conversation navigator**: the turn marks at the conversation's right edge are drawn by the plugin, spaced at the height of the list they open into. Reaching them with the pointer opens that list at once, one row per turn carrying the message that started it, each row exactly where its mark was and the turn being read left in place; the wheel scrolls the list and a click jumps to the turn, loading earlier history first when it is not loaded yet. Alt+↑ / Alt+↓ jump to the previous or the next turn and keep stepping when repeated, leaving the keys alone while the composer holds a draft; the turn you land on flashes a short line over its start. With dsh-plugin-msg-nav installed too, Alt+↑ / Alt+↓ stay with it. A Conversation navigator switch on the settings page's Conversation tab, on by default; off restores the host's own turn marks and hover preview.
+
 ## [0.10.6] - 2026-10-05
 
 [中文](#cn-0.10.6) | [English](#en-0.10.6)

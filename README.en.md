@@ -77,7 +77,7 @@ The settings page appears both in the settings dialog (the "Claude Style" tab) a
 | Appearance | Brand mark, Colours, Typefaces, Mascot, Where it appears |
 | Composer | Composer restyle, Home layout, Redraw the model picker (with Quick providers under it), Redraw the permission control |
 | Sidebar | Collapse the sidebar settings area, Sidebar search, In progress / Archived view |
-| Conversation | Turn status line, Chat-area animations, Composer caret motion, Chat / Trajectory tabs |
+| Conversation | Turn status line, Conversation navigator, Chat-area animations, Composer caret motion, Chat / Trajectory tabs |
 
 Every feature that takes over part of the host's interface has its own switch; turning it off brings the host's original back at once, without a reload. The conversation area's animations — the follow, the automatic folding with its rolling door, the text fade, the file change rows and the send flight — share one Chat-area animations switch; the caret keeps its own three-way choice.
 
@@ -96,6 +96,8 @@ Every feature that takes over part of the host's interface has its own switch; t
 **A rolling door for folds**: opening or closing a row (a tool card, a thinking row, a command card) or a process group moves the height frame by frame, really pushing the content below away or pulling it back. The door only rolls the stretch the reader can see, so any length moves at the same speed, and a body holding several cards rolls as one door. It rides the Chat-area animations switch, together with the entrance fade of an expanded body.
 
 **Composer caret motion**: the composer's text caret is drawn by the plugin and glides when it moves; a question card's answer box and a queued message's inline editor are covered as well. The Conversation tab offers Every move (the default), Explicit moves and Off.
+
+**Conversation navigator**: the column of short marks at the conversation's right edge holds one per turn and follows where you are reading. Reach it with the pointer and it opens into a list: each row carries the message that started its turn and sits exactly where that turn's mark was — the turn you are reading stays in place, and the turn under the pointer is still under it. The wheel scrolls the list and a click jumps to the turn, loading earlier history first when it is not loaded yet. Alt+↑ / Alt+↓ jump to the previous or the next turn, and held or repeated they keep stepping; while the composer holds a draft the keys stay with it. The turn you land on flashes a short line over its start. With [dsh-plugin-msg-nav](https://github.com/SherUnlocked-4869/dsh-plugin-msg-nav) installed too, Alt+↑ / Alt+↓ stay with that plugin.
 
 **Mascot**: a pixel companion stands on the composer's top edge and changes its animation with what the agent is doing (thinking, writing and calling tools, several sessions at work, subagents, waiting on you, compacting the context, finished, failed, asleep). Follow the brand shows the pixel crab under Claude and Deepy the whale under DeepSeek; either can be picked for good, or none. Where it appears keeps it to the new-conversation page, or puts it in conversations as well.
 
@@ -150,6 +152,8 @@ Keep only one theme enabled at a time. dsh ≥ 0.1.7 is required, and a restart 
 | [Contributing](CONTRIBUTING.md) | Building from `src/`, commit conventions, and the screenshot and regression tooling (in English) |
 
 ## Acknowledgements
+
+The conversation navigator's opening list, keyboard jumps and landing line follow SherUnlocked-4869's [dsh-plugin-msg-nav](https://github.com/SherUnlocked-4869/dsh-plugin-msg-nav) (MIT).
 
 The animation frames of Deepy the pixel whale come from the Deepy whale theme pack drawn by calmly-eating-bugs ([@wp3171216237](https://github.com/wp3171216237)), and ship with the plugin by the author's permission. Many thanks to the author! GIFs of all 20 animations, contributed by the author, are in [showcase/gifs/](showcase/gifs/).
 

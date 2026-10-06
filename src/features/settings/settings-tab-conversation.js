@@ -1,6 +1,7 @@
     /**
-     * The settings page's Conversation tab: the turn status line, the ported
-     * chat-area interactions and the Chat / Trajectory tab strip.
+     * The settings page's Conversation tab: the turn status line, the
+     * conversation navigator, the ported chat-area interactions and the
+     * Chat / Trajectory tab strip.
      *
      * While dsh-chat-ux is on the page the ported rows show the reader's own
      * answer with the control disabled and a line saying who owns the behaviour
@@ -44,6 +45,12 @@
             settingsCopy('turnStatusTitle', 'Turn status line'),
             settingsCopy('turnStatusDesc', 'Move the status of a running, stopped or failed turn to the end of the turn\'s work, with the elapsed time, the output tokens and what the model is doing. Off restores the host\'s turn status.'),
             controls.toggle(prefs.turnStatus, value => { write({ turnStatus: value }) }),
+          ),
+          controls.row(
+            'turnNav',
+            settingsCopy('turnNavTitle', 'Conversation navigator'),
+            settingsCopy('turnNavDesc', 'Rest the pointer on the turn marks at the conversation\'s right edge and they open into a list of every turn, one line each with the message that started it; the wheel scrolls the list and a click jumps to that turn. Alt+↑ and Alt+↓ jump to the previous or the next turn, and the turn you land on is marked with a short line. Off restores the host\'s turn marks.'),
+            controls.toggle(prefs.turnNav, value => { write({ turnNav: value }) }),
           ),
           controls.row(
             'chatAnimations',

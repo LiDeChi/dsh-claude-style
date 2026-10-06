@@ -1,6 +1,6 @@
     /**
-     * The chat area's host contract, as the ported chat interactions read it
-     * (docs/architecture.md D32).
+     * The chat area's host contract, as the ported chat interactions
+     * (docs/architecture.md D32) and the conversation navigator (D34) read it.
      *
      * Everything here is an attribute or selector the host itself writes. Its
      * class names carry a build-time hash and change with every release, so the
@@ -69,3 +69,27 @@
     const PROCESS_CONTENT_SELECTOR = '[data-step-process-content]'
     /** On a process group's root while this tier does not cap the body (detailed, fully expanded). */
     const PROCESS_EXPANDED_MODE_ATTRIBUTE = 'data-group-expanded-mode'
+    /** On every chat row: the turn the row belongs to. */
+    const CHAT_TURN_ATTRIBUTE = 'data-chat-turn'
+    /**
+     * The turn rail (ui-chat's TurnNavigator): a nav at the conversation's
+     * right edge with one mark per turn, absent below two turns and hidden
+     * when the conversation is narrow. It is the one nav in the chat frame.
+     */
+    const TURN_RAIL_SELECTOR = `${CONVERSATION_SCROLL_SELECTOR} nav[class*="_frame"]`
+    /** The rail's own scroller, its first child: the marks scroll inside it. */
+    const TURN_RAIL_SCROLLER_SELECTOR = ':scope > [class*="_scroller"]'
+    /**
+     * One mark: a button carrying its position in the rail's list, not its
+     * turn number. The rail renders only the marks near its scroll position.
+     */
+    const TURN_RAIL_MARK_SELECTOR = 'button[data-index]'
+    /** The mark of the turn at the reading position. */
+    const TURN_RAIL_CURRENT_SELECTOR = 'button[data-index][aria-current="true"]'
+    /**
+     * The rail's fixed pitch and its inset at each end (TurnNavigator's
+     * TURN_SPACING_PX and RAIL_INSET_PX): its scroller's content is
+     * `count × pitch + 2 × (inset − pitch / 2)` pixels tall.
+     */
+    const TURN_RAIL_PITCH = 10
+    const TURN_RAIL_INSET = 6

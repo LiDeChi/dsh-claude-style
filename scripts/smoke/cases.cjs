@@ -569,6 +569,40 @@ const CASES = {
       !!sw.allOn && keys.every((key) => sw.allOn[key] > 0), JSON.stringify(sw.allOn))
     commonChecks(r)
   },
+  'turn-nav'(r) {
+    check('apply() completes', r.applyError === null, r.applyError)
+    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    const nav = r.turnNav || {}
+    const rail = nav.rail || {}
+    const open = nav.open || {}
+    const keys = nav.keys || {}
+    check('the skin\'s rail stands in the host rail\'s slot, one mark per turn, the host\'s rail hidden but laid out',
+      rail.hostHidden === 'hidden' && rail.inSlot === true && rail.marks === 5 && rail.current === 4 &&
+        JSON.stringify(rail.unloaded) === '[true,true,true,false,false]',
+      JSON.stringify(rail))
+    check('the pointer reaching the rail opens the card at once, over it, and the rail\'s marks step back',
+      nav.openAtOnce === 'true' && open.open === 'true' && open.railMarked === true && open.marksFaded === '0', JSON.stringify({ openAtOnce: nav.openAtOnce, open }))
+    check('every turn of the outline is a row, the loaded prompt wins, a turn without a prompt reads in the host\'s words',
+      JSON.stringify(open.rows) === JSON.stringify(['first question', 'Turn 2', 'third question', 'fourth question, as loaded', 'fifth question']) &&
+        (open.labels || []).every((label, i) => label === `Jump to turn ${i + 1}`),
+      JSON.stringify({ rows: open.rows, labels: open.labels }))
+    check('the row of the turn being read is marked and sits exactly on its mark, dash on dash', open.current === '4' && open.rowGap === 0 && open.dashGap === 0,
+      JSON.stringify({ current: open.current, rowGap: open.rowGap, dashGap: open.dashGap }))
+    check('a row press presses the host\'s mark for that turn and lines the landed turn\'s first row',
+      JSON.stringify(nav.rowPress) === '[3]' && nav.rowLanding === 'fourth question', JSON.stringify({ press: nav.rowPress, landing: nav.rowLanding }))
+    check('the pointer leaving closes the card and gives the rail its marks back',
+      !!nav.closed && nav.closed.open === 'false' && nav.closed.railMarked === false, JSON.stringify(nav.closed))
+    check('Alt+↑ jumps one turn up from the reading position, and again on from the turn it went to',
+      keys.up === true && keys.upAgain === true && JSON.stringify(keys.presses) === '[3,2]' && keys.landing === 'fourth question',
+      JSON.stringify(keys))
+    check('Shift+Alt+↑, a bare ↑ and an arrow in a field holding a draft stay with the page',
+      keys.shifted === false && keys.bare === false && keys.draft === false, JSON.stringify(keys))
+    check('switching it off hands the host its rail back; on stands the skin\'s in again, live',
+      !!nav.switchedOff && nav.switchedOff.rail === 0 && nav.switchedOff.hostReplaced === false && nav.switchedOff.hostShown === 'visible' &&
+        !!nav.switchedOn && nav.switchedOn.rail === 1 && nav.switchedOn.hostReplaced === true,
+      JSON.stringify({ off: nav.switchedOff, on: nav.switchedOn }))
+    commonChecks(r)
+  },
   'host-palette'(r) {
     check('apply() completes', r.applyError === null, r.applyError)
     check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
@@ -610,7 +644,7 @@ const CASES = {
       appearance: ['brand', 'palette', 'typeface', 'mascot', 'mascotScope'],
       composer: ['composerScope', 'homeLayout', 'modelPicker', 'quickProviders', 'permissionsControl'],
       sidebar: ['collapseFooter', 'sidebarSearch', 'workspaceView'],
-      conversation: ['turnStatus', 'chatAnimations', 'caretMotion', 'viewTabs'],
+      conversation: ['turnStatus', 'turnNav', 'chatAnimations', 'caretMotion', 'viewTabs'],
     }
     const pages = settings.pages || {}
     for (const tab of Object.keys(expected)) {

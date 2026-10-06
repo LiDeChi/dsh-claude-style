@@ -278,6 +278,7 @@
       workspaceView: true,
       sidebarSearch: true,
       turnStatus: true,
+      turnNav: true,
       viewTabs: true,
       chatAnimations: true,
     }
