@@ -526,6 +526,15 @@
       var statsBlock = document.querySelector('.dsh-claude-context-stats')
       var statsPanel = statsBlock === null ? null : statsBlock.closest('[role="dialog"]')
       r.context.opened = statsPanel !== null
+      // Another plugin's popover is on the page, holding a `dl` of its own, and
+      // it carries what a generation before this one left on it. The block is
+      // the host's panel's, and none of that is left on the popover.
+      r.context.panelId = statsPanel === null ? null : statsPanel.id
+      r.context.strayBlockGone = document.getElementById('stray-context-block') === null
+      var foreignPopover = document.getElementById('foreign-popover')
+      r.context.foreignUnmarked = foreignPopover !== null &&
+        !foreignPopover.hasAttribute('data-dsh-claude-context-panel') &&
+        !foreignPopover.hasAttribute('data-dsh-claude-context-aligned')
       r.context.expanded = statsMeter === null ? null : statsMeter.querySelector('button').getAttribute('aria-expanded')
       r.context.hostRows = statsPanel === null ? 0 : statsPanel.querySelectorAll('dl dt').length
       // The panel is the host's and it places from the anchor's left edge; the

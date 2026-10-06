@@ -190,6 +190,9 @@ const CASES = {
       JSON.stringify({ hidden: r.statsHidden, cards: r.statsStrayCards }))
     check('the host\'s panel takes the skin\'s own entrance, stamped by the feature',
       r.context.panelStamped === true, JSON.stringify(r.context.panelStamped))
+    check('another plugin\'s popover is not taken for the host\'s panel, and the marks a previous generation left on it are cleared',
+      r.context.panelId === 'context-panel' && r.context.strayBlockGone === true && r.context.foreignUnmarked === true,
+      JSON.stringify({ panel: r.context.panelId, strayGone: r.context.strayBlockGone, foreignUnmarked: r.context.foreignUnmarked }))
     check('with no projection frame yet the block holds the numbers\' place under the real headings',
       same(r.context.skeletonSections, ['Session statistics', 'Token usage']) &&
         r.context.skeletonRows === 8 && r.context.skeletonItemHeight === 37,
@@ -316,6 +319,9 @@ const CASES = {
     check('the compact row carries no trigger of its own; the meter still opens the panel',
       r.context.panelStamped === true && r.context.opened === true && r.context.expanded === 'true',
       JSON.stringify({ stamped: r.context.panelStamped, opened: r.context.opened, expanded: r.context.expanded }))
+    check('another plugin\'s popover is not taken for the host\'s panel, and the marks a previous generation left on it are cleared',
+      r.context.panelId === 'context-panel' && r.context.strayBlockGone === true && r.context.foreignUnmarked === true,
+      JSON.stringify({ panel: r.context.panelId, strayGone: r.context.strayBlockGone, foreignUnmarked: r.context.foreignUnmarked }))
     check('with no projection frame yet the place is the compact one: four items in a 2x2 grid, no section headings',
       same(r.context.skeletonSections, []) &&
         r.context.skeletonRows === 4 && r.context.skeletonItemHeight === 37,
