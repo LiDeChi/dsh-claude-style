@@ -100,6 +100,7 @@ const FRAGMENTS = [
   'shared/chat-dom.js',
   'shared/scroll-ease.js',
   'shared/peer-plugin.js',
+  'shared/visual-owner.js',
   'features/selection/selection.js',
   'features/composer/composer.js',
   'features/copy/copy.js',

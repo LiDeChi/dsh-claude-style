@@ -2,6 +2,17 @@
 
 All notable changes to `dsh-claude-style` are documented here, newest first.
 
+## [Unreleased]
+
+[中文](#cn-unreleased) | [English](#en-unreleased)
+
+<h3 id="cn-unreleased">新增功能</h3>
+
+- **与皮肤中心交接**：DSH 皮肤中心把本主题列为可选皮肤。选中它即把整页交给本插件，换选其他皮肤、官方默认或壁纸在跑时页面自动交还，无需刷新。判定读皮肤中心注入服务端 HTML 的 `html[data-dsh-skin]` 与壁纸插件的 `body[data-we-wallpaper]`，两者任一存在即让路：让路期间不挂样式表、不安装功能、不占用任何文档属性，只保留设置页与偏好。构建在 `body` 上盖 `data-dsh-claude-style-handoff` 标记自己支持让路。
+
+<h3 id="en-unreleased">New Features</h3>
+
+- **Skin center handoff**: the DSH Skin Center offers this theme as a selectable skin. Selecting it hands the whole page to this plugin; selecting another skin, the official default, or a running wallpaper takes the page back without a reload. The verdict reads the `html[data-dsh-skin]` attribute the Skin Center injects into the served document and the wallpaper plugin's `body[data-we-wallpaper]`; either one means yielding, and while yielded the theme mounts no stylesheet, installs no feature and claims no document attribute, keeping only its settings page and preferences. A build stamps `data-dsh-claude-style-handoff` on `body` to say it can do this.
 ## [0.11.0] - 2026-10-06
 
 [中文](#cn-0.11.0) | [English](#en-0.11.0)
