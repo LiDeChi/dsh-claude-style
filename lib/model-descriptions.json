@@ -836,6 +836,14 @@
       "zh": "把进行中、已停止和失败轮次的状态移到这一轮内容的末尾，显示用时、输出 token 数和当前动作。关闭后恢复系统的轮次状态。",
       "en": "Move the status of a running, stopped or failed turn to the end of the turn's work, with the elapsed time, the output tokens and what the model is doing. Off restores the host's turn status."
     },
+    "turnNavTitle": {
+      "zh": "对话导航",
+      "en": "Conversation navigator"
+    },
+    "turnNavDesc": {
+      "zh": "鼠标停在对话区右侧那列轮次短横线上时，它会展开成一张列表，每一轮一行，写着开启这一轮的那条消息；滚轮可以上下翻，点一行就跳到那一轮。Alt+↑ 和 Alt+↓ 跳到上一轮或下一轮，跳到的那一轮开头会闪一条短横线。关闭后恢复系统原来的轮次短横线。",
+      "en": "Rest the pointer on the turn marks at the conversation's right edge and they open into a list of every turn, one line each with the message that started it; the wheel scrolls the list and a click jumps to that turn. Alt+↑ and Alt+↓ jump to the previous or the next turn, and the turn you land on is marked with a short line. Off restores the host's turn marks."
+    },
     "chatAnimationsTitle": {
       "zh": "聊天区动画效果",
       "en": "Chat-area animations"
