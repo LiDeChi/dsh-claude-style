@@ -8,14 +8,35 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 <h3 id="cn-unreleased">新增功能</h3>
 
+- **对话导航**：对话区右侧的轮次短横线改由插件绘制，间距与展开后的列表行高一致。鼠标碰到它立刻展开成一张列表，每一轮一行，写着开启这一轮的那条消息，每一行正好落在它那条短横线原来的位置上，正在读的那一轮保持原位；滚轮上下翻，点一行页面滑到那一轮（只滑最后一小段，约三分之一秒），还没加载的早期对话先加载再跳；指针停在列表上时，对话区顶部的对话 / 轨迹标签照常显示。Alt+↑ / Alt+↓ 跳到上一轮或下一轮，连按会接着走，输入框里有草稿时不接管；跳到的那一轮开头闪一条短横线。同时装着 dsh-plugin-msg-nav 时 Alt+↑ / Alt+↓ 留给它。设置页「对话」页新增「对话导航」开关，默认开启，关闭后恢复系统原来的轮次短横线与悬停预览。
+
+### 体验优化
+
+- **聊天区跟随的滑动更平稳**：流式输出时每来一行，画面滑完都会多跳一下（约 1.7 像素）；代码块这样的大块内容到达时，滚动一下子就冲到最快。现在滑动从静止平稳起步、停下时不再跳动；最新一行被压在屏幕下缘的时间按回放测算少了约四分之一到三分之一（一行一行输出时 533 → 400 毫秒，快速输出时 1350 → 1000 毫秒）。超过 1200 像素的距离不再一帧跳过去，而是先到离目标 1200 像素处，再滑完剩下的一段。
+- **聊天气泡动效落地更平滑**：飞行结束的那一刻，气泡里的文字会瞬间变深、像换了字重。现在落地时真实气泡在飞行的气泡下面先显示出来，飞行的那份在 0.16 秒内淡出，文字是逐渐变清晰的；上浮的终点也正好落在气泡上，不再差出一两个像素。
+
 ### 问题修复
 
 - **切换会话与新建会话不再卡住**：装着本插件时，点开另一条会话或新建会话，页面会僵住一到两秒，长对话里尤其明显。原因是选中文字的配色作用于整个页面，浏览器每一轮样式重算都要为页面上每个元素算一次选中样式；现在这套配色只作用于对话正文与输入框里承载文字的块级元素（段落、列表、标题、引用、代码）。实测单次切换的样式重算从 0.9–2.4 秒降到 0.11–0.51 秒（未装插件时约 0.05 秒）；侧栏、设置页与弹层里的选中配色回到宿主默认。
-- **对话导航**：对话区右侧的轮次短横线改由插件绘制，间距与展开后的列表行高一致。鼠标碰到它立刻展开成一张列表，每一轮一行，写着开启这一轮的那条消息，每一行正好落在它那条短横线原来的位置上，正在读的那一轮保持原位；滚轮上下翻，点一行跳到那一轮，还没加载的早期对话先加载再跳。Alt+↑ / Alt+↓ 跳到上一轮或下一轮，连按会接着走，输入框里有草稿时不接管；跳到的那一轮开头闪一条短横线。同时装着 dsh-plugin-msg-nav 时 Alt+↑ / Alt+↓ 留给它。设置页「对话」页新增「对话导航」开关，默认开启，关闭后恢复系统原来的轮次短横线与悬停预览。
+- **装卸或更新别的插件之后，本插件的界面不再失去样式**：此前别的插件加载、重新加载或更新之后，本插件的整个界面有时会变回宿主原本的样子，插件的标记却还留在页面上。现在无论别的插件如何装卸，本插件的外观都保持不变。
+- **同时装着的别的插件不再丢失样式**：一个插件自己挂上去、没有归属标记的样式表，会被下一个加载的插件记在自己名下，并在那个插件重新加载时被删掉——同时装着的表情包插件就曾这样整份失去样式，只能刷新页面恢复。现在这类样式表在本插件看到它的当时就被标记为无主，之后任何插件的加载、重新加载与更新都不再碰它。
+- **小鲸鱼帧图顶端的灰线消失**：Deepy 演某几段动画时，帧图最上方有时会闪出一条约 1 像素高的灰线，站在哪里、窗口多大不同就时有时无。现在任何站位、任何一段动画都不再出现，小鲸鱼的样貌与动作不变。
 
 <h3 id="en-unreleased">New Features</h3>
 
-- **Conversation navigator**: the turn marks at the conversation's right edge are drawn by the plugin, spaced at the height of the list they open into. Reaching them with the pointer opens that list at once, one row per turn carrying the message that started it, each row exactly where its mark was and the turn being read left in place; the wheel scrolls the list and a click jumps to the turn, loading earlier history first when it is not loaded yet. Alt+↑ / Alt+↓ jump to the previous or the next turn and keep stepping when repeated, leaving the keys alone while the composer holds a draft; the turn you land on flashes a short line over its start. With dsh-plugin-msg-nav installed too, Alt+↑ / Alt+↓ stay with it. A Conversation navigator switch on the settings page's Conversation tab, on by default; off restores the host's own turn marks and hover preview.
+- **Conversation navigator**: the turn marks at the conversation's right edge are drawn by the plugin, spaced at the height of the list they open into. Reaching them with the pointer opens that list at once, one row per turn carrying the message that started it, each row exactly where its mark was and the turn being read left in place; the wheel scrolls the list and a click glides the page to the turn (only the last stretch, about a third of a second), loading earlier history first when it is not loaded yet; the Chat / Trajectory tabs at the top of the conversation stay up while the pointer is on the list. Alt+↑ / Alt+↓ jump to the previous or the next turn and keep stepping when repeated, leaving the keys alone while the composer holds a draft; the turn you land on flashes a short line over its start. With dsh-plugin-msg-nav installed too, Alt+↑ / Alt+↓ stay with it. A Conversation navigator switch on the settings page's Conversation tab, on by default; off restores the host's own turn marks and hover preview.
+
+### Improvements
+
+- **The chat-area follow glides more evenly**: every streamed line ended its glide with an extra hop of about 1.7px, and a large block such as a code block set the scroll off at full speed at once. The glide now builds up from rest and comes to a stop without a hop, and the newest line spends a quarter to a third less time under the bottom edge on a replayed stream (line-by-line output 533 → 400 ms, fast output 1350 → 1000 ms). A distance past 1200px is no longer covered in one frame: the position goes to 1200px short of the target and glides the rest.
+- **The send flight lands more smoothly**: the moment the flight ended, the bubble's words darkened at once, as if their weight had changed. The real bubble now shows underneath the flying one as it lands, and the flying copy fades out over 0.16 s, so the words sharpen into place; the rise also ends exactly on the bubble rather than a pixel or two past it.
+
+### Bug Fixes
+
+- **Switching and starting sessions no longer stalls**: with the plugin installed, opening another conversation or starting a new one froze the page for a second or two, worst in long conversations. The selection colours applied to the whole document, so every style pass had the browser compute selection styling for every element on the page; they now apply to the blocks that carry text in the conversation and in the composer — paragraphs, lists, headings, quotes, code. Measured on one switch, style recalculation went from 0.9–2.4 s to 0.11–0.51 s (about 0.05 s with the plugin off); selection colours in the sidebar, settings and popovers go back to the host's own.
+- **Loading, reloading or updating another plugin no longer strips this plugin's styling**: after another plugin was loaded, reloaded or updated, the whole interface could fall back to the host's own look with this plugin's markers still on the page. The plugin's appearance now survives any other plugin being loaded, reloaded or removed.
+- **Another plugin installed beside this one no longer loses its styling**: a stylesheet a plugin mounts without an ownership tag is taken into whichever package loads next and deleted when that package reloads — the meme plugin lost its entire styling that way, and only a page refresh brought it back. Such a sheet is now marked as unowned the moment this plugin sees it, and no plugin's load, reload or update touches it afterwards.
+- **A grey line no longer flashes along the top of Deepy's frames**: while some animations played, a line about one pixel tall could appear at the top of the frame and vanish again, depending on where the whale stood and how large the window was. It no longer appears in any position or animation, and the whale looks and animates exactly as before.
 
 ## [0.10.6] - 2026-10-05
 
@@ -24,9 +45,6 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 <h3 id="cn-0.10.6">新增功能</h3>
 
 - **聊天气泡动效**：提交消息的那一下，输入卡片原样浮起一份，一边飞一边把多余的收掉——工具栏左右两组贴着最近的角缩小、淡出，描边与阴影跟着形状收回，草稿里的字跟着变窄的形状一行一行重新排——落地时正好就是那条真实气泡；真实气泡在飞行期间藏着，落定后原位出现。设置页的「动画效果」选了「减弱」、两端不在同一屏、或起点读不到（快捷键与程序化提交）时都不飞；页面切到后台时另有定时器兜底，藏起来的消息一定会放出来。与对话区其他动画一起合并在设置页「对话」页的「聊天区动画效果」开关里，默认开启。
-### Bug Fixes
-
-- **Switching and starting sessions no longer stalls**: with the plugin installed, opening another conversation or starting a new one froze the page for a second or two, worst in long conversations. The selection colours applied to the whole document, so every style pass had the browser compute selection styling for every element on the page; they now apply to the blocks that carry text in the conversation and in the composer — paragraphs, lists, headings, quotes, code. Measured on one switch, style recalculation went from 0.9–2.4 s to 0.11–0.51 s (about 0.05 s with the plugin off); selection colours in the sidebar, settings and popovers go back to the host's own.
 - **文件变更行**：从 run_code 程序里派发出去的写入与编辑按直接调用的样子显示——行尾带 `+n -m`，展开是改动卡片，路径可点开文件；失败与中断的行保留裁决信息、不再给路径链接，状态另有给读屏的说明。改动内容无法从参数推出的调用保留系统的输入 / 输出卡片。与对话区其他动画一起合并在设置页「对话」页的「聊天区动画效果」开关里，默认开启。
 - **新到的文字先淡后实**：流式回答里新出现的字符从两成不透明度开始，约 0.12 秒内坐实到它自己的颜色，并按到达次序略作错开，读起来像文字正被写下。整段一次到达的内容（切会话、翻历史）、一次几千字的突发、以及刚被折叠重排过的文字都保持本色；主线程忙不过来时它自己让路，闲下来再继续。与对话区其他动画一起合并在设置页「对话」页的「聊天区动画效果」开关里，默认开启。
 - **折叠不再瞬间切换，展开体像卷帘门一样拉下来**：读者点开或收起一行（工具卡片、思考行、命令卡片）或一个过程组时，高度逐帧变化，下方内容被真的推开或收回。门只走读者看得见的那一段，两千像素的展开体和两万像素的展开体在眼前的速度一样；展开体里是多张卡片时（代码卡片加输出卡片）整扇门一起走，不会先挤没能缩的那一张。主线程卡住时门停一下再接着走，不会跳变；读者自己滚动离开底部之后，收尾不会把他拽回去。它与其他对话区动画一起挂在「聊天区动画效果」这个开关上（默认开启），关掉后读者点开收起恢复系统原来的瞬开瞬收。
