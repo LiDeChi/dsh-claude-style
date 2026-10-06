@@ -62,14 +62,19 @@ body[data-dsh-claude-style] .dsh-claude-deepy-sprite {
 }
 
 /* The strip carries the whole sheet and is translated frame to frame: a
-   transform composites, where a background-position would repaint. */
+   transform composites, where a background-position would repaint. Its box is
+   the rebuilt vector's own box, so `--dsh-claude-deepy-cell-w` is one frame
+   cell — the crop box plus the transparent margin each frame keeps there
+   (DEEPY_GUTTER; without that margin the downscale that draws the vector
+   samples the frame above's shadow along the cell's edge) — and
+   `--dsh-claude-deepy-strip-h` the stacked height of all its cell rows. */
 body[data-dsh-claude-style] .dsh-claude-deepy-strip {
   display: block;
-  width: calc(var(--dsh-claude-deepy-w, 0) * 16px);
+  width: calc(var(--dsh-claude-deepy-cell-w, 0) * 16px);
   height: calc(var(--dsh-claude-deepy-strip-h, 0) * 2px);
   background-image: var(--dsh-claude-deepy-sheet, none);
   background-repeat: no-repeat;
-  background-size: calc(var(--dsh-claude-deepy-w, 0) * 16px) auto;
+  background-size: calc(var(--dsh-claude-deepy-cell-w, 0) * 16px) auto;
 }
 
 /* The resting whale's body, head to tail: columns 12–44, rows 30–48. */

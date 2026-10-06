@@ -15,13 +15,17 @@
      *
      * @param onReady - `onReady(key)`: a sheet became playable; the caller
      *     reads the state again and plays what it asks for.
+     * @param gutter - the transparent margin each frame keeps on all four
+     *     sides in the rebuilt vector (DEEPY_GUTTER).
      * @returns `{ ready, failed, url, dispose }`.
      */
-    function createMascotWhaleSheets(onReady) {
+    function createMascotWhaleSheets(onReady, gutter) {
       /** Cache API store for the generated SVG texts; entries key on the sheet's content stamp. */
       const SHEET_CACHE = 'dsh-claude-style-deepy'
       /** Bumped when the conversion below changes: cached vectors key on it too. */
-      const CONVERTER_VERSION = 1
+      const CONVERTER_VERSION = 2
+      /** The sheets' own resolution: five pixels to a logical pixel (D24). */
+      const SHEET_SCALE = 5
       /** The address each loaded sheet plays from. */
       const sheetUrls = new Map()
       /** Blob addresses handed out, revoked on dispose. */
@@ -76,16 +80,41 @@
       /**
        * Rebuild a decoded sheet as SVG text: one path per color, each made of
        * a row's runs of that color. Transparent pixels are simply absent.
+       *
+       * Every frame cell is laid out with the transparent margin `gutter` on
+       * all four sides — the layout the sprite's geometry expects, and what
+       * keeps the browser's downscale from sampling across a cell's edge
+       * (DEEPY_GUTTER).
+       *
+       * @param image - the decoded sheet.
+       * @param gutter - the margin in logical pixels.
+       * @param box - the frame's crop box `[x, y, width, height]` in logical pixels.
        */
-      function vectorizeSheet(image) {
-        const width = image.naturalWidth
-        const height = image.naturalHeight
+      function vectorizeSheet(image, gutter, box) {
+        const scale = SHEET_SCALE
+        const innerWidth = box[2] * scale
+        const innerHeight = box[3] * scale
+        const margin = gutter * scale
+        const cellWidth = innerWidth + margin * 2
+        const cellHeight = innerHeight + margin * 2
+        const columns = Math.round(image.naturalWidth / innerWidth)
+        const rows = Math.round(image.naturalHeight / innerHeight)
+        const width = columns * cellWidth
+        const height = rows * cellHeight
         const canvas = document.createElement('canvas')
         canvas.width = width
         canvas.height = height
-        const pen = canvas.getContext('2d')
-        pen.drawImage(image, 0, 0)
-        const data = pen.getImageData(0, 0, width, height).data
+        const layout = canvas.getContext('2d')
+        for (let column = 0; column < columns; column++) {
+          for (let row = 0; row < rows; row++) {
+            layout.drawImage(
+              image,
+              column * innerWidth, row * innerHeight, innerWidth, innerHeight,
+              column * cellWidth + margin, row * cellHeight + margin, innerWidth, innerHeight
+            )
+          }
+        }
+        const data = layout.getImageData(0, 0, width, height).data
         /** Color string → the path chunks of its runs so far. */
         const paths = new Map()
         for (let y = 0; y < height; y++) {
@@ -140,7 +169,7 @@
         image.src = url
         await image.decode()
         try {
-          const svg = vectorizeSheet(image)
+          const svg = vectorizeSheet(image, gutter, DEEPY_SHEETS[key].box)
           sheetCacheWrite(key, svg)
           return sheetObjectUrl(svg)
         } catch (error) {

@@ -37,11 +37,13 @@
      *
      * @param ctx - client context.
      * @param ui - shared handle table (`ui.composer`).
-     * @param character - `{ name, sheets, frameMs, extras, createSheets }`:
+     * @param character - `{ name, sheets, frameMs, gutter, extras, createSheets }`:
      *     `name` prefixes the class names, the custom properties and the anchor
      *     mark (`dsh-claude-<name>`); `sheets` is the animation table
      *     (`{ frames, box, still }` per key, every key the signals, moments,
-     *     sleep, extras and reactions name); `extras` the idle extras;
+     *     sleep, extras and reactions name); `gutter` the transparent margin
+     *     each frame cell carries in the character's sheets, in logical pixels
+     *     (absent when they carry none); `extras` the idle extras;
      *     `createSheets(onReady)` returns `{ ready, failed, paint, dispose }`.
      * @returns `{ sync, release, onActivity, dispose }`.
      */
@@ -66,6 +68,8 @@
       /** How far a press travels before it lifts the mascot. */
       const LIFT_PX = 4
       const PREFIX = `dsh-claude-${character.name}`
+      /** The transparent margin each frame cell carries in this character's sheets (DEEPY_GUTTER), in logical pixels. */
+      const GUTTER = character.gutter ?? 0
       /** A marker on the host element the mascot stands on, which makes it the mascot's containing block. */
       const ANCHOR_ATTR = `data-${PREFIX}-anchor`
       /** The stamp carrying the anchor mark across re-renders. */
@@ -271,9 +275,15 @@
         return motionReduced() && stage.reaction === null
       }
 
+      /** One frame cell of a sheet: the crop box plus the transparent margin around it. */
+      function cellSize(sheet) {
+        return [sheet.box[2] + GUTTER * 2, sheet.box[3] + GUTTER * 2]
+      }
+
       /** The strip translation that puts one frame of a sheet in the window. */
       function frameOffset(sheet, frame) {
-        return `translate(${-(frame % 8) * sheet.box[2] * 2}px, ${-Math.floor(frame / 8) * sheet.box[3] * 2}px)`
+        const [cellWidth, cellHeight] = cellSize(sheet)
+        return `translate(${-((frame % 8) * cellWidth + GUTTER) * 2}px, ${-(Math.floor(frame / 8) * cellHeight + GUTTER) * 2}px)`
       }
 
       /**
@@ -365,6 +375,7 @@
 
       function show(next, now) {
         const sheet = SHEETS[next.key]
+        const [cellWidth, cellHeight] = cellSize(sheet)
         stage.current = { key: next.key, mode: next.mode, priority: next.priority, start: now }
         if (stage.reaction !== null && stage.reaction.key === next.key) stage.reaction.fresh = false
         const style = root.style
@@ -373,7 +384,8 @@
         style.setProperty(`--${PREFIX}-y`, String(sheet.box[1]))
         style.setProperty(`--${PREFIX}-w`, String(sheet.box[2]))
         style.setProperty(`--${PREFIX}-h`, String(sheet.box[3]))
-        style.setProperty(`--${PREFIX}-strip-h`, String(sheet.box[3] * Math.ceil(sheet.frames / 8)))
+        style.setProperty(`--${PREFIX}-cell-w`, String(cellWidth))
+        style.setProperty(`--${PREFIX}-strip-h`, String(cellHeight * Math.ceil(sheet.frames / 8)))
         setAttributeIfChanged(root, 'data-animation', next.key)
         play(next.key, next.mode, now)
         if (!root.hasAttribute('data-ready')) root.setAttribute('data-ready', '')

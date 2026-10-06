@@ -17,9 +17,10 @@
         name: 'deepy',
         sheets: DEEPY_SHEETS,
         frameMs: DEEPY_FRAME_MS,
+        gutter: DEEPY_GUTTER,
         extras: ['idle-look', 'idle-spout'],
         createSheets(onReady) {
-          const sheets = createMascotWhaleSheets(onReady)
+          const sheets = createMascotWhaleSheets(onReady, DEEPY_GUTTER)
           return {
             ready: sheets.ready,
             failed: sheets.failed,

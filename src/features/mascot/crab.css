@@ -56,13 +56,16 @@ body[data-dsh-claude-style] .dsh-claude-crab-sprite {
 }
 
 /* The strip carries the whole sheet and is translated frame to frame: a
-   transform composites, where a background-position would repaint. The art
+   transform composites, where a background-position would repaint. Its box is
+   the sheet's own box — `--dsh-claude-crab-cell-w` is one frame cell, which
+   is the crop box because these sheets carry no margin (the art is built at
+   one pixel a cell and inlined, so there is no rebuild to add one). The art
    is one pixel a cell, scaled to 2px: whole multiples, so `pixelated` keeps
    every cell square. */
 body[data-dsh-claude-style] .dsh-claude-crab-strip {
   position: relative;
   display: block;
-  width: calc(var(--dsh-claude-crab-w, 0) * 16px);
+  width: calc(var(--dsh-claude-crab-cell-w, 0) * 16px);
   height: calc(var(--dsh-claude-crab-strip-h, 0) * 2px);
   background-image: var(--dsh-claude-crab-sheet, none);
   background-repeat: no-repeat;
