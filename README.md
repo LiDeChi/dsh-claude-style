@@ -146,7 +146,7 @@ dsh plugin --profile web add dsh-claude-style                  # npm 包（推�
 | 文档 | 说明 |
 | --- | --- |
 | [设计令牌](docs/STYLE.md) | 调色板、字体、形状，源码结构与宿主选择器纪律（英文） |
-| [架构决策](docs/architecture.md) | 单文件拼接、单一调度器、特性契约、账号表面等决策与权衡 |
+| [架构决策](docs/decisions/README.md) | 每条决策一个文件：构建与源码、宿主边界、运行时与各个功能的取舍，以及正在进行的架构迁移 |
 | [更新日志](CHANGELOG.md) | 版本历史 |
 | [贡献指南](CONTRIBUTING.md) | 如何从 `src/` 构建、提交规范与截图/回归工具（英文） |
 

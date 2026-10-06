@@ -597,6 +597,6 @@ plays its reaction.
 - A surface's stylesheet sits beside its feature under `src/features/<feature>/`;
   the look no single feature owns is in `src/theme/`, and the parts several
   features share (the popover card and rows, the sliding highlight) are in
-  `src/shared/`. The source layout, the host selector discipline and the checks
-  the build runs are in `docs/architecture.md` (D1, D3, D9, D18, D19).
+  `src/shared/`. The host selector discipline and the style checks the build
+  runs are in `docs/decisions/` (D3, D4, D9, D19, D30, D37).
 

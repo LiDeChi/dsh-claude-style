@@ -147,7 +147,7 @@ Keep only one theme enabled at a time. dsh ≥ 0.1.7 is required, and a restart 
 | Document | Contents |
 | --- | --- |
 | [Design tokens](docs/STYLE.md) | Palette, typography, shapes, source layout, and host-selector discipline (in English) |
-| [Architecture decisions](docs/architecture.md) | Single-file bundling, the single-scheduler rule, the feature contract, the account surface, and their trade-offs |
+| [Architecture decisions](docs/decisions/README.md) | One file per decision: build and source, the host boundary, the runtime and each feature's trade-offs, and the architecture migration in progress (in Chinese) |
 | [Changelog](CHANGELOG.md) | Version history |
 | [Contributing](CONTRIBUTING.md) | Building from `src/`, commit conventions, and the screenshot and regression tooling (in English) |
 

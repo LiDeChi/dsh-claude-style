@@ -36,7 +36,7 @@
     "skin.json",
     "cordis.patch.yml",
     "docs/STYLE.md",
-    "docs/architecture.md",
+    "docs/decisions",
     "CHANGELOG.md",
     "README.md",
     "README.en.md",
