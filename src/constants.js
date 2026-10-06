@@ -313,6 +313,20 @@
      */
     const DEEPY_ROUTE = '/dsh-claude-style/deepy/'
     const DEEPY_FRAME_MS = 50
+    /**
+     * The transparent margin, in logical pixels, that every frame keeps on all
+     * four sides when a sheet is rebuilt as a vector (whale-sheets.js, D24).
+     *
+     * The sheets stack their frames edge to edge, and the browser draws the
+     * rebuilt vector scaled down — from five pixels a logical pixel in the
+     * sheet to two on the sprite. That downscale samples a little way past a
+     * frame's edge, and the pixel it finds there is the bottom row of the
+     * frame above: the soft tail of the whale's shadow. On the page it reads
+     * as a one-device-pixel grey line across the top of the frame. A margin
+     * wide enough for that reach leaves the sampling nothing but transparency,
+     * and a whole logical pixel keeps every strip offset a whole CSS pixel.
+     */
+    const DEEPY_GUTTER = 1
     const DEEPY_SHEETS = {
       'idle': { frames: 48, box: [12, 26, 36, 24], still: 0 },
       'idle-look': { frames: 68, box: [11, 11, 37, 39], still: 0 },
@@ -333,20 +347,6 @@
       'tickle': { frames: 48, box: [9, 17, 43, 33], still: 0 },
       'drag': { frames: 24, box: [10, 4, 41, 46], still: 0 },
     }
-    /**
-     * The transparent margin, in logical pixels, that every frame keeps on all
-     * four sides when a sheet is rebuilt as a vector (whale-sheets.js, D24).
-     *
-     * The sheets stack their frames edge to edge, and the browser draws the
-     * rebuilt vector scaled down — from five pixels a logical pixel in the
-     * sheet to two on the sprite. That downscale samples a little way past a
-     * frame's edge, and the pixel it finds there is the bottom row of the
-     * frame above: the soft tail of the whale's shadow. On the page it reads
-     * as a one-device-pixel grey line across the top of the frame. A margin
-     * wide enough for that reach leaves the sampling nothing but transparency,
-     * and a whole logical pixel keeps every strip offset a whole CSS pixel.
-     */
-    const DEEPY_GUTTER = 1
 
     /**
      * The composer crab's animations (src/features/mascot/crab.js), drawn by
