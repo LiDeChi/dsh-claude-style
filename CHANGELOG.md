@@ -2,6 +2,18 @@
 
 All notable changes to `dsh-claude-style` are documented here, newest first.
 
+## [Unreleased]
+
+[中文](#cn-unreleased) | [English](#en-unreleased)
+
+<h3 id="cn-unreleased">问题修复</h3>
+
+- **子智能体工作室的节点详情小窗不再把会话统计与 Token 用量带走**：打开工作室、点开一个子代理的节点详情小窗后，输入区上下文面板里的「会话统计」与「Token 用量」两段画到了那个小窗下面，没有底色地压在对话内容上，上下文面板只剩宿主自己的三行。现在两段仍留在上下文面板里。
+
+<h3 id="en-unreleased">Bug Fixes</h3>
+
+- **A node detail in the subagent studio no longer takes the session statistics and the token usage with it**: with the studio open and a node's detail popped up, the session statistics and the token usage sections drew under that popup with no surface of their own, over the conversation, and the composer's context panel kept only the host's three rows. Both sections stay in the context panel now.
+
 ## [0.10.6] - 2026-10-05
 
 [中文](#cn-0.10.6) | [English](#en-0.10.6)

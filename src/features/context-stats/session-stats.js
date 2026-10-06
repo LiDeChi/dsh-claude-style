@@ -53,6 +53,27 @@
       const CONTEXT_PANEL_ALIGNED_ATTR = 'data-dsh-claude-context-aligned'
       /** The viewport margin the host keeps for this panel (ui-chat's stat-dialog). */
       const CONTEXT_PANEL_MARGIN = 12
+      /**
+       * The host's own marks on its three statistics dialogs — the two session
+       * pills' and the per-turn token panel's. Their rows are a `dl` as well,
+       * so the context panel is told from them by these marks.
+       */
+      const HOST_STATS_DIALOGS = '[data-session-stats-details], [data-session-stats-usage], [data-turn-usage-details]'
+
+      // The block and the panel marks a generation before this one left on a
+      // dialog that is not the host's panel: a client hot reload drops the
+      // previous generation's disposals without running them, so they would
+      // stay on that node for good. Everything except the host's panel goes,
+      // and the pass that follows fills the panel again.
+      const hostPanel = contextPanel()
+      const keptBlock = hostPanel === null ? null : hostPanel.querySelector(`[${CONTEXT_STATS_ATTR}]`)
+      removeStrayNodes(document, `[${CONTEXT_STATS_ATTR}]`, [keptBlock])
+      const strayPanels = document.querySelectorAll(`[${CONTEXT_PANEL_ATTR}]`)
+      for (let i = 0; i < strayPanels.length; i++) {
+        if (strayPanels[i] === hostPanel) continue
+        strayPanels[i].removeAttribute(CONTEXT_PANEL_ATTR)
+        strayPanels[i].removeAttribute(CONTEXT_PANEL_ALIGNED_ATTR)
+      }
 
       /** The projection keys this page is following, and how to stop. */
       let watch = null
@@ -332,16 +353,24 @@
       }
 
       /**
-       * The host's context panel: the dialog it portals to <body>, told apart
-       * from the host's other dialogs by shape rather than by its own copy —
-       * it is the one that is not a modal and that lists its rows in a <dl>.
+       * The host's context panel: the dialog it portals to <body>.
+       *
+       * A `dl` alone does not name it. The host's three statistics dialogs
+       * carry one too, and so does a popover whose content holds one
+       * (dsh-better-sidebar's agent node detail, portaled to the same <body>).
+       * The three are excluded by the marks on them, and the panel is named by
+       * where its rows sit: the host puts the grid directly in the panel, while
+       * a popover keeps its `dl` inside the card that paints the surface. The
+       * box carrying that card holds the positioning only, and paints nothing,
+       * so a walk that stops there writes the numbers onto the page.
        */
       function contextPanel() {
         const dialogs = document.querySelectorAll('[role="dialog"]')
         for (let i = 0; i < dialogs.length; i++) {
         const dialog = dialogs[i]
         if (dialog.getAttribute('aria-modal') === 'true') continue
-        if (dialog.querySelector('dl') === null) continue
+        if (dialog.querySelector(HOST_STATS_DIALOGS) !== null) continue
+        if (dialog.querySelector(':scope > dl') === null) continue
         return dialog
         }
         return null
