@@ -103,6 +103,20 @@
     }
 
     /**
+     * One session's chat target (ui-chat's `chat` target of uiConversation):
+     * the loaded window's nodes, turns and turn navigation, as the host's own
+     * chat view reads them. Null while the conversation service is absent or
+     * the session has no binding. The host builds the target only for a
+     * subscriber or while the shell shows that session's chat view, so a bare
+     * read on the trajectory view sees nothing.
+     */
+    function findChatTarget(ctx, sessionId) {
+      const conversation = ctx.get('uiConversation')
+      if (!conversation || !ctx.get('sessions')?.binding(sessionId)) return null
+      return conversation.binding(sessionId).target('chat')
+    }
+
+    /**
      * What an open turn is doing, read off the host's chat snapshot (ui-chat's
      * `chat` target of uiConversation): its newest step's assistant output
      * while that streams — `{ kind: 'assistant', assistant, newest }`, with

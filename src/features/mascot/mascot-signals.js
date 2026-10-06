@@ -210,13 +210,13 @@
           followed = undefined
           return
         }
-        const conversation = ctx.get('uiConversation')
-        if (conversation) {
+        const target = findChatTarget(ctx, sessionId)
+        if (target !== null) {
           // The host builds the chat target only for a subscriber (or while the
           // shell shows the chat view), and its publications are the ones that
           // tell a streaming step's progress; a bare read would see nothing on
           // the trajectory view.
-          chat = conversation.binding(sessionId).target('chat')
+          chat = target
           stopChat = chat.subscribe(onChange)
         }
         adoptCompactions(feed.getSnapshot().entries)

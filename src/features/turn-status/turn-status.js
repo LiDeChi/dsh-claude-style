@@ -66,10 +66,8 @@
       }
 
       function chatSnapshot(sessionId) {
-        const conversation = ctx.get('uiConversation')
-        const sessions = ctx.get('sessions')
-        if (!conversation || !sessions || !sessions.binding(sessionId)) return null
-        return conversation.binding(sessionId).target('chat').getSnapshot()
+        const target = findChatTarget(ctx, sessionId)
+        return target === null ? null : target.getSnapshot()
       }
 
       /**
