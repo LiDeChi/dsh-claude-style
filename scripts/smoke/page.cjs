@@ -1,9 +1,9 @@
 /**
- * One case's stand-in page: the host's footer and composer markup, then the
+ * One page's stand-in markup: the host's footer and composer markup, then the
  * stand-in host (stand-in.js), the built bundle and the probe (probe.js).
  * Both page scripts are plain browser scripts; what they need from Node — the
- * case name, the markup payload, the launcher's pixel — is set on `window`
- * before them.
+ * page name, the cases this load runs, the run's tier, the markup payload, the
+ * launcher's pixel — is set on `window` before them.
  */
 'use strict'
 const fs = require('fs')
@@ -13,8 +13,8 @@ const { MARKUP, PNG_1PX } = require('./shared.cjs')
 const STAND_IN = fs.readFileSync(path.join(__dirname, 'stand-in.js'), 'utf8')
 const PROBE = fs.readFileSync(path.join(__dirname, 'probe.js'), 'utf8')
 
-/** The stand-in page for one case: host footer, host composer, then the bundle. */
-function page(name) {
+/** The stand-in page for one load: host footer, host composer, then the bundle. */
+function page(name, tier, cases) {
   // The desktop footer mirrors 0.1.7's: the account menu lives in the
   // `settings.launcher` slot inside the host's `triggerRow`, and the settings
   // button the web-style footer has is gone. Every other case keeps the
@@ -236,7 +236,7 @@ ${hostControls}
 ${chatArea}
 ${caretArea}
 ${foldArea}
-<script>window.SMOKE_CASE = ${JSON.stringify(name)}; window.SMOKE_MARKUP = ${JSON.stringify(MARKUP)}; window.SMOKE_PNG = ${JSON.stringify(PNG_1PX)}</script>
+<script>window.SMOKE_CASE = ${JSON.stringify(name)}; window.SMOKE_GROUPS = ${JSON.stringify(cases)}; window.SMOKE_TIER = ${JSON.stringify(tier)}; window.SMOKE_MARKUP = ${JSON.stringify(MARKUP)}; window.SMOKE_PNG = ${JSON.stringify(PNG_1PX)}</script>
 <script>${STAND_IN}</script>
 <script src="/client.js"></script>
 <script>${PROBE}</script>

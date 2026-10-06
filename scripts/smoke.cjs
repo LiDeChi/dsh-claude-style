@@ -44,7 +44,15 @@
  * stand-in page), stand-in.js and probe.js (the scripts that page runs before
  * and after the bundle) and cases.cjs (what each case's report must show).
  *
- * Usage: node scripts/smoke.cjs        (CHROME_PATH overrides the browser lookup)
+ * Usage: node scripts/smoke.cjs [--case <name>[,<name>…]] [--feature <dir>[,<dir>…]] [--quick]
+ *        (CHROME_PATH overrides the browser lookup)
+ *        --case runs the named browser cases alone, --feature the cases that
+ *        cover the named directories under src/features/; both may be repeated,
+ *        combined, and neither means every case. --quick leaves out the cases
+ *        and the checks that watch motion (TIMING_CASES in scripts/smoke/
+ *        shared.cjs). Cases that share a stand-in configuration and a markup
+ *        run in one page load (PAGES in shared.cjs), and the log names the pages
+ *        it loaded. The Node host half runs either way.
  * Exit:  0 every check passed · 1 a check failed · 2 the browser half could not run
  */
 'use strict'
@@ -52,10 +60,74 @@ const fs = require('fs')
 const http = require('http')
 const path = require('path')
 const { findChrome, launchChrome, connectTab } = require('./chrome.cjs')
-const { ROOT, CLIENT, SKIN_FIXTURE, SKIN_CASES, sleep, check, failures } = require('./smoke/shared.cjs')
+const { ROOT, CLIENT, SKIN_FIXTURE, SKIN_CASES, sleep, check, failures, skips, setTier, tierName, TIMING_CASES, FEATURE_CASES, pagesFor } = require('./smoke/shared.cjs')
 const { hostHalf } = require('./smoke/host-half.cjs')
 const { page } = require('./smoke/page.cjs')
 const { CASES } = require('./smoke/cases.cjs')
+
+/** End the run over a command line or a table that cannot be honoured. */
+function bad(message) {
+  console.error(`smoke: ${message}`)
+  process.exit(2)
+}
+
+/**
+ * What the command line asked for: `--case a,b` names cases, `--feature dir`
+ * names a directory under src/features/ and stands for the cases the table
+ * gives it, `--quick` picks the tier. Both name flags may be repeated and
+ * combined. An unknown argument, case or directory ends the run with exit 2, so
+ * a misspelling cannot pass as a full run.
+ */
+function selection() {
+  const cases = []
+  const args = process.argv.slice(2)
+  let quick = false
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i]
+    if (arg === '--quick') {
+      quick = true
+      continue
+    }
+    const flag = arg === '--case' || arg.startsWith('--case=') ? 'case'
+      : arg === '--feature' || arg.startsWith('--feature=') ? 'feature'
+      : null
+    if (flag === null) bad(`unknown argument "${arg}"`)
+    const value = arg.includes('=') ? arg.slice(arg.indexOf('=') + 1) : args[++i]
+    if (value === undefined || value.trim() === '') bad(`--${flag} needs a name`)
+    for (const raw of value.split(',')) {
+      const name = raw.trim()
+      if (name === '') continue
+      if (flag === 'case') {
+        if (!Object.hasOwn(CASES, name)) bad(`no browser case named "${name}" — the cases are: ${Object.keys(CASES).join(', ')}`)
+        cases.push(name)
+        continue
+      }
+      if (!Object.hasOwn(FEATURE_CASES, name)) bad(`no feature directory named "${name}" — the directories are: ${Object.keys(FEATURE_CASES).join(', ')}`)
+      if (FEATURE_CASES[name].length === 0) bad(`src/features/${name}/ has no smoke case of its own`)
+      cases.push(...FEATURE_CASES[name])
+    }
+  }
+  return { cases: [...new Set(cases)], quick }
+}
+
+/**
+ * The feature table has to keep up with the tree: every directory under
+ * src/features/ names one, every key is a directory, and every case it names
+ * exists. A stale table ends the run instead of quietly running the wrong set.
+ */
+function checkFeatureTable() {
+  const dir = path.join(ROOT, 'src', 'features')
+  const dirs = fs.readdirSync(dir, { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => entry.name)
+  for (const name of dirs) {
+    if (!Object.hasOwn(FEATURE_CASES, name)) bad(`src/features/${name}/ is missing from FEATURE_CASES (scripts/smoke/shared.cjs)`)
+  }
+  for (const [name, covered] of Object.entries(FEATURE_CASES)) {
+    if (!dirs.includes(name)) bad(`FEATURE_CASES names "${name}", which src/features/ does not hold`)
+    for (const one of covered) {
+      if (!Object.hasOwn(CASES, one)) bad(`FEATURE_CASES["${name}"] names the case "${one}", which the case table does not hold`)
+    }
+  }
+}
 
 /** Load one case in a fresh tab and return the page's report. */
 async function runCase(port, base, name) {
@@ -86,13 +158,30 @@ async function runCase(port, base, name) {
   }
 }
 
-async function browserHalf() {
+/**
+ * The cases this run loads: the picked ones (or every case) minus the timing
+ * cases the quick tier leaves out. A selection that leaves nothing ends the run
+ * before the host half, so an empty quick run cannot look like a pass.
+ */
+function plan(only, quick) {
+  const all = Object.keys(CASES)
+  const timing = new Set(TIMING_CASES)
+  const asked = only.length ? only : all
+  const cases = asked.filter((name) => !(quick && timing.has(name)))
+  const leftOut = quick ? asked.filter((name) => timing.has(name)) : []
+  if (cases.length === 0) bad(`the quick tier leaves nothing to run: ${leftOut.join(', ')} watch motion`)
+  return { cases, leftOut, total: all.length }
+}
+
+async function browserHalf(planned) {
+  const { cases, leftOut, total } = planned
+  const pages = pagesFor(cases)
   const browser = findChrome()
   if (!browser) {
     console.log('\nbrowser half — skipped: no Chrome/Edge found (set CHROME_PATH)')
-    return false
+    return { ran: false, scope: '' }
   }
-  /** The case whose page is being served; the picture route answers for it. */
+  /** The page being served; the picture route answers for it. */
   let current = null
   const server = http.createServer((req, res) => {
     const name = new URL(req.url, 'http://x').pathname.slice(1)
@@ -120,13 +209,16 @@ async function browserHalf() {
       }
       res.writeHead(200, { 'content-type': 'image/png' })
       res.end(fs.readFileSync(sheet))
-    } else if (Object.prototype.hasOwnProperty.call(CASES, name)) {
+    } else {
+      const entry = pages.find((one) => one.page === name)
+      if (entry === undefined) {
+        res.writeHead(404)
+        res.end()
+        return
+      }
       current = name
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' })
-      res.end(page(name))
-    } else {
-      res.writeHead(404)
-      res.end()
+      res.end(page(name, tierName(), entry.cases))
     }
   })
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve))
@@ -134,11 +226,17 @@ async function browserHalf() {
   const base = `http://127.0.0.1:${server.address().port}`
   const chrome = await launchChrome(browser, { name: 'smoke', width: 1280, height: 800 })
   try {
-    for (const name of Object.keys(CASES)) {
-      console.log(`\nbrowser half — ${name}`)
-      CASES[name](await runCase(chrome.port, base, name))
+    console.log(`\nbrowser half — tier ${tierName()} — ${cases.length} of ${total} cases in ${pages.length} page loads: ${cases.join(', ')}`)
+    if (leftOut.length) console.log(`browser half — left out as timing: ${leftOut.join(', ')}`)
+    for (const { page: pageName, cases: pageCases } of pages) {
+      if (pageCases.length > 1) console.log(`\nbrowser half — page ${pageName} — ${pageCases.join(', ')}`)
+      const report = await runCase(chrome.port, base, pageName)
+      for (const name of pageCases) {
+        console.log(`\nbrowser half — ${name}`)
+        CASES[name](report)
+      }
     }
-    return true
+    return { ran: true, scope: `${cases.length} of ${total} browser cases in ${pages.length} page loads, tier ${tierName()}` }
   } finally {
     server.close()
     await chrome.close()
@@ -146,9 +244,16 @@ async function browserHalf() {
 }
 
 async function main() {
+  const { cases, quick } = selection()
+  checkFeatureTable()
+  const planned = plan(cases, quick)
+  setTier(quick ? 'quick' : 'full')
   await hostHalf()
-  const ran = await browserHalf()
-  console.log(failures() === 0 ? `\nsmoke: all checks passed${ran ? '' : ' (browser half skipped)'}` : `\nsmoke: ${failures()} check(s) failed`)
+  const { ran, scope } = await browserHalf(planned)
+  const skipped = skips() === 0 ? '' : `, ${skips()} timing checks skipped`
+  console.log(failures() === 0
+    ? `\nsmoke: all checks passed (${scope}${skipped})${ran ? '' : ' (browser half skipped)'}`
+    : `\nsmoke: ${failures()} check(s) failed`)
   process.exit(failures() > 0 ? 1 : ran ? 0 : 2)
 }
 

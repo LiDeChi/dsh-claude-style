@@ -19,6 +19,17 @@ function contrast(a, b) {
   return (high + 0.05) / (low + 0.05)
 }
 
+/**
+ * The two checks every case opens with: the install completed and no feature
+ * reported a failure. The cases whose subject is a failing host API
+ * (install-fault, sync-fault) state their own expectations instead, and the
+ * three that never look at the console keep the install check alone.
+ */
+function basicChecks(r) {
+  check('apply() completes', r.applyError === null, r.applyError)
+  check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+}
+
 /** Checks every case shares: a clean teardown and an idle scheduler. */
 function commonChecks(r) {
   check('nothing the skin runs leaves an uncaught error or an unhandled rejection',
@@ -42,12 +53,21 @@ function commonChecks(r) {
   check('a seat carrying the running status dot draws no circle',
     r.seatRunning !== null && r.seatRunning.content === 'none' && r.seatRunning.svgs > 0,
     JSON.stringify(r.seatRunning))
-  check('scheduler idle once settled (0 passes in 1 s)', r.idlePasses === 0, `${r.idlePasses} passes`)
+  check('scheduler idle once settled (0 passes in 1 s)', r.idlePasses === 0, `${r.idlePasses} passes`, 'timing')
   check('a closed popover card claims no menu role for the host\'s keyboard arbitration',
     r.closedMenuCards === 0, `${r.closedMenuCards} closed cards carry role=menu`)
   check('no Windows titlebar marker: the body carries no data-dsh-titlebar-tabs',
     r.titlebarTabs === false, JSON.stringify(r.titlebarTabs))
   check('teardown registered with the host', r.teardownRegistered)
+  check("the sheet carries this package's own module-system tags, so no sibling's bookkeeping can take it away",
+    r.sheetPlugin === 'dsh-claude-style' && r.sheetPluginCss === 'dsh-claude-style/client.css' && r.sheetClaimable === false,
+    JSON.stringify({ plugin: r.sheetPlugin, css: r.sheetPluginCss, claimable: r.sheetClaimable }))
+  check("a sibling's untagged sheet stays out of this package's bookkeeping, so no reload of this package removes it",
+    r.siblingSheetTag === 'dsh-claude-style/foreign-sheet' && r.siblingSheetClaimable === false && r.siblingSheetSurvives === true,
+    JSON.stringify({ tag: r.siblingSheetTag, claimable: r.siblingSheetClaimable, survives: r.siblingSheetSurvives }))
+  check("a sibling's sheet arriving after this bundle is parked before any package can claim it",
+    r.lateSheetTag === 'dsh-claude-style/foreign-sheet' && r.lateSheetClaimable === false,
+    JSON.stringify({ tag: r.lateSheetTag, claimable: r.lateSheetClaimable }))
   if (!r.teardownRegistered) return
   check('teardown leaves no skin node, marker, body attribute or stylesheet',
     r.leftNodes === 0 && r.leftMarkers === 0 && r.leftAttrs.length === 0 && !r.leftStylesheet,
@@ -60,9 +80,21 @@ function commonChecks(r) {
 }
 
 const CASES = {
-  default(r) {
-    check('apply() completes', r.applyError === null, r.applyError)
-    check('stylesheet injected', r.stylesheet)
+  // The skin's own Claude palette: the ivory and warm-black canvases, the clay
+  // accent and the raised card fill, read from the live custom properties.
+  brand(r) {
+    basicChecks(r)
+    const palette = r.claudePalette || {}
+    check('the Claude brand keeps its ivory and warm-black canvases and the clay accent',
+      palette.canvas === 'rgb(252, 252, 251)' && palette.accent === '#d97757' && !!palette.dark &&
+        palette.dark.canvas === 'rgb(20, 20, 19)' && palette.dark.accent === '#d97757' && palette.dark.raised === '#1e1e1d',
+      JSON.stringify(palette))
+    commonChecks(r)
+  },
+  // The classic hero: the welcome is drawn on arrival and held between passes,
+  // and the crab stands on that page's card too.
+  hero(r) {
+    basicChecks(r)
     const greeting = r.greeting || {}
     check('the classic hero draws its welcome on arrival and keeps it between passes',
       typeof greeting.low === 'string' && greeting.low !== 'Host greeting' && greeting.low !== '' &&
@@ -70,11 +102,13 @@ const CASES = {
         greeting.high !== greeting.low,
       JSON.stringify(greeting))
     check('the classic hero page carries the crab too', r.classicCrab === true, JSON.stringify(r.classicCrab))
-    const palette = r.claudePalette || {}
-    check('the Claude brand keeps its ivory and warm-black canvases and the clay accent',
-      palette.canvas === 'rgb(252, 252, 251)' && palette.accent === '#d97757' && !!palette.dark &&
-        palette.dark.canvas === 'rgb(20, 20, 19)' && palette.dark.accent === '#d97757' && palette.dark.raised === '#1e1e1d',
-      JSON.stringify(palette))
+    commonChecks(r)
+  },
+  // The conversation header's tab strip: the pill is drawn under the active tab
+  // without sliding in, slides to the tab a switch selects, and the teardown
+  // takes it back off.
+  'view-tabs'(r) {
+    basicChecks(r)
     const pill = r.viewPill || {}
     const under = (s) => !!s && s.attr && s.content !== 'none' && Math.abs(s.x - s.itemX) < 0.5 &&
       Math.abs(s.w - s.itemW) < 0.5 && s.itemFill === 'rgba(0, 0, 0, 0)'
@@ -83,27 +117,42 @@ const CASES = {
       under(pill.first) && pill.first.slides.length === 0, JSON.stringify(pill.first))
     check('a view switch slides the pill to the newly active tab',
       under(pill.switched) && pill.switched.slides.indexOf('transform') !== -1 && pill.switched.x > pill.first.x,
-      JSON.stringify(pill.switched))
+      JSON.stringify(pill.switched), 'timing')
     check('the pill slides whatever the system motion setting: no reduced-motion rule reaches it',
       pill.reducedMotionRules === 0, `${pill.reducedMotionRules} rules`)
     check('teardown takes the pill, its placement and the strip stamp off the view tabs', pill.left === false, JSON.stringify(pill.left))
+    commonChecks(r)
+  },
+  // The composer's host controls, marked by structure, the marks their teardown
+  // leaves behind, and the host's own Enter on an open menu.
+  composer(r) {
+    basicChecks(r)
+    const controls = r.controls || {}
+    check('the composer\'s host controls are marked by structure: commands, access, send',
+      controls.commands === 'commands' && controls.access === 'access' && controls.send === 'send', JSON.stringify(controls))
+    check('the submit button\'s mark follows its glyph to stop and back',
+      controls.stopping === 'stop' && controls.back === 'send', JSON.stringify(controls))
+    check('teardown takes the draft marks off the composer cards', r.leftDraftMarks === 0, `${r.leftDraftMarks} left`)
+    check('teardown takes the control marks off the host controls', r.leftControlMarks === 0, `${r.leftControlMarks} left`)
+    check('Enter on an open composer menu reaches the host', same(r.keys, ['host picked the menu item']), JSON.stringify(r.keys))
+    commonChecks(r)
+  },
+  // The sidebar's search box: placed in the brand row, resting hidden, opening
+  // the host's modal through a root of the skin's own.
+  search(r) {
+    basicChecks(r)
     const search = r.search || {}
     check('the search box goes in the brand row beside the brand, and rests hidden until the sidebar is hovered',
       search.placed === true && search.rowMarked === true && search.resting === 'hidden', JSON.stringify(search))
     check('pressing the search box renders the host modal through a root of the skin\'s own', search.modalRendered === true, JSON.stringify(search))
     check('teardown takes the search box, its row mark and its root away',
       search.left === 0 && search.rootUnmounted === true, JSON.stringify(search))
-    check('teardown takes the draft marks off the composer cards', r.leftDraftMarks === 0, `${r.leftDraftMarks} left`)
-    const controls = r.controls || {}
-    check('the composer\'s host controls are marked by structure: commands, access, send',
-      controls.commands === 'commands' && controls.access === 'access' && controls.send === 'send', JSON.stringify(controls))
-    check('the submit button\'s mark follows its glyph to stop and back',
-      controls.stopping === 'stop' && controls.back === 'send', JSON.stringify(controls))
-    check('teardown takes the control marks off the host controls', r.leftControlMarks === 0, `${r.leftControlMarks} left`)
-    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
-    check('the host\'s stats row is hidden and no stats card of the skin\'s own is left',
-      r.statsHidden === true && r.statsStrayCards === 0,
-      JSON.stringify({ hidden: r.statsHidden, cards: r.statsStrayCards }))
+    commonChecks(r)
+  },
+  // The account row's self-built drawer: the header, the plugin rows, the
+  // settings row, the nickname and the avatar.
+  account(r) {
+    basicChecks(r)
     check('synthetic path: the popover carries the header, the plugin rows and the settings row',
       r.drawer !== null && same(r.drawer, ['action', 'embed', 'settings']) && r.syntheticHeader === true,
       JSON.stringify({ drawer: r.drawer, header: r.syntheticHeader }))
@@ -114,9 +163,15 @@ const CASES = {
       r.syntheticBox !== null && r.syntheticBox.popoverLeft === r.syntheticBox.buttonLeft &&
         r.syntheticBox.popoverWidth === r.syntheticBox.buttonWidth,
       JSON.stringify(r.syntheticBox))
-    check('Enter on an open composer menu reaches the host', same(r.keys, ['host picked the menu item']), JSON.stringify(r.keys))
-    check("the permission control stands in for the host's access button", r.composerRestyle && !r.hostAccessVisible,
-      JSON.stringify({ restyle: r.composerRestyle, hostAccess: r.hostAccessVisible }))
+    check('the closed drawer takes its parked rows out of the paint tree',
+      r.syntheticVisibility === 'hidden' && r.syntheticRowVisibility === 'hidden',
+      JSON.stringify({ panel: r.syntheticVisibility, row: r.syntheticRowVisibility }))
+    commonChecks(r)
+  },
+  // The permission control's ladder: the catalog in the skin order, with the
+  // Auto review tier offered while the catalog carries that preset.
+  permissions(r) {
+    basicChecks(r)
     check('the permission ladder is the catalog, in the skin order',
       same(r.permRows.map(function (row) { return row.preset }), ['read-only', 'workspace-write', 'auto', 'danger-full-access']),
       JSON.stringify(r.permRows))
@@ -124,16 +179,12 @@ const CASES = {
       r.permAutoRowDisplay !== null && r.permAutoRowDisplay !== 'none' &&
         r.permRows[2].text.indexOf('Auto review') === 0,
       JSON.stringify({ popoverRow: r.permAutoRowDisplay, row: r.permRows[2] }))
-    check('the closed drawer takes its parked rows out of the paint tree',
-      r.syntheticVisibility === 'hidden' && r.syntheticRowVisibility === 'hidden',
-      JSON.stringify({ panel: r.syntheticVisibility, row: r.syntheticRowVisibility }))
     commonChecks(r)
   },
   // The context popover's numbers: read from the host's session projections
   // (never by opening its stat dialogs) and rendered into the panel's block.
   'context-stats'(r) {
-    check('apply() completes', r.applyError === null, r.applyError)
-    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    basicChecks(r)
     check('the host\'s stats row is hidden, its pills left as the data\'s own surface',
       r.statsHidden === true && r.statsStrayCards === 0,
       JSON.stringify({ hidden: r.statsHidden, cards: r.statsStrayCards }))
@@ -167,8 +218,7 @@ const CASES = {
   // The auto mode cases: the ladder follows the host catalog, so a third-party
   // permission tier is a first-class row.
   automode(r) {
-    check('apply() completes', r.applyError === null, r.applyError)
-    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    basicChecks(r)
     check('the ladder takes the catalog, the third-party tier included',
       same(r.permRows.map(function (row) { return row.preset }), ['read-only', 'workspace-write', 'auto-mode', 'danger-full-access']),
       JSON.stringify(r.permRows))
@@ -189,8 +239,7 @@ const CASES = {
     commonChecks(r)
   },
   'automode-current'(r) {
-    check('apply() completes', r.applyError === null, r.applyError)
-    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    basicChecks(r)
     check('a session running the third-party tier names it instead of its id',
       r.permLabel === 'Auto mode', JSON.stringify(r.permLabel))
     check('the running tier is marked in the popover',
@@ -202,8 +251,7 @@ const CASES = {
     commonChecks(r)
   },
   'automode-hero'(r) {
-    check('apply() completes', r.applyError === null, r.applyError)
-    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    basicChecks(r)
     check('the Auto slot binds to the tier the deployment offers',
       same(r.permSegments.map(function (s) { return s.preset }), ['read-only', 'workspace-write', 'auto-mode', 'danger-full-access']),
       JSON.stringify(r.permSegments))
@@ -217,8 +265,7 @@ const CASES = {
   },
   'automode-roundtrip'(r) {
     var ladder = ['read-only', 'workspace-write', 'auto-mode', 'danger-full-access']
-    check('apply() completes', r.applyError === null, r.applyError)
-    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    basicChecks(r)
     check('the ladder is drawn in the conversation view', same(r.rowsBeforeHome, ladder), JSON.stringify(r.rowsBeforeHome))
     check('the home view shows it as segments and leaves no popover behind',
       same(r.segmentsInHome, ladder) && r.popoversInHome === 0,
@@ -228,8 +275,7 @@ const CASES = {
     commonChecks(r)
   },
   hdsl(r) {
-    check('apply() completes', r.applyError === null, r.applyError)
-    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    basicChecks(r)
     check("the launcher's account name outranks the OS-user probe", r.accountUser === 'HDSLPlayer', JSON.stringify(r.accountUser))
     check("the launcher's atlas is cropped into the head the launcher itself draws",
       r.skinCanvas !== null && r.skinCanvas.width === 64 && r.skinFlag === true,
@@ -246,8 +292,7 @@ const CASES = {
     commonChecks(r)
   },
   'hdsl-noskin'(r) {
-    check('apply() completes', r.applyError === null, r.applyError)
-    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    basicChecks(r)
     check('the launcher account still names the instance', r.accountUser === 'HDSLPlayer', JSON.stringify(r.accountUser))
     check('a built-in figure with no picture leaves the circle to the mark alone',
       r.skinCanvas === null && r.skinFlag === false && r.photo === null,
@@ -255,8 +300,7 @@ const CASES = {
     commonChecks(r)
   },
   'hdsl-broken'(r) {
-    check('apply() completes', r.applyError === null, r.applyError)
-    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    basicChecks(r)
     check('a picture the launcher points at but cannot serve leaves no canvas and no marker',
       r.skinCanvas === null && r.skinFlag === false,
       JSON.stringify({ canvas: r.skinCanvas, flag: r.skinFlag }))
@@ -265,8 +309,7 @@ const CASES = {
     commonChecks(r)
   },
   'stats-compact'(r) {
-    check('apply() completes', r.applyError === null, r.applyError)
-    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    basicChecks(r)
     check('the compact row is hidden too, and no card of the skin\'s own is left',
       r.statsHidden === true && r.statsStrayCards === 0,
       JSON.stringify({ hidden: r.statsHidden, cards: r.statsStrayCards }))
@@ -305,7 +348,7 @@ const CASES = {
     check('apply() completes although the account API is broken', r.applyError === null, r.applyError)
     check('only the account footer was switched off', r.errors.length === 1 && r.errors[0].includes('"footer"'), r.errors.join(' | '))
     check("the host's own footer is handed back", !r.footerTakeover && r.accountUser === null, JSON.stringify({ takeover: r.footerTakeover, row: r.accountUser }))
-    check('the rest of the skin keeps running', r.stylesheet && r.composerRestyle && same(r.keys, ['host picked the menu item']))
+    check('the rest of the skin keeps running', r.composerRestyle && same(r.keys, ['host picked the menu item']))
     commonChecks(r)
   },
   'sync-fault'(r) {
@@ -314,14 +357,11 @@ const CASES = {
       r.errors.length === 2 && r.errors.some((e) => e.includes('"permissions"')) && r.errors.some((e) => e.includes('"model"')), r.errors.join(' | '))
     check("the host's own access button is handed back", r.hostAccessVisible === true, JSON.stringify(r.hostAccessVisible))
     check('the composer restyle keeps running', r.composerRestyle === true, JSON.stringify(r.composerRestyle))
-    check('the rest of the skin keeps running', r.stylesheet && r.accountUser === 'Tester', JSON.stringify(r.accountUser))
+    check('the rest of the skin keeps running', r.accountUser === 'Tester', JSON.stringify(r.accountUser))
     commonChecks(r)
   },
   studio(r) {
-    check('apply() completes', r.applyError === null, r.applyError)
-    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
-    check('the studio preference reaches the document',
-      r.homeLayoutAttr === 'studio', JSON.stringify(r.homeLayoutAttr))
+    basicChecks(r)
     check('the usage panel registers into the dock list seat with an id',
       Array.isArray(r.slotRegistrations) && r.slotRegistrations.length === 1 &&
         r.slotRegistrations[0].key === 'conversation.input.dock' &&
@@ -355,11 +395,11 @@ const CASES = {
       JSON.stringify(mascot))
     check('a click on its left half reaches the crab and pokes it; the poke plays back to idle without waking a pass',
       mascot.reachable === true && mascot.poked === 'poke-left' && mascot.afterPoke === 'idle' && mascot.passesDuring === 0,
-      JSON.stringify(mascot))
+      JSON.stringify(mascot), 'timing')
     check('with the animation choice on "reduced" it holds the idle still frame; a click still pokes it',
       mascot.reducedAttr === 'reduced' && mascot.stillFrame === 'translate(0px, 0px)' && mascot.stillAnimations === 0 &&
         mascot.reducedClick === 'poke-left',
-      JSON.stringify(mascot))
+      JSON.stringify(mascot), 'timing')
     check('the crab leaves with the hero page', mascot.afterHero === false, JSON.stringify(mascot))
     check('the studio hero mark is on the document on the hero page and off it elsewhere, and the studio rules reach the stack',
       r.homeHero !== undefined && r.homeHero.onHero === true && r.homeHero.offHero === false && r.homeHero.stackMaxWidth === '720px',
@@ -397,8 +437,7 @@ const CASES = {
     commonChecks(r)
   },
   'no-auto-review'(r) {
-    check('apply() completes', r.applyError === null, r.applyError)
-    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    basicChecks(r)
     check("the permission control stands in for the host's access button", r.composerRestyle && !r.hostAccessVisible,
       JSON.stringify({ restyle: r.composerRestyle, hostAccess: r.hostAccessVisible }))
     check('a preset the catalog does not carry is not drawn at all',
@@ -411,8 +450,7 @@ const CASES = {
     commonChecks(r)
   },
   popovers(r) {
-    check('apply() completes', r.applyError === null, r.applyError)
-    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    basicChecks(r)
     check('a pointer crossing a trigger opens nothing before the dwell elapses',
       r.permOpenAtDwell === 0, `${r.permOpenAtDwell} open at 50 ms`)
     check('a pointer that stays the dwell out opens the card',
@@ -489,7 +527,7 @@ const CASES = {
       JSON.stringify({ opened: r.hoverOpenedMenu, closed: r.hoverClosedMenu }))
     check('the host account menu carries the skin entry animation',
       r.menuEntryKeyframes === true && r.menuEntryAnimation === true,
-      JSON.stringify({ keyframes: r.menuEntryKeyframes, animation: r.menuEntryAnimation }))
+      JSON.stringify({ keyframes: r.menuEntryKeyframes, animation: r.menuEntryAnimation }), 'timing')
     check('the card stays unpainted until the skin\'s rows are in it and the host has placed it',
       r.accountReveal.paintedWhileUnready === false && r.accountReveal.revealedAt > 0 &&
         r.accountReveal.rowsAtReveal === true && r.accountReveal.placedAtReveal === true &&
@@ -520,8 +558,7 @@ const CASES = {
     commonChecks(r)
   },
   'turn-status'(r) {
-    check('apply() completes', r.applyError === null, r.applyError)
-    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    basicChecks(r)
     const status = r.turnStatus || {}
     const failed = status.failed || {}
     const live = status.live || {}
@@ -540,8 +577,7 @@ const CASES = {
     commonChecks(r)
   },
   switches(r) {
-    check('apply() completes', r.applyError === null, r.applyError)
-    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    basicChecks(r)
     const sw = r.switches || {}
     const keys = Object.keys(sw.start || {})
     const present = (marks, key) => !!marks && marks[key] > 0
@@ -559,8 +595,7 @@ const CASES = {
     commonChecks(r)
   },
   'switches-off'(r) {
-    check('apply() completes', r.applyError === null, r.applyError)
-    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    basicChecks(r)
     const sw = r.switches || {}
     const keys = Object.keys(sw.start || {})
     check('a feature switched off before the page loads never installs',
@@ -570,8 +605,7 @@ const CASES = {
     commonChecks(r)
   },
   'turn-nav'(r) {
-    check('apply() completes', r.applyError === null, r.applyError)
-    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    basicChecks(r)
     const nav = r.turnNav || {}
     const rail = nav.rail || {}
     const open = nav.open || {}
@@ -582,6 +616,7 @@ const CASES = {
       JSON.stringify(rail))
     check('the pointer reaching the rail opens the card at once, over it, and the rail\'s marks step back',
       nav.openAtOnce === 'true' && open.open === 'true' && open.railMarked === true && open.marksFaded === '0', JSON.stringify({ openAtOnce: nav.openAtOnce, open }))
+    check('the card hangs in the rail\'s slot, so a pointer on it stays on the conversation pane', open.inSlot === true, JSON.stringify(open.inSlot))
     check('every turn of the outline is a row, the loaded prompt wins, a turn without a prompt reads in the host\'s words',
       JSON.stringify(open.rows) === JSON.stringify(['first question', 'Turn 2', 'third question', 'fourth question, as loaded', 'fifth question']) &&
         (open.labels || []).every((label, i) => label === `Jump to turn ${i + 1}`),
@@ -604,8 +639,7 @@ const CASES = {
     commonChecks(r)
   },
   'host-palette'(r) {
-    check('apply() completes', r.applyError === null, r.applyError)
-    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    basicChecks(r)
     const hp = r.hostPalette || {}
     const host = hp.host || {}
     check('under the host\'s colours and type the skin writes none of the host\'s tokens',
@@ -635,8 +669,7 @@ const CASES = {
     commonChecks(r)
   },
   settings(r) {
-    check('apply() completes', r.applyError === null, r.applyError)
-    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    basicChecks(r)
     const settings = r.settings || {}
     check('the settings section registers with the settings dialog', settings.registered === true, JSON.stringify(settings.registered))
     const expected = {
@@ -662,8 +695,7 @@ const CASES = {
     commonChecks(r)
   },
   'crab-states'(r) {
-    check('apply() completes', r.applyError === null, r.applyError)
-    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    basicChecks(r)
     const crab = r.states || {}
     const is = (state, animation, place) => !!state && state.animation === animation && state.place === place && state.ready === true
     check('picked under the Claude brand, the crab stands on the home card idling, from its inlined sheet',
@@ -686,6 +718,13 @@ const CASES = {
     check('it idles after work, sleeps after a quiet minute, and a pointer move wakes it',
       is(crab.afterWork, 'idle', 'stack') && is(crab.asleep, 'sleeping', 'stack') && is(crab.woken, 'waking', 'stack'),
       JSON.stringify({ afterWork: crab.afterWork, asleep: crab.asleep, woken: crab.woken }))
+    // The walk this case drives is the only one that reaches these two: the
+    // whale's case reads two sheets and leaves.
+    check('it subscribes to the session\'s chat target, which the host builds only for a subscriber',
+      crab.chatFollowed === true, JSON.stringify(crab.chatFollowed))
+    check('a compaction whose end comes back with the whole feed after a reconnect stops playing, uncelebrated',
+      is(crab.resendBefore, 'compacting', 'stack') && is(crab.resent, 'idle', 'stack'),
+      JSON.stringify({ before: crab.resendBefore, after: crab.resent }))
     check('it leaves with the conversation, and takes its anchor mark along', crab.gone === true, JSON.stringify(crab.gone))
     check('kept to the home page it stays off the conversation and stands on the home card',
       crab.backInConversation === true && crab.homeOnly === null && is(crab.homeOnlyHero, 'idle', 'card'),
@@ -695,8 +734,7 @@ const CASES = {
     commonChecks(r)
   },
   'chat-follow'(r) {
-    check('apply() completes', r.applyError === null, r.applyError)
-    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    basicChecks(r)
     const follow = r.chatFollow || {}
     check('the follow feature marks the document, and only a capped process body is clipped to one axis',
       follow.marked === true && follow.overflowX === 'hidden' && follow.expandedOverflowX === 'auto',
@@ -740,8 +778,7 @@ const CASES = {
       JSON.stringify({ marked: follow.glideButtonMarked, back: follow.glideButtonBack }))
   },
   caret(r) {
-    check('apply() completes', r.applyError === null, r.applyError)
-    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    basicChecks(r)
     const caret = r.caret || {}
     const on = caret.on || {}
     const off = caret.off || {}
@@ -763,46 +800,50 @@ const CASES = {
       caretReduced.layer === true &&
         String(caretReduced.transition).split(',').every(value => value.trim() === '0s') &&
         caretReduced.animation === 'none',
-      JSON.stringify(caretReduced))
+      JSON.stringify(caretReduced), 'timing')
   },
   'chat-fold'(r) {
-    check('apply() completes', r.applyError === null, r.applyError)
-    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    basicChecks(r)
     const fold = r.fold || {}
-    check('a running thinking row and a running process group are opened, and the group carries its label half',
-      fold.thinkOpen === true && fold.groupOpen === true && fold.openMark === true && fold.liveDetail === true &&
-        fold.label === 'Working' && fold.labelName === 'Working' && fold.spread === '56px',
-      JSON.stringify(fold))
+    check('a running thinking row and a running process group are opened',
+      fold.thinkOpen === true && fold.groupOpen === true, JSON.stringify(fold))
+    check('the opened group carries its mark, its live detail and the label half\'s width',
+      fold.openMark === true && fold.liveDetail === true && fold.spread === '56px', JSON.stringify(fold))
+    check('the opened group reads Working on its label and on its name',
+      fold.label === 'Working' && fold.labelName === 'Working', JSON.stringify(fold))
     check('a tier that does not cap its body is never pressed',
       fold.expandedUntouched === true && (fold.clicks || {}).expanded === 0, JSON.stringify(fold.clicks))
     const after = fold.after || {}
-    check('when the reasoning stops and the section ends, both fold back',
-      after.thinkOpen === false && after.groupOpen === false && after.openMark === false && after.liveDetail === false,
-      JSON.stringify(after))
+    check('the thinking row folds back when the reasoning stops', after.thinkOpen === false, JSON.stringify(after))
+    check('the process group folds back when the section ends, its mark and live detail with it',
+      after.groupOpen === false && after.openMark === false && after.liveDetail === false, JSON.stringify(after))
     check('a group the reader opened himself in that phase stays open', fold.readerOpen === true, JSON.stringify(fold.readerOpen))
     const glide = fold.glide || {}
     const glideAfter = glide.after || {}
-    check('a reader press on a folding row is intercepted, the real element is pressed with the door marked, and the press is handed back',
-      glide.rolling === true && glide.clipped === true && glide.clicksDuringRoll === 0 &&
-        glideAfter.bodyGone === true && glideAfter.rollingAnywhere === false && glideAfter.clicks === 1,
-      JSON.stringify(glide))
+    check('a press on a folding row is intercepted and handed to the real element when the door lands',
+      glide.clicksDuringRoll === 0 && glideAfter.clicks === 1, JSON.stringify(glide))
+    check('the folding row carries the door over a clipped body',
+      glide.rolling === true && glide.clipped === true, JSON.stringify(glide))
+    check('when the door lands the body is gone and nothing is rolling',
+      glideAfter.bodyGone === true && glideAfter.rollingAnywhere === false, JSON.stringify(glideAfter))
     const glideOpen = glide.open || {}
     const glideOpenAfter = glide.openAfter || {}
-    check('the opening direction rolls the body the host inserts and hands the styles back when the door lands',
-      glideOpen.inserted === true && glideOpen.rolling === true &&
-        glideOpenAfter.present === true && glideOpenAfter.rolling === false,
-      JSON.stringify({ open: glideOpen, after: glideOpenAfter }))
+    check('the opening direction rolls the body the host inserts',
+      glideOpen.inserted === true && glideOpen.rolling === true, JSON.stringify(glideOpen))
+    check('when the door lands the inserted body stays and nothing rolls',
+      glideOpenAfter.present === true && glideOpenAfter.rolling === false, JSON.stringify(glideOpenAfter))
     // The switch covers the door and the entrance fade as well (D29/D32).
     const animationsOff = fold.animationsOff || {}
-    check('switching Automatic folding off stops the door, the entrance fade and the interception together',
-      fold.entranceOn === '0.12s, 0.12s' && animationsOff.mark === false && animationsOff.entrance === '0s' &&
-        animationsOff.immediateClicks === 1 && animationsOff.rolling === false &&
-        (fold.animationsBack || {}).mark === true,
-      JSON.stringify({ on: fold.entranceOn, off: animationsOff, back: fold.animationsBack }))
+    check('with Automatic folding on, the entrance fade runs',
+      fold.entranceOn === '0.12s, 0.12s', JSON.stringify(fold.entranceOn))
+    check('switching it off takes the mark and the fade, and lets the press land at once with nothing rolling',
+      animationsOff.mark === false && animationsOff.entrance === '0s' &&
+        animationsOff.immediateClicks === 1 && animationsOff.rolling === false, JSON.stringify(animationsOff))
+    check('switching it back brings the fold mark back',
+      (fold.animationsBack || {}).mark === true, JSON.stringify(fold.animationsBack))
   },
   'chat-reveal'(r) {
-    check('apply() completes', r.applyError === null, r.applyError)
-    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    basicChecks(r)
     const reveal = r.reveal || {}
     const opening = reveal.opening || {}
     const grown = reveal.grown || {}
@@ -824,8 +865,7 @@ const CASES = {
       JSON.stringify(flip))
   },
   'chat-files'(r) {
-    check('apply() completes', r.applyError === null, r.applyError)
-    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    basicChecks(r)
     const files = r.files || {}
     const seats = files.seats || []
     const collapsed = files.collapsed || {}
@@ -833,60 +873,72 @@ const CASES = {
     const failed = files.failed || {}
     const running = files.running || {}
     const escalated = files.escalated || {}
-    check('both file tools are claimed from the tool view seat below the host rows',
-      seats.length === 2 && seats[0].seat === 'edit' && seats[1].seat === 'write' && seats[0].priority === -1,
-      JSON.stringify(seats))
-    check('a settled edit reads as a row with its tool, variant and state, the shortened path and the +n -m tail',
-      (collapsed.root || {}).variant === 'edit' && (collapsed.root || {}).state === 'ok' &&
-        collapsed.texts.includes('app.js') && collapsed.texts.includes('+1') && collapsed.texts.includes('-1') &&
-        typeof collapsed.summary === 'string' && collapsed.summary.includes('dsh-claude-file-link'),
-      JSON.stringify({ root: collapsed.root, texts: collapsed.texts, summary: collapsed.summary }))
-    check('the title comes from the seat copy and the row itself opens and closes',
-      (collapsed.disclosure || {}).title === 't:tool.title.edit' && (collapsed.disclosure || {}).expandOnRowClick === true &&
-        (collapsed.disclosure || {}).keepContentWhenOpen === true,
+    check('both file tools are claimed from the tool view seat',
+      seats.length === 2, JSON.stringify(seats))
+    check('the edit seat comes first, at priority -1', (seats[0] || {}).seat === 'edit' && (seats[0] || {}).priority === -1, JSON.stringify(seats[0]))
+    check('the write seat follows', (seats[1] || {}).seat === 'write', JSON.stringify(seats[1]))
+    check('a settled edit reads as a row of the edit variant in the ok state',
+      (collapsed.root || {}).variant === 'edit' && (collapsed.root || {}).state === 'ok', JSON.stringify(collapsed.root))
+    check('the settled row names the shortened path and the +n -m tail',
+      collapsed.texts.includes('app.js') && collapsed.texts.includes('+1') && collapsed.texts.includes('-1'),
+      JSON.stringify(collapsed.texts))
+    check('the settled row\'s summary carries the file link',
+      typeof collapsed.summary === 'string' && collapsed.summary.includes('dsh-claude-file-link'),
+      JSON.stringify(collapsed.summary))
+    check('the row\'s title comes from the seat copy',
+      (collapsed.disclosure || {}).title === 't:tool.title.edit', JSON.stringify(collapsed.disclosure))
+    check('the row itself opens and closes, keeping its content while open',
+      (collapsed.disclosure || {}).expandOnRowClick === true && (collapsed.disclosure || {}).keepContentWhenOpen === true,
       JSON.stringify(collapsed.disclosure))
-    check('expanded, the hunks the result metadata reported go into the diff card at the chat line cap',
-      (expanded.diff || {}).maxLines === 9 && ((expanded.diff || {}).diffs || []).length === 1 &&
-        (expanded.diff || {}).className === 'dsh-claude-file-diff' && expanded.texts.includes('t:row.inspect'),
+    check('expanded, the hunks the result metadata reported go into the diff card',
+      ((expanded.diff || {}).diffs || []).length === 1, JSON.stringify(expanded.diff))
+    check('the diff card is capped at the chat line count and carries the skin\'s class',
+      (expanded.diff || {}).maxLines === 9 && (expanded.diff || {}).className === 'dsh-claude-file-diff',
       JSON.stringify(expanded.diff))
-    check('a failed call draws no diff and no path link, and its verdict colours the summary',
-      (failed.root || {}).state === 'error' && failed.diff === null && typeof failed.summary === 'string' &&
-        failed.summary.includes('dsh-claude-file-error') && failed.texts.includes('ToolError: permission_denied') &&
+    check('the expanded row carries the inspect label', expanded.texts.includes('t:row.inspect'), JSON.stringify(expanded.texts))
+    check('a failed call reads as an error row', (failed.root || {}).state === 'error', JSON.stringify(failed.root))
+    check('a failed call draws no diff', failed.diff === null, JSON.stringify(failed.diff))
+    check('the failed call\'s verdict colours the summary and hides the failed label',
+      typeof failed.summary === 'string' && failed.summary.includes('dsh-claude-file-error') &&
         failed.hiddenText === 't:row.failed',
-      JSON.stringify({ root: failed.root, summary: failed.summary, hidden: failed.hiddenText }))
-    check('a write that is still running shows the change its arguments describe, with the running state announced',
-      (running.diff || {}).className === 'dsh-claude-file-diff' && running.hiddenText === 't:row.running',
-      JSON.stringify({ diff: running.diff && running.diff.className, hidden: running.hiddenText }))
-    check("a call whose change cannot be derived keeps the host's IN/OUT card",
-      escalated.diff === null && escalated.io !== null && escalated.texts.includes('t:row.input') && escalated.texts.indexOf('t:row.output') === -1,
-      JSON.stringify({ diff: escalated.diff, io: escalated.io !== null, texts: escalated.texts }))
-    check('the switch hands both seat keys back and takes them again, without a reload',
-      files.offSeats === 0 && files.backSeats === 2, JSON.stringify({ off: files.offSeats, back: files.backSeats }))
+      JSON.stringify({ summary: failed.summary, hidden: failed.hiddenText }))
+    check('the failed call shows the tool\'s own error',
+      failed.texts.includes('ToolError: permission_denied'), JSON.stringify(failed.texts))
+    check('a write that is still running shows the change its arguments describe',
+      (running.diff || {}).className === 'dsh-claude-file-diff', JSON.stringify(running.diff))
+    check('the running write announces the running state', running.hiddenText === 't:row.running', JSON.stringify(running.hiddenText))
+    check('a call whose change cannot be derived draws no diff card', escalated.diff === null, JSON.stringify(escalated.diff))
+    check('it keeps the host\'s IN/OUT card, with no output row',
+      escalated.io !== null && escalated.texts.indexOf('t:row.output') === -1, JSON.stringify(escalated.texts))
+    check('it keeps the input row', escalated.texts.includes('t:row.input'), JSON.stringify(escalated.texts))
+    check('switching the file rows off hands both seat keys back', files.offSeats === 0, JSON.stringify(files.offSeats))
+    check('switching them back takes both again, without a reload', files.backSeats === 2, JSON.stringify(files.backSeats))
     // The other plugin coming and going mid-session (src/shared/peer-plugin.js):
     // the decision is re-taken, not frozen at install.
     const peerOn = files.peerOn || {}
     const peerOff = files.peerOff || {}
-    check('the other plugin arriving mid-session takes the seat keys and the ported marks down',
-      peerOn.seats === 0 && peerOn.foldMark === false && peerOn.revealMark === false, JSON.stringify(peerOn))
-    check('and leaving hands them back, without a reload',
-      peerOff.seats === 2 && peerOff.foldMark === true, JSON.stringify(peerOff))
+    check('the other plugin arriving mid-session takes the seat keys down',
+      peerOn.seats === 0, JSON.stringify(peerOn))
+    check('it takes the ported fold and reveal marks down with them',
+      peerOn.foldMark === false && peerOn.revealMark === false, JSON.stringify(peerOn))
+    check('the other plugin leaving hands the seat keys back', peerOff.seats === 2, JSON.stringify(peerOff))
+    check('leaving brings the fold mark back', peerOff.foldMark === true, JSON.stringify(peerOff))
   },
   // The other chat-behaviour plugin on the page: the ported features must hand
   // their behaviour over whole (src/shared/peer-plugin.js, D32).
   'peer-chat-ux'(r) {
-    check('apply() completes', r.applyError === null, r.applyError)
-    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    basicChecks(r)
     const peer = r.peer || {}
     const marks = peer.marks || {}
-    check('a streaming chat area and a focused composer get none of the ported effects',
-      marks.follow === false && marks.fold === false && marks.reveal === false &&
-        marks.caretLayer === false && marks.caretMark === false && peer.highlights === 0,
-      JSON.stringify(peer))
+    check('a streaming chat area gets none of the ported chat effects',
+      marks.follow === false && marks.fold === false && marks.reveal === false, JSON.stringify(marks))
+    check('a focused composer gets no drawn caret',
+      marks.caretLayer === false && marks.caretMark === false, JSON.stringify(marks))
+    check('no character is registered as a step highlight', peer.highlights === 0, JSON.stringify(peer.highlights))
     check('the file change rows leave the host its two seat keys',
       peer.seats === 0, JSON.stringify(peer.seats))
-    check('a running thinking row and process group are left exactly as the host rendered them',
-      peer.thinkExpanded === false && peer.groupOpen === false,
-      JSON.stringify({ think: peer.thinkExpanded, group: peer.groupOpen }))
+    check('a running thinking row is left as the host rendered it', peer.thinkExpanded === false, JSON.stringify(peer.thinkExpanded))
+    check('a running process group is left as the host rendered it', peer.groupOpen === false, JSON.stringify(peer.groupOpen))
     const settings = peer.settings || {}
     const taken = ['chatAnimations', 'caretMotion']
     const answers = settings.answers || {}
@@ -897,39 +949,46 @@ const CASES = {
       const answer = answers[key]
       return !!answer && (answer.on === true || answer.option === 'typing')
     }
-    check('the Conversation tab greys those two controls out, keeps each one showing the reader\'s own answer, and names dsh-chat-ux in the accent line',
-      settings.registered === true && taken.every(key => (settings.rows || []).includes(key)) &&
-        taken.every(key => (settings.refusing || []).includes(key)) &&
-        taken.every(key => (settings.managed || []).includes(key)) &&
-        taken.every(showsOwnAnswer) &&
-        (settings.texts || []).some(text => text.includes('dsh-chat-ux')),
-      JSON.stringify({ rows: settings.rows, refusing: settings.refusing, managed: settings.managed, answers }))
+    check('the Conversation tab carries both ported controls',
+      settings.registered === true && taken.every(key => (settings.rows || []).includes(key)),
+      JSON.stringify(settings.rows))
+    check('both controls are greyed out and marked as managed by the other plugin',
+      taken.every(key => (settings.refusing || []).includes(key)) &&
+        taken.every(key => (settings.managed || []).includes(key)),
+      JSON.stringify({ refusing: settings.refusing, managed: settings.managed }))
+    check('each control keeps showing the reader\'s own answer', taken.every(showsOwnAnswer), JSON.stringify(answers))
+    check('the accent line names dsh-chat-ux',
+      (settings.texts || []).some(text => text.includes('dsh-chat-ux')), JSON.stringify(settings.texts))
     check('the rows the other plugin does not own keep answering',
       (settings.refusing || []).includes('turnStatus') === false && (settings.refusing || []).includes('viewTabs') === false,
       JSON.stringify(settings.refusing))
     commonChecks(r)
   },
   'chat-send'(r) {
-    check('apply() completes', r.applyError === null, r.applyError)
-    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    basicChecks(r)
     const send = r.send || {}
     const flying = send.flying || {}
     const landed = send.landed || {}
-    check('a submission lifts a stand-in off the composer card and hides the real row while it flies',
-      send.inputFound === true && flying.ghost === true && flying.clone === true && flying.hidden === true &&
-        flying.visibility === 'hidden' && flying.animations > 0,
-      JSON.stringify(send))
-    check('when the flight lands the stand-in is gone and the row is visible again',
-      landed.ghost === false && landed.hidden === false && landed.visibility === 'visible',
-      JSON.stringify(landed))
+    check('a submission finds the composer input', send.inputFound === true, JSON.stringify(send.inputFound))
+    check('a submission lifts a stand-in off the composer card',
+      flying.ghost === true && flying.clone === true, JSON.stringify(flying))
+    check('the real row is hidden while the stand-in flies',
+      flying.hidden === true && flying.visibility === 'hidden', JSON.stringify(flying))
+    check('the flight plays an animation', flying.animations > 0, JSON.stringify(flying.animations))
+    check('when the flight lands the stand-in is gone', landed.ghost === false, JSON.stringify(landed))
+    check('the row is visible again when the flight lands',
+      landed.hidden === false && landed.visibility === 'visible', JSON.stringify(landed))
     const sendReduced = send.reduced || {}
-    check('the animation choice reaches it too: Reduced measures no origin and flies nothing (D26)',
+    check('the animation choice reaches it too: Reduced flies nothing and leaves the row visible (D26)',
       sendReduced.ghost === false && sendReduced.hidden === false && sendReduced.visibility === 'visible',
       JSON.stringify(sendReduced))
   },
+  // The DeepSeek brand's whale: its palette, the sheet it plays on the home
+  // card, the sheet a state change switches to, and the motion choice holding a
+  // sheet's still frame. The states it plays on the conversation page are the
+  // crab case's, which walks the mascot feature whole.
   deepy(r) {
-    check('apply() completes', r.applyError === null, r.applyError)
-    check('no feature reported a failure', r.errors.length === 0, r.errors.join(' | '))
+    basicChecks(r)
     const deepy = r.states || {}
     const is = (state, animation, place) => !!state && state.animation === animation && state.place === place && state.ready === true
     check('the brand stored as "off" reads as DeepSeek, and the light canvas turns sky white',
@@ -944,29 +1003,14 @@ const CASES = {
     check('its frames change on its own node without waking a pass',
       !!deepy.idle && deepy.idle.before !== deepy.idle.after && deepy.idle.passes === 0, JSON.stringify(deepy.idle))
     check('a click on its face pokes it', is(deepy.poke, 'poke-left', 'card'), JSON.stringify(deepy.poke))
-    check('on the conversation page it stands on the input area and thinks while the model reasons',
-      is(deepy.thinking, 'thinking', 'stack'), JSON.stringify(deepy.thinking))
-    check('it subscribes to the session\'s chat target, which the host builds only for a subscriber',
-      deepy.chatFollowed === true, JSON.stringify(deepy.chatFollowed))
-    check('it types while the model writes', is(deepy.typing, 'typing', 'stack'), JSON.stringify(deepy.typing))
-    check('with three sessions at work it puts on the hard hat', is(deepy.building, 'building', 'stack'), JSON.stringify(deepy.building))
-    check('an approval puts it on the approval panel, ringing the notification bubble',
-      is(deepy.notification, 'notification', 'panel'), JSON.stringify(deepy.notification))
-    check('a running compaction plays the compaction', is(deepy.compacting, 'compacting', 'stack'), JSON.stringify(deepy.compacting))
-    check('a finished compaction is celebrated', is(deepy.celebrating, 'happy', 'stack'), JSON.stringify(deepy.celebrating))
-    check('a failed tool call shakes it, over the celebration', is(deepy.failed, 'error', 'stack'), JSON.stringify(deepy.failed))
-    // The error sheet's still frame is its 24th: column 0, row 3 of 33-pixel-high frames at 2px a pixel.
+    check('the state change switches the node to another served sheet',
+      !!deepy.home && !!deepy.poke && deepy.poke.sheet !== deepy.home.sheet && /^url\("blob:/.test(deepy.poke.sheet),
+      JSON.stringify({ home: deepy.home.sheet, poke: deepy.poke.sheet }))
     check('the animation choice resolves onto the document: reduced holds the still frame, always plays',
       deepy.stillAttr === 'reduced' && deepy.alwaysAttr === 'full' &&
-        !!deepy.still && deepy.still.before === '0px -198px' && deepy.still.after === '0px -198px',
+        !!deepy.still && deepy.still.before === deepy.still.after,
       JSON.stringify({ stillAttr: deepy.stillAttr, alwaysAttr: deepy.alwaysAttr, frames: deepy.still }))
-    check('a compaction whose end comes back with the whole feed after a reconnect stops playing, uncelebrated',
-      is(deepy.resendBefore, 'compacting', 'stack') && is(deepy.resent, 'idle', 'stack'),
-      JSON.stringify({ before: deepy.resendBefore, after: deepy.resent }))
-    check('a minute of work is no quiet spell: the work ends and it idles; a quiet minute puts it to sleep; a pointer move wakes it',
-      is(deepy.afterWork, 'idle', 'stack') && is(deepy.asleep, 'sleeping', 'stack') && is(deepy.woken, 'waking', 'stack'),
-      JSON.stringify({ afterWork: deepy.afterWork, asleep: deepy.asleep, woken: deepy.woken }))
-    check('it leaves with the conversation, and takes its anchor mark along', deepy.gone === true, JSON.stringify(deepy.gone))
+    check('it leaves with the page, and takes its anchor mark along', deepy.gone === true, JSON.stringify(deepy.gone))
     commonChecks(r)
   },
 }

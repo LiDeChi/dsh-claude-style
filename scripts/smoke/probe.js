@@ -1,4 +1,13 @@
-/** Runs in the page after the bundle: applies the skin and reports. */
+/**
+ * Runs in the page after the bundle: applies the skin and reports.
+ *
+ * The reads run as one sequence. What no case names is the shared baseline —
+ * the install, the account menu, the composer row, the session list, the
+ * teardown — which every case's assertions draw on. A read only one case needs
+ * sits in an `onlyFor([...])` step of its own, and that list is the step's
+ * declaration of which cases read it. A page load may carry several cases (see
+ * PAGES in shared.cjs), and then it runs their steps in this order.
+ */
 (function () {
   window.__applyError = null
   try { window.__skin.apply(window.__ctx) } catch (e) { window.__applyError = String((e && e.stack) || e) }
@@ -26,6 +35,22 @@
   }
   window.__smoke = (async function () {
     var r = { applyError: window.__applyError, teardownRegistered: typeof window.__dispose === 'function' }
+    /**
+     * One case's own collection: `body` runs when the cases this page load
+     * carries include one of `names` (page.cjs sets window.SMOKE_GROUPS to
+     * them, and window.SMOKE_CASE to the page's own name for the pages that
+     * carry a single case). This is the only place that decides, and a list
+     * that matches none of them leaves that case's assertions short of their
+     * fields, so they fail.
+     */
+    async function onlyFor(names, body) {
+      var running = window.SMOKE_GROUPS || [window.SMOKE_CASE]
+      if (names.some(function (name) { return running.indexOf(name) !== -1 })) await body()
+    }
+    // Held across the plan: the shell cases' collection takes hold of the
+    // view-tab strip and the search root, and the teardown tail reads them.
+    var viewStrip = null
+    var searchRoot = null
     // The account menu is counted by content (its Sign out row): a role=menu
     // portal exists only while its menu is open — ours included — so the row
     // the host itself renders is the stable test.
@@ -39,7 +64,7 @@
       }
       return false
     }
-    if (window.SMOKE_CASE === 'late-forms') {
+    await onlyFor(['late-forms'], async function () {
       // The directory has not answered yet: the skin holds the defaults.
       r.lateBefore = document.body.getAttribute('data-dsh-claude-home-layout')
       window.__serveNamespace()
@@ -47,8 +72,8 @@
       document.body.appendChild(document.createElement('i'))
       await sleep(200)
       r.lateAfter = document.body.getAttribute('data-dsh-claude-home-layout')
-    }
-    if (window.SMOKE_CASE === 'popovers') {
+    })
+    await onlyFor(['popovers'], async function () {
       // The shared popover rule (shared/popover.js): the dwell keeps a pointer that
       // merely crosses a trigger from unfolding anything, and only one card is up
       // at a time — whichever opens last folds the one before it.
@@ -150,12 +175,12 @@
       drawerTrigger.dispatchEvent(new MouseEvent('mouseleave'))
       await sleep(250)
       r.cardsLeftAfterLeave = permUp() + drawerUp()
-    }
-    if (window.SMOKE_CASE === 'sync-fault') {
+    })
+    await onlyFor(['sync-fault'], async function () {
       // A sync is retired after failing three passes in a row: drive four.
       for (var n = 0; n < 4; n++) { document.body.appendChild(document.createElement('i')); await sleep(80) }
-    }
-    if (window.SMOKE_CASE === 'desktop') {
+    })
+    await onlyFor(['desktop'], async function () {
       // The footer entries are hidden in place from the first pass: nothing in
       // this case has opened the drawer yet, so this read is the state a fresh
       // page shows beside the account row. (The first pass runs on a frame.)
@@ -303,11 +328,23 @@
       document.dispatchEvent(new KeyboardEvent('keydown', { key: ',', ctrlKey: true, bubbles: true, cancelable: true }))
       await sleep(700)
       r.dialogAfterShortcut = document.querySelectorAll('[class*="settingsArea"] [role="dialog"]').length
+    })
+    // The reads below depend on the skin's first pass having landed. Waiting
+    // for the page to go quiet, rather than for a fixed delay, keeps that true
+    // on a slow machine without spending the delay on a fast one; the full tier
+    // then watches for a pass, which is the idle check, and the quick tier
+    // leaves that check out.
+    var quietSince = window.__passes
+    for (var waited = 0, quiet = 0; waited < 30 && quiet < 6; waited += 1) {
+      await sleep(50)
+      if (window.__passes === quietSince) quiet += 1
+      else { quiet = 0; quietSince = window.__passes }
     }
-    await sleep(1200)
-    var from = window.__passes
-    await sleep(1000)
-    r.idlePasses = window.__passes - from
+    if (window.SMOKE_TIER !== 'quick') {
+      var from = window.__passes
+      await sleep(1000)
+      r.idlePasses = window.__passes - from
+    }
     // The host's stats row is hidden outright, in both of its shapes: its pills
     // stay in the document as the read's own click targets, and their dialogs
     // are read into the context popover instead (the 'default' case below).
@@ -328,7 +365,7 @@
     }
     r.seatIdle = seatState(seats[0])
     r.seatRunning = seatState(seats[1])
-    if (window.SMOKE_CASE === 'default') {
+    await onlyFor(['brand'], async function () {
       // The Claude palette, light and dark: the ivory and warm-black canvases,
       // the clay accent, the raised card fill.
       var claudeLight = getComputedStyle(document.body)
@@ -344,6 +381,8 @@
         raised: claudeDark.getPropertyValue('--dsh-claude-raised').trim(),
       }
       document.body.removeAttribute('data-ds-dark-theme')
+    })
+    await onlyFor(['hero'], async function () {
       // The classic hero's welcome is drawn on arrival and holds between
       // passes: the draw pinned to either end of its pool gives two different
       // lines, and a further pass leaves the drawn one alone.
@@ -375,6 +414,8 @@
       r.greeting.high = await arrive(0.999)
       greetRoot.remove()
       await sleep(150)
+    })
+    await onlyFor(['view-tabs'], async function () {
       // The conversation view tabs (ConversationSession's strip): the pill is
       // drawn under the active tab without sliding in, then slides to the tab a
       // switch selects. The strip stays until the teardown, which must take the
@@ -387,8 +428,28 @@
         '<button type="button" role="tab" aria-selected="false" class="_c_tab_1">Context</button></div>'
       document.body.appendChild(viewHeader)
       await sleep(150)
-      var viewStrip = viewHeader.firstChild
+      viewStrip = viewHeader.firstChild
       var viewTabs = viewStrip.children
+      r.viewPill = { stamped: viewStrip.hasAttribute('data-dsh-view-tabs'), first: pillState(viewStrip, viewTabs[0]) }
+      viewTabs[0].setAttribute('aria-selected', 'false')
+      viewTabs[0].className = '_c_tab_1'
+      viewTabs[2].setAttribute('aria-selected', 'true')
+      viewTabs[2].className = '_c_tab_1 _c_tabActive_1'
+      await sleep(60)
+      r.viewPill.switched = pillState(viewStrip, viewTabs[2])
+      // The slide plays whatever the system's motion setting: no reduced-motion
+      // block in the shipped stylesheets may reach the pill.
+      r.viewPill.reducedMotionRules = 0
+      for (var sheetIndex = 0; sheetIndex < document.styleSheets.length; sheetIndex++) {
+        var sheetRules = document.styleSheets[sheetIndex].cssRules
+        for (var ruleIndex = 0; ruleIndex < sheetRules.length; ruleIndex++) {
+          var mediaRule = sheetRules[ruleIndex]
+          if (mediaRule instanceof CSSMediaRule && /prefers-reduced-motion/.test(mediaRule.conditionText) &&
+            mediaRule.cssText.indexOf('data-dsh-claude-pill') !== -1) r.viewPill.reducedMotionRules++
+        }
+      }
+    })
+    await onlyFor(['composer'], async function () {
       // The composer's host controls are marked by what they are, read from
       // the host's structure; the submit button turning into stop (its glyph
       // becomes a rect) moves its mark with it.
@@ -403,13 +464,8 @@
       sendSvg.innerHTML = sendGlyph
       await sleep(60)
       r.controls.back = controlOf('send')
-      r.viewPill = { stamped: viewStrip.hasAttribute('data-dsh-view-tabs'), first: pillState(viewStrip, viewTabs[0]) }
-      viewTabs[0].setAttribute('aria-selected', 'false')
-      viewTabs[0].className = '_c_tab_1'
-      viewTabs[2].setAttribute('aria-selected', 'true')
-      viewTabs[2].className = '_c_tab_1 _c_tabActive_1'
-      await sleep(60)
-      r.viewPill.switched = pillState(viewStrip, viewTabs[2])
+    })
+    await onlyFor(['search'], async function () {
       // The sidebar's brand row (ui-sidebar SidebarRoot): the search box goes in
       // beside the wide brand, and pressing it renders the host's Modal through
       // a root of the skin's own.
@@ -425,26 +481,15 @@
       var rootsBefore = window.__roots.length
       if (searchTrigger) searchTrigger.click()
       await sleep(60)
-      var searchRoot = window.__roots[rootsBefore]
+      searchRoot = window.__roots[rootsBefore]
       r.search = {
         placed: !!searchTrigger && searchTrigger.previousElementSibling === logoRow.firstElementChild,
         rowMarked: logoRow.hasAttribute('data-dsh-claude-search-row'),
         resting: searchTrigger ? getComputedStyle(searchTrigger).visibility : null,
         modalRendered: !!searchRoot && searchRoot.renders > 0,
       }
-      // The slide plays whatever the system's motion setting: no reduced-motion
-      // block in the shipped stylesheets may reach the pill.
-      r.viewPill.reducedMotionRules = 0
-      for (var sheetIndex = 0; sheetIndex < document.styleSheets.length; sheetIndex++) {
-        var sheetRules = document.styleSheets[sheetIndex].cssRules
-        for (var ruleIndex = 0; ruleIndex < sheetRules.length; ruleIndex++) {
-          var mediaRule = sheetRules[ruleIndex]
-          if (mediaRule instanceof CSSMediaRule && /prefers-reduced-motion/.test(mediaRule.conditionText) &&
-            mediaRule.cssText.indexOf('data-dsh-claude-pill') !== -1) r.viewPill.reducedMotionRules++
-        }
-      }
-    }
-    if (window.SMOKE_CASE === 'context-stats' || window.SMOKE_CASE === 'stats-compact') {
+    })
+    await onlyFor(['context-stats', 'stats-compact'], async function () {
       // The shown conversation, marked the way the host marks it: the skin reads
       // the session id off the conversation column, so the card and its dock are
       // wrapped in the case's own phase/column pair (the dock stays the card's
@@ -531,7 +576,7 @@
       statsCard.appendChild(document.createElement('span'))
       await sleep(400)
       r.context.roomAfter = document.body.style.getPropertyValue('--dsh-claude-meter-room')
-    }
+    })
     var drawer = document.querySelector('.dsh-claude-account-popover-body')
     r.drawer = drawer ? Array.prototype.map.call(drawer.children, function (c) {
       if (c.hasAttribute('data-action-index')) return 'action'
@@ -588,6 +633,31 @@
     var badge = mirrored ? mirrored.querySelector('.dsh-claude-popover-item-badge') : null
     r.mirroredBadge = badge ? badge.textContent : null
     r.stylesheet = !!document.getElementById('dsh-claude-style-style')
+    // The skin's sheet wears this package's own module-system tags (D33): the
+    // host's claim sweep reads untagged tags alone, so a tagged sheet cannot be
+    // claimed by a sibling package and removed by that sibling's reload.
+    var skinStyle = document.getElementById('dsh-claude-style-style')
+    r.sheetPlugin = skinStyle ? skinStyle.getAttribute('data-plugin') : null
+    r.sheetPluginCss = skinStyle ? skinStyle.getAttribute('data-plugin-css') : null
+    r.sheetClaimable = skinStyle ? skinStyle.matches('style:not([data-plugin])') : null
+    // The sibling's sheet (stand-in.js planted it before this bundle's factory
+    // ran): this package must keep it out of its own bookkeeping, so no reload of
+    // this package removes it (D33).
+    var siblingSheet = document.getElementById('smoke-sibling-sheet')
+    r.siblingSheetTag = siblingSheet ? siblingSheet.getAttribute('data-plugin') : null
+    r.siblingSheetClaimable = siblingSheet ? siblingSheet.matches('style:not([data-plugin])') : null
+    // A sibling's sheet that arrives after this bundle's factory ran, the way a
+    // plugin mounting its sheet from apply() arrives: the head watch parks it
+    // before the next package materializes (D33).
+    var lateSheet = document.createElement('style')
+    lateSheet.id = 'smoke-late-sibling-sheet'
+    lateSheet.textContent = '.smoke-late-sibling-sheet{color:rgb(4, 5, 6)}'
+    document.head.appendChild(lateSheet)
+    await Promise.resolve()
+    await sleep(0)
+    r.lateSheetTag = lateSheet.getAttribute('data-plugin')
+    r.lateSheetClaimable = lateSheet.matches('style:not([data-plugin])')
+    lateSheet.remove()
     // This stand-in host never carries the Windows titlebar marker, so the
     // skin must leave the body marker off and keep its measured placement.
     r.titlebarTabs = document.body.hasAttribute('data-dsh-titlebar-tabs')
@@ -619,7 +689,7 @@
     modelSeatRoot.setAttribute('data-dsh-claude-model-host', '')
     r.modelSeat.markedRoot = getComputedStyle(modelSeatRoot).display
     modelCard.remove()
-    if (window.SMOKE_CASE === 'studio') {
+    await onlyFor(['studio'], async function () {
       // Render the registered panel on the hero page, once per tab, the way
       // the dock seat would: a throw here is the slot's error boundary on the
       // live page, which leaves the new-conversation page without its panel.
@@ -784,7 +854,7 @@
         coldStart: panelDisplay('_x_composerStack_1 _x_composerHero_1', true),
         conversation: panelDisplay('_x_composerStack_1'),
       }
-    }
+    })
     // The host's own access-mode button: the permission control stands in for
     // it while installed, and hands it back when switched off.
     var hostAccess = document.querySelector('button[aria-label^="Access mode"]')
@@ -822,7 +892,7 @@
     // A round trip through the home view: the hero layout takes the trigger and
     // its popover out of the tree, and coming back builds a fresh, empty one
     // that has to be filled again.
-    if (window.SMOKE_CASE === 'automode-roundtrip') {
+    await onlyFor(['automode-roundtrip'], async function () {
       var wakePass = function () {
         var node = document.createElement('span')
         document.body.appendChild(node)
@@ -845,14 +915,13 @@
       r.rowsAfterReturn = Array.prototype.map.call(document.querySelectorAll('.dsh-claude-perm-popover [data-preset]'), function (it) {
         return it.getAttribute('data-preset')
       })
-    }
+    })
     // The chat column (ui-chat ChatView) of a failed turn followed by a running
     // one: each turn's process control renders first, then the turn's work;
     // the failed turn has its error and its footer, and a queued message
     // follows the running turn. Each status line has to show below its turn's
     // work, above what follows.
-    var switchCase = window.SMOKE_CASE === 'switches' || window.SMOKE_CASE === 'switches-off'
-    if (window.SMOKE_CASE === 'turn-status' || switchCase) {
+    await onlyFor(['turn-status', 'switches', 'switches-off'], async function () {
       var chatSession = document.createElement('div')
       chatSession.setAttribute('data-conversation-session', 'smoke-session')
       chatSession.innerHTML = '<div data-chat-flow="" style="display:flex;flex-direction:column">' +
@@ -886,12 +955,12 @@
         failed: lineOf(statusButtons[0]),
         live: lineOf(statusButtons[1]),
       }
-    }
+    })
     // The feature switches: each switched feature's own marks on the page,
     // read after a preference write and a pass. Off has to leave none of a
     // feature's marks (its teardown handed the surface back); on brings them
     // back, live, without touching the others.
-    if (switchCase) {
+    await onlyFor(['switches', 'switches-off'], async function () {
       // The host surfaces the three sidebar and header features take over:
       // the brand row (search), the workspace section with its tree
       // (workspace view) and the conversation's view-tab strip.
@@ -941,7 +1010,7 @@
       }
       await sleep(300)
       r.switches = { start: switchMarks(), steps: [] }
-      if (window.SMOKE_CASE === 'switches') {
+      await onlyFor(['switches'], async function () {
         for (var si = 0; si < switchKeys.length; si++) {
           var offPatch = {}
           offPatch[switchKeys[si]] = false
@@ -952,9 +1021,9 @@
           r.switches.steps.push({ key: switchKeys[si], off: off, on: on })
         }
         r.switches.allOff = await settleSwitch(allSwitches(false))
-      }
+      })
       r.switches.allOn = await settleSwitch(allSwitches(true))
-    }
+    })
     // The conversation navigator: the host's turn rail, built the way ui-chat
     // renders it — a nav in its slot in the conversation's scroller, one mark
     // per turn carrying its list position, the reading position's mark
@@ -962,7 +1031,7 @@
     // pixels tall — over chat rows that carry their turn. A press on the
     // host's mark is recorded, which is the whole of what the host's own jump
     // starts from. The skin's rail stands in the same slot.
-    if (window.SMOKE_CASE === 'turn-nav') {
+    await onlyFor(['turn-nav'], async function () {
       var navPhase = document.createElement('div')
       navPhase.setAttribute('data-phase', 'active')
       var navMarks = ''
@@ -1014,6 +1083,8 @@
       var navCurrent = navCard === null ? null : navCard.querySelector('[data-current]')
       navOut.open = {
         open: navCard === null ? null : navCard.getAttribute('data-open'),
+        // In the rail's slot, inside the conversation pane: a pointer on the card is on the pane.
+        inSlot: navCard !== null && navCard.parentElement === navRail.parentElement,
         railMarked: skinRail.hasAttribute('data-dsh-claude-turn-nav-open'),
         marksFaded: getComputedStyle(skinRail.querySelector('.dsh-claude-turn-rail-track')).opacity,
         rows: navRows.map(function (row) { return row.textContent }),
@@ -1067,13 +1138,13 @@
       navOut.switchedOff = await navSwitch(false)
       navOut.switchedOn = await navSwitch(true)
       r.turnNav = navOut
-    }
+    })
     // Following the host's colours and type: with the host's palette in the
     // page, the skin writes none of the host's tokens, paints none of the
     // host's frame, and its own surfaces read the host's tokens; a wallpaper
     // plugin's cleared canvas and glass then reach both. Back on Claude the
     // skin's own palette returns.
-    if (window.SMOKE_CASE === 'host-palette') {
+    await onlyFor(['host-palette'], async function () {
       var hostProbe = function (html) {
         var holder = document.createElement('div')
         holder.innerHTML = html
@@ -1120,12 +1191,12 @@
         claude: await readHost({ palette: 'claude', typeface: 'claude' }, false),
       }
       for (var hostKey in hostNodes) hostNodes[hostKey].remove()
-    }
+    })
     // The settings page, rendered through the stand-in React into a plain tree:
     // the tab strip, which rows each tab carries, and the sub-rows that grey
     // out while their parent is off. A tab is opened by standing the tab state
     // in for a click (the stand-in's `states`).
-    if (window.SMOKE_CASE === 'settings') {
+    await onlyFor(['settings'], async function () {
       var Section = (window.__slotComponents || {})['claude-style']
       var walk = function (node, visit) {
         if (node === null || node === undefined || typeof node !== 'object') return
@@ -1162,13 +1233,13 @@
         r.settings.parentsOff = { appearance: renderTab('appearance'), composer: renderTab('composer') }
         window.__pushForm({ modelPicker: true, mascot: 'brand' })
       }
-    }
+    })
     // The DeepSeek brand, stored under its old name ("off"): the whale takes
     // the crab's place and the canvas turns sky white. On the home page it
     // stands on the card; on the conversation page it follows the session's
     // work from the top of the input area, and stands on the panel that takes
     // the card's place while the reader is asked for something.
-    if (window.SMOKE_CASE === 'deepy' || window.SMOKE_CASE === 'crab-states') {
+    await onlyFor(['deepy', 'crab-states'], async function () {
       var mascotName = window.SMOKE_CASE === 'deepy' ? 'deepy' : 'crab'
       var driver = window.__deepy
       var whaleNow = function () {
@@ -1221,6 +1292,19 @@
       var deepyPasses = window.__passes
       await sleep(600)
       r.states.idle = { before: r.states.home && r.states.home.frame, after: whaleNow().frame, passes: window.__passes - deepyPasses }
+      if (mascotName === 'deepy') {
+        // The motion choice holds the playing sheet's still frame: a looping
+        // animation stops advancing, while a one-shot (the poke below) plays out.
+        window.__pushForm({ motion: 'reduced' })
+        await sleep(150)
+        r.states.stillAttr = document.body.getAttribute('data-dsh-claude-motion')
+        var whaleStill = whaleNow().frame
+        await sleep(400)
+        r.states.still = { before: whaleStill, after: whaleNow().frame }
+        window.__pushForm({ motion: 'full' })
+        await sleep(150)
+        r.states.alwaysAttr = document.body.getAttribute('data-dsh-claude-motion')
+      }
       // A click on its face pokes it.
       var hit = document.querySelector('.dsh-claude-' + mascotName + '-hit')
       var hitBox = hit.getBoundingClientRect()
@@ -1229,6 +1313,16 @@
       hit.dispatchEvent(new PointerEvent('pointerup', Object.assign({ buttons: 0 }, press)))
       await sleep(250)
       r.states.poke = whaleNow()
+      if (mascotName === 'deepy') {
+        // Two sheets are all this case asks for: the one it plays above, and the
+        // one this state change switches to. It leaves with the page.
+        deepyHero.remove()
+        await sleep(200)
+        r.states.gone = whaleNow() === null && document.querySelectorAll('[data-dsh-claude-deepy-anchor]').length === 0
+        return
+      }
+      // The crab plays every state on the conversation page, and stands where
+      // its scope puts it: the walk below is the crab case's alone.
       // The poke plays out (2s) before the page moves on.
       await sleep(1900)
       deepyHero.remove()
@@ -1368,11 +1462,11 @@
         scopeHero.remove()
         await sleep(200)
       }
-    }
+    })
     // The ported chat-follow feature (src/features/chat-follow/): a structural
     // moment hands the host's follow back, and a reader who took the scroll
     // over himself is left where he is.
-    if (window.SMOKE_CASE === 'chat-follow') {
+    await onlyFor(['chat-follow'], async function () {
       var followScroller = document.querySelector('[data-conversation-scroll]')
       var followColumn = document.querySelector('[data-chat-flow]')
       var cappedBody = document.querySelector('[data-step-process]:not([data-group-expanded-mode]) [data-step-process-body]')
@@ -1486,11 +1580,11 @@
       followScroller.scrollTop = followScroller.scrollHeight
       await sleep(200)
       r.chatFollow.glideButtonBack = document.querySelector('[data-dsh-claude-stream-glide]') === null
-    }
+    })
     // The ported caret motion (src/features/caret/): the focused composer
     // surface gets a drawn caret and the native one gives way; switching the
     // feature off takes both away and gives the native one back.
-    if (window.SMOKE_CASE === 'caret') {
+    await onlyFor(['caret'], async function () {
       var caretEditor = document.querySelector('[data-composer-input]')
       var caretOf = function () {
         var layer = document.querySelector('[data-dsh-claude-caret-layer]')
@@ -1555,12 +1649,12 @@
       }
       window.__pushForm({ motion: 'system' })
       await sleep(250)
-    }
+    })
     // The ported automatic folding (src/features/chat-fold/): a running thinking
     // row and a running process group are opened at install, both fold back when
     // their section ends, a tier that does not cap its body is never pressed, and
     // a group the reader opened himself in that phase stays open.
-    if (window.SMOKE_CASE === 'chat-fold') {
+    await onlyFor(['chat-fold'], async function () {
       var foldThink = document.getElementById('debugThink')
       var foldGroup = document.getElementById('debugGroup')
       var foldHeader = document.getElementById('debugGroupHeader')
@@ -1668,12 +1762,12 @@
       window.__pushForm({ chatAnimations: true })
       await sleep(200)
       r.fold.animationsBack = { mark: document.body.hasAttribute('data-dsh-claude-chat-fold') }
-    }
+    })
     // The ported token reveal (src/features/chat-reveal/): characters arriving in
     // a streaming container are registered as named highlights from the faintest
     // step, they are gone once faded, and the preference withdraws the engine
     // whole.
-    if (window.SMOKE_CASE === 'chat-reveal') {
+    await onlyFor(['chat-reveal'], async function () {
       var revealPeek = function () {
         var registry = window.CSS ? window.CSS.highlights : null
         var total = 0
@@ -1726,11 +1820,11 @@
         opening: revealOpening, grown: revealGrown, settled: revealSettled, off: revealOff, back: revealBack,
         reduced: revealReduced, systemFlip: { reduced: revealFlipReduced, back: revealFlipBack },
       }
-    }
+    })
     // The ported file-change row (src/features/chat-files/): the two keyed seats
     // are claimed from the tool view slot, and one row renders its collapsed tail
     // and its expanded card from the call's own arguments and metadata.
-    if (window.SMOKE_CASE === 'chat-files') {
+    await onlyFor(['chat-files'], async function () {
       var slotEntries = (window.__slots || []).filter(function (entry) { return entry.key === 'tool.call.toolview' })
       var fileRow = (window.__slotComponents || {}).edit
       var t = function (key) { return 't:' + key }
@@ -1845,11 +1939,11 @@
       filePeerStyle.remove()
       await sleep(250)
       r.files.peerOff = { seats: fileSeats(), foldMark: document.body.hasAttribute('data-dsh-claude-chat-fold') }
-    }
+    })
     // The ported send flight (src/features/chat-send/): a submission lifts a
     // stand-in off the composer card, hides the real row while it flies, and puts
     // everything back when it lands.
-    if (window.SMOKE_CASE === 'chat-send') {
+    await onlyFor(['chat-send'], async function () {
       var sendInput = document.getElementById('editor')
       var sendFlow = document.createElement('div')
       sendFlow.setAttribute('data-chat-flow', '')
@@ -1905,11 +1999,11 @@
       window.__pushForm({ motion: 'system' })
       await sleep(150)
       sendFlow.remove()
-    }
+    })
     // The other chat-behaviour plugin installed (src/shared/peer-plugin.js): the
     // ported features stand down whole, and the settings page shows their
     // switches off and disabled with the reason.
-    if (window.SMOKE_CASE === 'peer-chat-ux') {
+    await onlyFor(['peer-chat-ux'], async function () {
       var peerHighlights = function () {
         var registry = window.CSS && window.CSS.highlights
         if (!registry) return 0
@@ -2004,7 +2098,7 @@
         peerTexts(peerTree, r.peer.settings.texts)
       }
       peerChat.remove()
-    }
+    })
     // The host's own account row, when the host has one: the skin marks it and
     // repaints it as a Claude row, so the teardown has to hand it back exactly as
     // the host rendered it (D12).
@@ -2070,6 +2164,15 @@
         display: getComputedStyle(hostRowEnd).display,
         width: hostRowEnd.getBoundingClientRect().width,
       }
+      // The host removes every tag carrying this package's id when the package
+      // reloads (client-modules' `removeOwnedStyles`); the sibling's sheet must
+      // not be among them, whether that step runs before or after the teardown.
+      var tagsOwned = document.querySelectorAll('style[data-plugin]')
+      for (var to = 0; to < tagsOwned.length; to++) {
+        if (tagsOwned[to].getAttribute('data-plugin') === 'dsh-claude-style') tagsOwned[to].remove()
+      }
+      r.siblingSheetSurvives = !!siblingSheet && siblingSheet.isConnected
+      if (siblingSheet) siblingSheet.remove()
     }
     return r
   })()
