@@ -52,8 +52,11 @@
      *             shape, colour and the words' re-flow are all on the compositor,
      *             so they keep moving while the host parses a response on the main
      *             thread.
-     *   land      unmark and drop the stand-in — the real row is already at the
-     *             destination, so the hand-over moves nothing.
+     *   land      unmark the real row and fade the stand-in out over it
+     *             (CHAT_LANDING_MS), then drop the stand-in — the real row is
+     *             already at the destination, so the hand-over moves nothing,
+     *             and the fade carries the words from the stand-in's rendering
+     *             to the page's (see land()).
      *
      * Five edges:
      *
@@ -106,13 +109,53 @@
         const activeFlight = flight
         if (activeFlight === null || !touchesUserRow(records)) return
         const row = currentRow(activeFlight.previous)
-        if (row === null || row === activeFlight.hidden) return
-        activeFlight.hidden?.removeAttribute(CHAT_FLYING_ATTR)
-        row.setAttribute(CHAT_FLYING_ATTR, '')
-        activeFlight.hidden = row
+        if (row === null || row === activeFlight.hidden || row === activeFlight.landedRow) return
+        // Landing, the real row is already showing under the fading stand-in:
+        // a row swapped in now is followed, not hidden.
+        if (activeFlight.landing) {
+          activeFlight.landedRow = row
+        } else {
+          activeFlight.hidden?.removeAttribute(CHAT_FLYING_ATTR)
+          row.setAttribute(CHAT_FLYING_ATTR, '')
+          activeFlight.hidden = row
+        }
         activeFlight.bubble = findBubble(row)
         followTarget(activeFlight)
       })
+
+      /**
+       * Hand the stand-in over to the real bubble: show the real row under it and
+       * fade the stand-in out over CHAT_LANDING_MS, still following the
+       * destination, then settle.
+       *
+       * The two are the same bubble in the same place, but they are not drawn
+       * alike: the stand-in flies on compositor layers, and a transparent layer
+       * draws its words with greyscale antialiasing where the page draws the
+       * real bubble's with the screen's subpixel antialiasing (ClearType on
+       * Windows). Swapped in one frame, the words visibly darken and change
+       * weight the instant the flight ends; faded across, they sharpen into the
+       * real ones.
+       */
+      const land = () => {
+        const activeFlight = flight
+        if (activeFlight === null || activeFlight.landing) return
+        activeFlight.landing = true
+        const row = activeFlight.hidden
+        row?.removeAttribute(CHAT_FLYING_ATTR)
+        activeFlight.hidden = null
+        activeFlight.landedRow = row
+        const fade = activeFlight.morph.wrapper.animate([{ opacity: 1 }, { opacity: 0 }], {
+          duration: CHAT_LANDING_MS,
+          easing: 'ease-out',
+          fill: 'forwards',
+        })
+        activeFlight.morph.animations.push(fade)
+        // The handler rather than the `finished` promise: settling cancels this
+        // animation, and a cancelled animation rejects its promise.
+        fade.onfinish = () => {
+          if (flight === activeFlight) settle()
+        }
+      }
 
       /** Land: release the real row first, then drop the stand-in. Reversed, a blank flashes. */
       const settle = () => {
@@ -157,11 +200,8 @@
         const activeFlight = flight
         if (activeFlight === null) return
         const u = activeFlight.morph.progress()
-        if (u >= 1) {
-          settle()
-          return
-        }
         activeFlight.morph.compact(u)
+        if (u >= 1) land()
         followTarget(activeFlight)
         requestAnimationFrame(tick)
       }
@@ -190,10 +230,13 @@
           shiftedY: 0,
           previous: lastUserRow(),
           hidden: echo,
+          // Whether the flight has landed and is fading across to the real row, and that row.
+          landing: false,
+          landedRow: null,
           bubble,
         }
         rowWatcher.observe(document.body, { childList: true, subtree: true })
-        rescue = window.setTimeout(settle, CHAT_FLIGHT_MS + CHAT_RESCUE_MARGIN_MS)
+        rescue = window.setTimeout(settle, CHAT_FLIGHT_MS + CHAT_LANDING_MS + CHAT_RESCUE_MARGIN_MS)
         requestAnimationFrame(tick)
       }
 

@@ -234,7 +234,7 @@
       const travel = run(mover, samples.map(sample => ({
         offset: sample.u,
         transform: 'translate(' + dx * sample.m + 'px, '
-          + dy * chatSendSpringProgress(sample.u, CHAT_RISE_DAMPING, CHAT_RISE_OMEGA) + 'px)',
+          + dy * chatSendRiseProgress(sample.u) + 'px)',
       })))
       // The shape: the shell scales to the stretch that can really be drawn right
       // now. This used to be `clip-path: inset(...)`, which does not composite:

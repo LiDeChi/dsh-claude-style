@@ -22,6 +22,13 @@
     const CHAT_FLIGHT_MS = 400
 
     /**
+     * How long the stand-in fades out over the real bubble once it has landed.
+     * Long enough for the words to read as sharpening rather than switching,
+     * short enough that two copies of the same bubble are never noticed.
+     */
+    const CHAT_LANDING_MS = 160
+
+    /**
      * The angular frequency the displacement and the shape share. One progress
      * `m` drives the horizontal position, the outer width, the content area and
      * the line height for the whole flight: the reader sees the bubble leave the
@@ -135,6 +142,18 @@
       const damped = omega * Math.sqrt(1 - damping * damping)
       return 1 - Math.exp(-damping * omega * u)
         * (Math.cos(damped * u) + (damping * omega / damped) * Math.sin(damped * u))
+    }
+
+    /**
+     * The vertical progress: the under-damped rise, with what it has not yet
+     * settled at the end of the flight taken out by a cubic that is all but zero
+     * early on. Uncorrected it ends 0.3% past the target (1.5px over a 500px
+     * rise), and the landing would show the stand-in and the real bubble that
+     * far apart.
+     */
+    function chatSendRiseProgress(u) {
+      const residual = chatSendSpringProgress(1, CHAT_RISE_DAMPING, CHAT_RISE_OMEGA) - 1
+      return chatSendSpringProgress(u, CHAT_RISE_DAMPING, CHAT_RISE_OMEGA) - residual * u * u * u
     }
 
     /**
