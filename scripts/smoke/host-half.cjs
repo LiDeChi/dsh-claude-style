@@ -1,7 +1,7 @@
 /**
  * The smoke's host half, in Node: host/index.js applied to a fake cordis
  * context, and its private routes driven with the request shapes that matter
- * (docs/architecture.md D11).
+ * (docs/decisions D11).
  */
 'use strict'
 const fs = require('fs')

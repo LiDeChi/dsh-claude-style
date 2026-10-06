@@ -1,6 +1,6 @@
     /**
      * A feature's handle on the shared `ui` registry. Every hook is optional: the
-     * scheduler calls the ones a feature implements and skips the rest (D13).
+     * scheduler calls the ones a feature implements and skips the rest (D42).
      *
      * @property {Function} [sync] Every scheduler pass, in FEATURES order.
      * @property {Function} [owns] `owns(target) → boolean`: whether the press

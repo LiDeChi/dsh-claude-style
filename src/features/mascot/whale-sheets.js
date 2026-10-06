@@ -1,5 +1,5 @@
     /**
-     * Deepy's sheet pipeline, split out of whale.js (D18): which address a
+     * Deepy's sheet pipeline, split out of whale.js (D46): which address a
      * sheet plays from, and the cache the converted text lives in.
      *
      * Sheets ship as PNG (the format compresses this art best), but a vector is

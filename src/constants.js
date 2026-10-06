@@ -418,7 +418,7 @@
     /**
      * On a node the skin owns purely for its own bookkeeping — the caret
      * motion's probe container and the caret it draws. The shared scheduler
-     * ignores mutations against such a node (D6), so measuring or redrawing
+     * ignores mutations against such a node (D40), so measuring or redrawing
      * never wakes a pass that no feature needs.
      */
     const QUIET_ATTR = 'data-dsh-claude-quiet'

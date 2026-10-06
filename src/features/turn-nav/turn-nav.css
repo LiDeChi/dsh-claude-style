@@ -1,4 +1,4 @@
-/* ---------- Conversation navigator (features/turn-nav, docs/architecture.md D34) ---------- */
+/* ---------- Conversation navigator (features/turn-nav, docs/decisions D34) ---------- */
 /* The skin's turn rail stands in the host's rail slot at the card's row pitch
    (24px), and opens into the card with every row on its mark. The host's own
    rail stays laid out but unseen: its marks are what a jump presses. */

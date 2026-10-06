@@ -350,7 +350,7 @@ export function registerRoutes(ctx, scope) {
      * Register one route. The web server refuses a path another plugin already
      * holds by throwing; that refusal is reported and the other routes still
      * register, because a throw here would fail this fiber and drop the client
-     * bundle — the whole skin — with it (docs/architecture.md D12).
+     * bundle — the whole skin — with it (docs/decisions D12).
      */
     const register = (label, route) => {
       try {
@@ -527,7 +527,7 @@ export function registerRoutes(ctx, scope) {
     return () => {
       usage.dispose()
       // One route's disposer failing must not keep the others registered
-      // (docs/architecture.md D12); the failure is reported.
+      // (docs/decisions D12); the failure is reported.
       for (const dispose of disposers) {
         try {
           dispose()

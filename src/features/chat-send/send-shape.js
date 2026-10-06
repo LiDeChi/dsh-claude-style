@@ -250,7 +250,7 @@
       const probeHost = document.createElement('div')
       // Marked quiet: the probe is built, measured and removed inside this call,
       // and the shared scheduler must not read that as a change worth a pass
-      // (QUIET_ATTR, D6).
+      // (QUIET_ATTR, D40).
       probeHost.setAttribute(QUIET_ATTR, '')
       probeHost.style.cssText = 'position:fixed;left:-100000px;top:0;visibility:hidden;contain:layout style;pointer-events:none'
       const probe = chatSendTextLayer(bubble, style)

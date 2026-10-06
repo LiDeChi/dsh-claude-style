@@ -1,5 +1,5 @@
     /**
-     * The host side of the conversation navigator (docs/architecture.md D34):
+     * The host side of the conversation navigator (docs/decisions D34):
      * ui-chat's turn rail, the turns it lists, and the jump that presses its
      * marks.
      *

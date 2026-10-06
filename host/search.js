@@ -87,7 +87,7 @@ export function createSessionSearch(ctx) {
    * One session's messages. The query service throws to say a stored log is
    * unreadable or went away between the listing and the read; that session
    * then holds nothing until its change token moves again, and the rest of
-   * the history stays searchable (docs/architecture.md D12).
+   * the history stays searchable (docs/decisions D12).
    */
   async function readMessages(query, sessionId) {
     try {

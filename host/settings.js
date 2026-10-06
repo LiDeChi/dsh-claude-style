@@ -98,7 +98,7 @@ function prefsField(Schema, key) {
  * bundle ships 3.18.2, so the marker is applied only when the installed
  * factory provides it.
  *
- * The import is guarded and top-level-awaited (docs/architecture.md D10): a
+ * The import is guarded and top-level-awaited (docs/decisions D10): a
  * host that cannot resolve schemastery must still load the skin — it just
  * loses the settings form.
  *

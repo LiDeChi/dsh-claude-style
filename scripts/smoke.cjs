@@ -5,7 +5,7 @@
  *
  * Host half, in Node: `host/index.js` is applied to a fake cordis context and the
  * username and session-delete routes get the request shapes that matter
- * (docs/architecture.md D11) — a cross-site page, a LAN peer and the browser's
+ * (docs/decisions D11) — a cross-site page, a LAN peer and the browser's
  * own same-origin fetch, plus the deletion route's own guards (POST only, the id
  * shape, an open session, a path-shaped id) and a real deletion against a
  * scratch harness home under .debug/ — once through a host that offers

@@ -91,7 +91,7 @@
       let endKeyed = false
       /**
        * Where the measuring probes are built. It is marked quiet (QUIET_ATTR),
-       * so the shared scheduler never reads a measurement as a change (D6); the
+       * so the shared scheduler never reads a measurement as a change (D40); the
        * probes are built and removed inside it, in the same call.
        */
       const probeHome = document.createElement('div')
@@ -232,7 +232,7 @@
         if (markedHost) host.setAttribute(CARET_HOST_ATTR, '')
         const caret = document.createElement('div')
         caret.setAttribute(CARET_LAYER_ATTR, '')
-        // The scheduler reads the insertion of a marked node as no change (D6).
+        // The scheduler reads the insertion of a marked node as no change (D40).
         caret.setAttribute(QUIET_ATTR, '')
         host.appendChild(caret)
         if (input.isContentEditable) observeComposer(input)

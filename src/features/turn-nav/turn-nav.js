@@ -1,5 +1,5 @@
     /**
-     * The conversation navigator (docs/architecture.md D34): the turn rail at
+     * The conversation navigator (docs/decisions D34): the turn rail at
      * the conversation's right edge, drawn by the skin at the pitch of the list
      * it opens into.
      *

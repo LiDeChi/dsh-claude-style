@@ -304,7 +304,7 @@ export function createUsage(ctx) {
     } catch {
       // Another plugin's file, read without any coordination with its writer:
       // a write in progress reads as no ledger, and the local fold answers
-      // (docs/architecture.md D12).
+      // (docs/decisions D12).
       return null
     }
     if (parsed === null || typeof parsed !== 'object') return null
@@ -366,7 +366,7 @@ export function createUsage(ctx) {
     } catch (error) {
       // The cache only saves work: a file that does not parse is reported, the
       // pass folds every session again and writes a whole new file over it
-      // (docs/architecture.md D12).
+      // (docs/decisions D12).
       ctx.logger?.warn?.(`dsh-claude-style: usage cache unreadable, folding again: ${error.message}`)
       return new Map()
     }
@@ -395,7 +395,7 @@ export function createUsage(ctx) {
       renameSync(temp, path)
     } catch (error) {
       // The cache only saves work: a write that fails is reported, and the
-      // roll-up this pass computed is still served (docs/architecture.md D12).
+      // roll-up this pass computed is still served (docs/decisions D12).
       ctx.logger?.warn?.(`dsh-claude-style: usage cache not written: ${error.message}`)
     }
   }
@@ -508,7 +508,7 @@ export function createUsage(ctx) {
     } catch (error) {
       // The query service throws these two to say a stored log is unreadable
       // or went away between the listing and the read: that session is
-      // skipped and retried on the next pass (docs/architecture.md D12).
+      // skipped and retried on the next pass (docs/decisions D12).
       if (error?.code !== 'SESSION_QUERY_CORRUPT_SESSION' && error?.code !== 'SESSION_QUERY_SESSION_NOT_FOUND') throw error
       ctx.logger?.warn?.(`dsh-claude-style: session ${sessionId} left out of the usage roll-up: ${error.message}`)
       return null

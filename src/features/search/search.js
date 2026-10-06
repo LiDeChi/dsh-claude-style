@@ -9,7 +9,7 @@
      * the host's mask, focus return and modal layer, so while it is open the
      * host's shortcuts treat it as the foreground dialog, and Esc closes it.
      * The skin fills the modal's card with its own rows (sources.js).
-     * docs/architecture.md D22.
+     * docs/decisions D22.
      *
      * @param ctx - client context.
      * @param ui - shared handle table.

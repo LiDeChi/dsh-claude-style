@@ -7,7 +7,7 @@
      * answer with the control disabled and a line saying who owns the behaviour
      * right now: that plugin implements the same interactions, and these
      * features stand down whole for as long as it is there
-     * (src/shared/peer-plugin.js, docs/architecture.md D32). Nothing is written
+     * (src/shared/peer-plugin.js, docs/decisions D32). Nothing is written
      * to the stored preference, so the switch already says what will happen the
      * moment that plugin goes away.
      */

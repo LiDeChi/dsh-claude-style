@@ -2,7 +2,7 @@
      * The other chat-behaviour plugin, when this page runs it.
      *
      * dsh-chat-ux implements the same chat-area interactions this skin ports
-     * (docs/architecture.md D32): the same fold doors over the same clicks, the
+     * (docs/decisions D32): the same fold doors over the same clicks, the
      * same two seat keys at the same priority, the same token fade, the same
      * drawn caret. Two implementations of one behaviour on one page do not
      * merge — the fold doors both intercept the click and replay it at each
@@ -31,7 +31,7 @@
      * read can hand back (features/chat-files/).
      *
      * The observer lives only while something is subscribed, and it is the third
-     * exception to the single-scheduler rule (docs/architecture.md D6): the head
+     * exception to the single-scheduler rule (docs/decisions D40): the head
      * is outside the scheduler's `<body>` subtree, and what it waits for is one
      * element appearing or going.
      */

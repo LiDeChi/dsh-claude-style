@@ -13,7 +13,7 @@
      * chat snapshot (`uiConversation`, target `chat`): the turn's start and
      * end, the usage its settled steps report, the output of the step still
      * streaming and the running tool calls. Durations and the stopped / failed
-     * words are the host's own chat wording. docs/architecture.md D23.
+     * words are the host's own chat wording. docs/decisions D23.
      *
      * @param ctx - client context.
      * @param ui - shared handle table.

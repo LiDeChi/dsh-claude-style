@@ -1,6 +1,6 @@
     /**
      * The chat area's host contract, as the ported chat interactions
-     * (docs/architecture.md D32) and the conversation navigator (D34) read it.
+     * (docs/decisions D32) and the conversation navigator (D34) read it.
      *
      * Everything here is an attribute or selector the host itself writes. Its
      * class names carry a build-time hash and change with every release, so the

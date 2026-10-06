@@ -4,7 +4,7 @@
      * into the caller's own state, and a listener list told once that happens.
      *
      * The fetch is armed by load(); a failure means the host half did not
-     * answer, and the caller's defaults simply stay (docs/architecture.md D12
+     * answer, and the caller's defaults simply stay (docs/decisions D12
      * — a Promise rejection that says "the host half did not answer"). reset()
      * re-arms the resource: a new host context is a new machine, so the next
      * load() fetches again.
