@@ -109,6 +109,16 @@ All fragments share one factory scope: no import/export, 4-space base indentatio
 ### Model Copy Is Data, Not Bundle
 
 - `src/model-descriptions.json` is validated at build time and **copied** to `lib/`; the browser side fetches it through the host route the first time it renders a picker. Extending the copy table requires no JS change.
+### Comments
+
+Code comments carry only what a reader needs to keep the code honest, and nothing else:
+
+- Say why the code has this shape: the host contract it depends on, the ordering that matters, what breaks if it changes. One to three lines is the norm; a block longer than that is a signal that the reasoning belongs in a document.
+- Never restate what the code says, never narrate the change ("used to be", "now", "the old rule is gone"), never record measurements or release history — those belong in `CHANGELOG.md`.
+- Architecture and design reasoning lives in `docs/architecture.md`; cite the decision number (`D9`) instead of retelling it. Visual tokens and shape rules cite `docs/STYLE.md` the same way.
+- When a rule's reason is already in a document, the comment is one line pointing at that document.
+- Reviewers may delete a comment that says nothing a reader could act on.
+
 - Each entry is `{ locale: text }`; lookup degrades through: exact entry → family rule → tier rule → catalog's own text.
 - The copy is product-line copy: mapped by name pattern, unchanged across version iterations and retirements; never add self-invented tier prefixes (like "Flagship tier:"); never repeat the model name already in the row.
 - Family rules are ordered and must be anchored (e.g. the `flash` rule is scoped to deepseek); **never write superlatives like "strongest/flagship"** — superlatives are only allowed in exact entries bound to a concrete version number. Full policy in docs/architecture.md D5.
