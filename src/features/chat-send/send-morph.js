@@ -93,11 +93,19 @@
       wrapper.style.top = start.top + 'px'
       const mover = document.createElement('div')
       mover.style.cssText = 'position:absolute;left:0;top:0;width:0;height:0;will-change:transform'
+      // The halo hangs where the card's surface is, not where the frame is: the
+      // surface is what carries the hairline and the shadow (send-snapshot.js's
+      // chatSendSurface), and on a card whose surface sits inside the frame the
+      // shadow would otherwise be drawn around the toolbar row too, which paints
+      // nothing.
+      const surface = snapshot.surface
       const halo = document.createElement('div')
-      halo.style.cssText = 'position:absolute;left:0;top:0;transform-origin:0 0;background:transparent;will-change:transform,opacity'
-      halo.style.width = W0 + 'px'
-      halo.style.height = H0 + 'px'
-      halo.style.borderRadius = R0 + 'px'
+      halo.style.cssText = 'position:absolute;transform-origin:0 0;background:transparent;will-change:transform,opacity'
+      halo.style.left = surface.left + 'px'
+      halo.style.top = surface.top + 'px'
+      halo.style.width = surface.width + 'px'
+      halo.style.height = surface.height + 'px'
+      halo.style.borderRadius = surface.radius + 'px'
       halo.style.boxShadow = snapshot.shadow
       const shell = document.createElement('div')
       shell.style.cssText = 'position:absolute;left:0;top:0;overflow:hidden;transform-origin:0 0;will-change:transform'
@@ -126,11 +134,28 @@
       // the colour both froze while only opacity kept going), while opacity is the
       // compositor's oldest road and is steady on older Chromium too. Two opaque
       // layers stacked by alpha are exactly the linear mix of the two colours.
+      //
+      // They start on the surface's box rather than the frame's — where the card
+      // paints its fill on the draft area, the toolbar row under it stands on the
+      // canvas (send-snapshot.js's chatSendSurface) — and grow into the whole
+      // shape along the shape's own progress (the fills' run below), so the
+      // bubble the stand-in lands as is filled edge to edge.
+      const fillStyle = 'position:absolute;margin:0;padding:0;border:0;transform-origin:0 0;will-change:transform,opacity'
       const bubbleFill = document.createElement('div')
-      bubbleFill.style.cssText = 'position:absolute;inset:0'
+      bubbleFill.style.cssText = fillStyle
+      bubbleFill.style.left = surface.left + 'px'
+      bubbleFill.style.top = surface.top + 'px'
+      bubbleFill.style.width = surface.width + 'px'
+      bubbleFill.style.height = surface.height + 'px'
+      bubbleFill.style.borderRadius = surface.radius + 'px'
       bubbleFill.style.backgroundColor = style.backgroundColor
       const cardFill = document.createElement('div')
-      cardFill.style.cssText = 'position:absolute;inset:0;will-change:opacity'
+      cardFill.style.cssText = fillStyle
+      cardFill.style.left = surface.left + 'px'
+      cardFill.style.top = surface.top + 'px'
+      cardFill.style.width = surface.width + 'px'
+      cardFill.style.height = surface.height + 'px'
+      cardFill.style.borderRadius = surface.radius + 'px'
       cardFill.style.backgroundColor = snapshot.background
       scaler.append(bubbleFill, cardFill)
       // The clone has left the card's parent chain, so descendant selectors match
@@ -325,15 +350,33 @@
         shell.style.borderRadius = final.radius + 'px'
         scaler.style.transform = 'none'
       }
-      run(cardFill, between(0, CHAT_MORPH_END, sample => ({ opacity: String(1 - sample.m) }), 2))
+      // The fills: from the surface's box to the shape's visible box, both edges
+      // moving on the shape's own `m`, so the box they reach at the end of the
+      // shape is exactly the one the shell clips to. The card's fades over the
+      // bubble's on the same samples.
+      const fillTransform = (sample) => {
+        const left = surface.left * (1 - sample.m)
+        const top = surface.top * (1 - sample.m)
+        const width = surface.width + (sample.visible - surface.width) * sample.m
+        const height = surface.height + (sample.height - surface.height) * sample.m
+        return 'translate(' + (left - surface.left) + 'px, ' + (top - surface.top) + 'px) scale('
+          + width / Math.max(surface.width, CHAT_MIN_REVERSE_DIVISOR) + ', '
+          + height / Math.max(surface.height, CHAT_MIN_REVERSE_DIVISOR) + ')'
+      }
+      run(bubbleFill, between(0, CHAT_MORPH_END, sample => ({ transform: fillTransform(sample) })))
+      run(cardFill, between(0, CHAT_MORPH_END, sample => ({
+        transform: fillTransform(sample),
+        opacity: String(1 - sample.m),
+      })))
       // The halo hangs outside the shell so the shell's `overflow: hidden` cannot
       // clip it — its shadow would otherwise paint past the visible right edge
       // (measured: 24px past the column on every frame). Its scale accounts for the
-      // frame plus the shadow's spread, putting the shadow's outer edge right on
+      // surface plus the shadow's spread, putting the shadow's outer edge right on
       // the visible right edge.
       const shadow = chatSendShadowSpread(snapshot.shadow)
       run(halo, between(0, CHAT_MORPH_END, sample => ({
-        transform: 'scale(' + sample.visible / (W0 + shadow) + ', ' + sample.height / (H0 + shadow) + ')',
+        transform: 'scale(' + sample.visible / (surface.left + surface.width + shadow) + ', '
+          + sample.height / (surface.top + surface.height + shadow) + ')',
         opacity: String(Math.max(0, 1 - sample.m / CHAT_HALO_GONE_AT)),
       }), 2))
       for (const piece of snapshot.chrome) {

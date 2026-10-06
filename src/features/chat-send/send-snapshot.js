@@ -97,6 +97,66 @@
     }
 
     /**
+     * The element inside the composer card that really paints the card's surface.
+     *
+     * The card element is not always the one that carries the fill, the hairline
+     * and the shadow. This skin's card.css paints all three on the draft area's
+     * scroll box and leaves the card itself with no background at all, so a flight
+     * that read them off the card would cross-fade an empty fill and shrink an
+     * empty shadow while the clone's own surface painted itself for the whole
+     * flight.
+     *
+     * The walk is shallow on purpose — the first descendant that paints a fill, in
+     * breadth-first order — and it costs nothing on a card that paints itself,
+     * which is the ordinary case.
+     *
+     * @param card - the composer card.
+     * @param cardStyle - its computed style.
+     * @returns the surface element and its child-index path from the card (empty
+     *          when the card is the surface).
+     */
+    function chatSendSurface(card, cardStyle) {
+      if (chatSendAlpha(cardStyle.backgroundColor) > 0) return { element: card, path: [] }
+      const queue = Array.from(card.children)
+      while (queue.length > 0) {
+        const node = queue.shift()
+        if (node === undefined) break
+        if (!(node instanceof HTMLElement)) continue
+        if (chatSendAlpha(window.getComputedStyle(node).backgroundColor) > 0) {
+          const path = []
+          for (let walk = node; walk !== card && walk.parentElement !== null; walk = walk.parentElement) {
+            path.unshift(Array.from(walk.parentElement.children).indexOf(walk))
+          }
+          return { element: node, path }
+        }
+        for (const child of node.children) queue.push(child)
+      }
+      return { element: card, path: [] }
+    }
+
+    /**
+     * The shadow the stand-in's halo draws: the surface's own box-shadow plus its
+     * border as one more ring, so the hairline shrinks and fades with the shadow
+     * (send-morph.js's halo run) instead of staying on the clone.
+     */
+    function chatSendSurfaceShadow(style) {
+      const parts = []
+      const shadow = style.boxShadow
+      if (shadow !== '' && shadow !== 'none') parts.push(shadow)
+      if (chatSendPixel(style.borderTopWidth) > 0 && chatSendAlpha(style.borderTopColor) > 0) {
+        parts.push('0 0 0 ' + style.borderTopWidth + ' ' + style.borderTopColor)
+      }
+      return parts.join(', ')
+    }
+
+    /** The element a child-index path from the card names, inside the clone. */
+    function chatSendElementAt(root, path) {
+      let element = root
+      for (const index of path) element = element?.children[index]
+      return element instanceof HTMLElement ? element : null
+    }
+
+    /**
      * Pin declarations inline with `!important`.
      *
      * Two things inside the stand-in are matched by other people's rules: the
@@ -167,6 +227,16 @@
         top: inputBox.top - box.top + input.clientTop + chatSendPixel(inputStyle.paddingTop),
         right: box.right - (inputBox.right - chatSendPixel(inputStyle.borderRightWidth) - chatSendPixel(inputStyle.paddingRight)),
         lineHeight: chatSendPixel(inputStyle.lineHeight),
+      }
+      const surface = chatSendSurface(card, cardStyle)
+      const surfaceStyle = surface.element === card ? cardStyle : window.getComputedStyle(surface.element)
+      const surfaceBox = surface.element.getBoundingClientRect()
+      const surfaceRect = {
+        left: surfaceBox.left - box.left,
+        top: surfaceBox.top - box.top,
+        width: surfaceBox.width,
+        height: surfaceBox.height,
+        radius: chatSendPixel(surfaceStyle.borderTopLeftRadius),
       }
 
       // Which pieces of the card are taken away: anything with area that is not
@@ -293,17 +363,28 @@
       draft.style.height = scrollBox.height + 'px'
       draft.style.minHeight = '0px'
       draft.style.maxHeight = 'none'
+      // The stand-in's surface is its own two fill layers (send-morph.js), so the
+      // clone's copy of the surface must not paint: left as it is, it covers those
+      // layers for the whole flight and the cross-fade to the bubble's fill never
+      // shows. The card element's own copy is already stripped by the pin above;
+      // this is the descendant that really carries the surface (chatSendSurface).
+      const clonedSurface = chatSendElementAt(clone, surface.path)
+      if (clonedSurface !== null && clonedSurface !== clone) {
+        clonedSurface.style.setProperty('background-color', 'transparent', 'important')
+        clonedSurface.style.setProperty('border-color', 'transparent', 'important')
+        clonedSurface.style.setProperty('box-shadow', 'none', 'important')
+      }
       const chrome = []
       for (const { path, rect } of paths) {
-        let element = clone
-        for (const index of path) element = element?.children[index]
-        if (element instanceof HTMLElement) chrome.push({ element, rect })
+        const element = chatSendElementAt(clone, path)
+        if (element !== null) chrome.push({ element, rect })
       }
       return {
         box,
-        background: cardStyle.backgroundColor,
+        surface: surfaceRect,
+        background: surfaceStyle.backgroundColor,
         radius: chatSendPixel(cardStyle.borderTopLeftRadius),
-        shadow: cardStyle.boxShadow,
+        shadow: chatSendSurfaceShadow(surfaceStyle),
         clone,
         draft,
         draftScrollTop: scroll.scrollTop,
