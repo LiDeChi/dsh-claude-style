@@ -1,35 +1,27 @@
 /* --- 2.1 Design Tokens (Dark Base & Light Overrides) --- */
-/* Who paints the colours and who sets the type are two preferences
-   (PALETTE_ATTR, TYPEFACE_ATTR). Every rule that writes a host token is gated
-   on the Claude choice — %%PALETTE_CLAUDE%% for colours, %%TYPEFACE_CLAUDE%% for
-   fonts, and scripts/build.mjs refuses an ungated one — so under "follow the
-   host" the host's own tokens (or another theme plugin's) stand. The skin's
-   own surfaces read its private tokens, and the host blocks at the end of this
-   file alias each of them to a host token. */
+/* Colour and type are two preferences (PALETTE_ATTR, TYPEFACE_ATTR): every rule
+   that writes a host token is gated on the Claude choice — %%PALETTE_CLAUDE%%
+   for colours, %%TYPEFACE_CLAUDE%% for fonts, and the build refuses an ungated
+   one — so under "follow the host" the host's own tokens stand. The palette
+   table is docs/STYLE.md's "Two palettes". */
 /* ---------- typography tokens: theme-independent ---------- */
 body[data-dsh-claude-style]%%TYPEFACE_CLAUDE%% {
   --dsw-font-family: %%SANS%%;
   --dsh-claude-font-serif: %%SERIF%%;
   --dsh-claude-font-prose: %%PROSE%%;
   --dsh-claude-font-code: %%MONO%%;
-  /* Claude's lockup is drawn in Anthropic's serif, so its rows take the same face:
-     the wordmark and the rest of the label then read as one piece of lettering.
-     The face is already served for the UI (see theme/typography.css); the serif token
-     stays behind it so a missing font degrades to the shipped serif, not to sans. */
+  /* Claude's lockup is drawn in Anthropic's serif, so its rows take the same
+     face; the serif token stays behind it so a missing font degrades to the
+     shipped serif. */
   --dsh-claude-font-brand: 'Anthropic Serif Web Text', var(--dsh-claude-font-serif);
-  /* Markdown document headings keep the host's own ladder, steepened from
-     21/19/18 toward Claude's measured ≈21/17/15; h1 and h4 keep the host's
-     values. The host reads these through a `font:` shorthand that names
-     --dsw-font-family directly, so overriding the `-font-family` sub-tokens
-     never reached the page — the shorthand itself is what has to be
-     re-declared. */
+  /* The host reads these through a `font:` shorthand that names --dsw-font-family
+     directly, so overriding the `-font-family` sub-tokens never reached the page:
+     the shorthand itself has to be re-declared. */
   --dsw-font-markdown-h2: 700 calc(18px + var(--dsh-content-font-delta)) / calc(26px + var(--dsh-content-font-delta)) var(--dsh-claude-font-prose);
   --dsw-font-markdown-h3: 700 calc(16px + var(--dsh-content-font-delta)) / calc(24px + var(--dsh-content-font-delta)) var(--dsh-claude-font-prose);
 }
 
-/* Under the host's type the skin's own faces fall back to the host's: its sans
-   for the display, prose and brand faces (the host carries no serif), its code
-   stack for code. */
+/* Under the host's type the skin's own faces fall back to the host's. */
 body[data-dsh-claude-style]%%TYPEFACE_HOST%% {
   --dsh-claude-font-serif: var(--dsw-font-family);
   --dsh-claude-font-prose: var(--dsw-font-family);
@@ -37,13 +29,8 @@ body[data-dsh-claude-style]%%TYPEFACE_HOST%% {
   --dsh-claude-font-brand: var(--dsw-font-family);
 }
 
-/* The reasoning slider's top rung is the one place the skin's accent does not
-   rule, whoever paints the rest: Claude's own "Ultracode" rung is violet, and
-   the user asked for that violet rather than a translation of it. Values
-   measured off Claude's recorded slider (block ≈ rgb(150,127,200), name ink
-   darker still); the matrix's eight tone buckets
-   (features/effort/effort-picker.css) are mixed from these tokens, so they
-   follow any change made here. */
+/* The reasoning slider's top rung keeps Claude's violet under every palette; the
+   matrix in features/effort/effort-picker.css mixes from these tokens. */
 body[data-dsh-claude-style][data-ds-dark-theme] {
   --dsh-claude-apex: #9d8ce0;
   --dsh-claude-apex-flash: #e6e0fb;
@@ -57,14 +44,11 @@ body[data-dsh-claude-style]:not([data-ds-dark-theme]) {
 }
 
 /* ---------- design tokens: warm-black (dark) palette ---------- */
-/* The dark palette is scoped to [data-ds-dark-theme] on purpose. The host
-   ships its own dark palette on body[data-ds-dark-theme] — the same (0,1,1)
-   weight as a bare body[data-dsh-claude-style] — so the two only tie, and
-   whichever stylesheet the loader appends last wins. When the host's lands
-   after this one its blue accents (--dsw-alias-state-business-primary,
-   --dsw-alias-button-info-fill, --dsw-alias-link and the brand "new color")
-   replace the warm palette. Naming the attribute keeps this block at (0,2,1)
-   and makes it order-independent. */
+/* The dark palette names [data-ds-dark-theme] on purpose: the host's own dark
+   block carries the same (0,1,1) weight as a bare body[data-dsh-claude-style],
+   so whichever sheet the loader appends last would win and its blue accents
+   would replace the warm palette. Naming the attribute keeps this block at
+   (0,2,1) and makes it order-independent. */
 body[data-dsh-claude-style]%%PALETTE_CLAUDE%%[data-ds-dark-theme] {
   --dsw-alias-bg-base: #141413;
   --dsw-alias-bg-layer-1: #1c1b1a;
@@ -76,10 +60,9 @@ body[data-dsh-claude-style]%%PALETTE_CLAUDE%%[data-ds-dark-theme] {
   --dsw-alias-border-l3: #3a3833;
   --dsw-alias-brand-primary: #d97757;
   --dsw-alias-brand-text: #faf9f5;
-  /* The host takes a primary button's fill from --dsw-alias-brand-primary but
-     its hover from a monochrome step of its own scale (light #43454a, dark
-     #ebeef2). The skin's accent is clay, so a filled button states both steps
-     here and the hover stays in the fill's own family. */
+  /* The host takes a primary button's fill from --dsw-alias-brand-primary but its
+     hover from a monochrome step of its own scale, so both steps are stated here
+     and the hover stays in the fill's family. */
   --dsw-alias-button-primary-fill: #d97757;
   --dsw-alias-button-primary-hover: #e08a6d;
   --dsw-alias-button-elevated-fill: #242320;
@@ -93,9 +76,8 @@ body[data-dsh-claude-style]%%PALETTE_CLAUDE%%[data-ds-dark-theme] {
   --dsh-claude-inline-code-fg: #e8a08a;
   --dsh-claude-link: #8ab4f8;
   --dsh-claude-link-underline: rgba(138, 180, 248, 0.6);
-  /* The host pins the code-block surface on `pre.shiki` with !important, so it
-     is only reachable through its own token; #1c1b1a is the value the skin's
-     (inert) `pre { background }` rule always meant. */
+  /* The host pins the code-block surface on `pre.shiki` with !important, so it is
+     only reachable through this token. */
   --dsw-alias-markdown-code-block: #1c1b1a;
   --dsw-alias-markdown-code-block-banner: #242320;
   --dsw-alias-interactive-bg-hover: var(--dsh-claude-hover-bg);
@@ -112,17 +94,9 @@ body[data-dsh-claude-style]%%PALETTE_CLAUDE%%[data-ds-dark-theme] {
   --dsw-specific-input-major: #0f0e0d;
   --dsw-specific-selector: #2e2c29;
   --dsw-specific-sidebar-fill: #141413;
-  /* The host's "new color" brand accent (shipped under this doubled suffix)
-     resolves to a deepseek blue in both palettes; the skin has one accent. */
+  /* The host's "new color" accent ships under this doubled suffix as a deepseek
+     blue in both palettes; the skin has one accent. */
   --dsw-alias-brand-primary-new-colorprimary-new-color: #d97757;
-  /* The skin's own surfaces and inks, named once so the DeepSeek palettes
-     below restate them in one place: the canvas and the sidebar's, the fill of
-     a raised card (popovers, menus, the search palette), the fill of a card
-     that sits on the canvas in light and is raised in dark (the account
-     popover, the search palette), the strongest ink of an active row, a
-     session title at rest, a table's header row, the scrollbar thumb at rest
-     and under the pointer, a text link under the pointer, the inverted chip
-     (the model picker's group label), and the sidebar's brand art. */
   --dsh-claude-canvas: #141413;
   --dsh-claude-sidebar-canvas: #141413;
   --dsh-claude-raised: #1e1e1d;
@@ -172,27 +146,21 @@ body[data-dsh-claude-style]%%PALETTE_CLAUDE%%:not([data-ds-dark-theme]) {
   --dsw-alias-interactive-bg-hover: var(--dsh-claude-hover-bg);
   --dsw-shadow-lv2: 0 4px 18px rgba(20, 20, 19, 0.10), 0 1px 3px rgba(20, 20, 19, 0.05);
   --dsw-alias-brand-primary-new-colorprimary-new-color: #d97757;
-  /* Carried over from the dark base block so the light palette stays complete
-     now that the dark palette is dark-scoped. The two fills are palette-specific
-     instead: the host paints a solid hover chip and an elevated surface lighter
-     than the canvas here, and the light ink they carry needs a light fill. */
+  /* The two fills are palette-specific: the host paints a solid hover chip and an
+     elevated surface lighter than the canvas here, and the light ink they carry
+     needs a light fill. */
   --dsw-alias-brand-text: #faf9f5;
   --dsw-alias-button-elevated-fill: #ffffff;
   --dsw-alias-interactive-bg-active: rgba(217, 119, 87, 0.30);
   --dsw-alias-interactive-bg-hover-solid: #f0efe9;
-  /* User message bubbles: the host's light bubble token is deepseek-50 (blue);
-     use the skin's button-hover gray instead. */
+  /* The host's light bubble token is a deepseek blue; the skin's button-hover
+     gray stands in for it. */
   --dsw-specific-bubble: var(--dsh-claude-hover-bg);
-  /* Markdown surfaces, measured off Claude: a white code block, a neutral-gray
-     inline-code chip, and blue links. The chip colour is the same gray the
-     components hover with, so the two read as one material. */
   --dsw-alias-markdown-code-block: #ffffff;
   --dsw-alias-markdown-code-block-banner: #ffffff;
   --dsh-claude-inline-code-fg: #943333;
   --dsh-claude-link: #184f95;
   --dsh-claude-link-underline: rgba(24, 79, 149, 0.6);
-  /* The skin's own light surfaces and inks: the dark block's set, plus the
-     resting plate of a segmented control or a switch. */
   --dsh-claude-canvas: #fcfcfb;
   --dsh-claude-sidebar-canvas: #fbfbf9;
   --dsh-claude-card: #fcfcfb;
@@ -207,18 +175,9 @@ body[data-dsh-claude-style]%%PALETTE_CLAUDE%%:not([data-ds-dark-theme]) {
 }
 
 /* ================= the DeepSeek brand: blue ================= */
-/* The DeepSeek brand turns both palettes blue. The accent is DeepSeek's own
-   brand blue #4D6BFE — the colour of its whale logo, and of Deepy — on every
-   fill, check and focus ring the clay took, with a lighter step for text on
-   the dark canvas; the sidebar's whale and wordmark take it as well. The
-   neutrals are cool: a sky-tinted white canvas with the host's bluish inks
-   (its neutral-bluish ramp) in light, a blue-black canvas in dark. The light
-   surfaces keep only a HINT of sky — the canvas sits within a couple of steps
-   of white, and the sidebar, the raised layers and the chips step back from it
-   in the same measure, so the blue reads as a tint on white rather than as a
-   coloured page. User bubbles take a blue tint, as the host's own do, and
-   inline code keeps the body ink, as the host draws it. Claude's violet top
-   rung stays. */
+/* The DeepSeek brand turns both palettes blue: its own #4D6BFE on every fill,
+   check and focus ring the clay took, cool neutrals around it (a sky-tinted white
+   canvas in light, a blue-black one in dark), and blue user bubbles. */
 body[data-dsh-claude-style]%%PALETTE_CLAUDE%%[%%BRAND_ATTR%%="%%BRAND_DEEPSEEK%%"]:not([data-ds-dark-theme]) {
   --dsw-alias-bg-base: #fafbff;
   --dsw-alias-bg-layer-1: #fafbff;
@@ -314,16 +273,15 @@ body[data-dsh-claude-style]%%PALETTE_CLAUDE%%[%%BRAND_ATTR%%="%%BRAND_DEEPSEEK%%
   --dsh-claude-scrollbar-hover: rgba(104, 112, 128, 0.9);
 }
 
-/* The canvases the Claude palette paints onto the host's own structure. Under
-   "follow the host" none of them apply: the host paints its frame, or another
-   theme plugin does. */
+/* The canvases the Claude palette paints onto the host's own structure; under
+   "follow the host" none of them apply. */
 body[data-dsh-claude-style]%%PALETTE_CLAUDE%%:not([data-ds-dark-theme]) {
   color: var(--dsw-alias-label-primary);
   background-color: var(--dsh-claude-canvas) !important;
 }
 
-/* The document element sits above the body and cannot read its tokens, so
-   each palette states its canvas here. */
+/* The document element sits above the body and cannot read its tokens, so each
+   palette states its canvas here. */
 html:has(body[data-dsh-claude-style]%%PALETTE_CLAUDE%%:not([data-ds-dark-theme])) {
   background-color: #fcfcfb !important;
 }
@@ -395,12 +353,10 @@ body[data-dsh-claude-style]:not([data-ds-dark-theme]) ::-webkit-scrollbar-thumb:
 }
 
 /* ================= following the host's colours ================= */
-/* Under "follow the host" every private surface and ink the skin's own nodes
-   read is an alias of a host token, so they take whatever the host — or a
-   theme plugin that rewrites the host's tokens, such as a wallpaper's glass —
-   paints. Cards alias the host's overlay layer rather than its canvas: a
-   plugin that clears the canvas to show a wallpaper still gives its overlays
-   a readable fill. The table is docs/STYLE.md's "Two palettes". */
+/* Every private surface and ink the skin's nodes read aliases a host token, so
+   they take whatever the host — or a wallpaper's glass — paints. Cards alias the
+   host's overlay layer rather than its canvas, so a plugin that clears the canvas
+   still gives them a readable fill (docs/STYLE.md). */
 body[data-dsh-claude-style]%%PALETTE_HOST%% {
   --dsh-claude-canvas: var(--dsw-alias-bg-base);
   --dsh-claude-sidebar-canvas: var(--dsw-specific-sidebar-fill);

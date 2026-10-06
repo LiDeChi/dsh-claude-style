@@ -1,12 +1,8 @@
 /* --- 2.2 Typography & Markdown Editorial --- */
 /* ---------- webfonts ---------- */
-/* The code font ships inside the plugin package and the host half serves it
-   under /dsh-claude-style/fonts/, so 'JetBrains Mono' resolves even on systems
-   that never installed it. @font-face cannot hang off the skin root — it is a
-   global registration — but the family is only referenced by the skin's own
-   font stacks, so nothing else on the page picks it up. When the route is
-   missing (host half unavailable) the fetch 404s and the stack's system
-   fallbacks take over exactly as before. */
+/* The code font ships in the package and the host half serves it, so 'JetBrains
+   Mono' resolves on systems that never installed it. When the route is missing the
+   fetch 404s and the stacks' system fallbacks take over. */
 @font-face {
   font-family: 'JetBrains Mono';
   src: url('/dsh-claude-style/fonts/JetBrainsMonoVariable.ttf') format('truetype-variations');
@@ -23,12 +19,10 @@
   font-display: swap;
 }
 
-/* The Anthropic text faces are NOT in the npm package (they remain Anthropic's
-   property), so these registrations resolve only when the user has dropped the
-   files into the plugin's fonts/ directory; otherwise the request 404s and the
-   stacks fall back to a system-installed copy. Both files are static Regular
-   cuts — a single 400 declaration covers them and the browser synthesizes the
-   heavier weights, exactly as it does for a system-installed copy. */
+/* The Anthropic text faces are not in the npm package, so these registrations
+   resolve only when the user dropped the files into fonts/; otherwise the stacks
+   fall back to a system-installed copy. Both are static Regular cuts, so one 400
+   declaration covers them and the browser synthesizes the heavier weights. */
 @font-face {
   font-family: 'Anthropic Sans Web Text';
   src: url('/dsh-claude-style/fonts/AnthropicSansWebText.ttf') format('truetype');
@@ -45,17 +39,12 @@
   font-display: swap;
 }
 
-/* The look-alikes the stacks name right after the Anthropic faces, for an
-   install that has neither the files nor a system copy. Both ship in the
-   package (SIL OFL 1.1), cut to exactly the characters the Anthropic faces
-   cover, so text the Anthropic faces would not draw falls through to the same
-   CJK and system fonts as before. Inter matches Anthropic Sans in x-height,
-   cap height and lowercase width to within 0.01 em; Noto Serif does the same
-   for Anthropic Serif, so switching between a face and its look-alike does
-   not rewrap text. Both carry real weights, roman only — the Anthropic faces
-   have no italic either, so emphasis is slanted the same way in both. The
-   family names are the skin's own: a plugin that asks for 'Inter' or
-   'Noto Serif' still gets its own copy, not these cut-down files. */
+/* The look-alikes the stacks name after the Anthropic faces, for an install with
+   neither the files nor a system copy. They ship in the package (SIL OFL 1.1), cut
+   to the coverage of the Anthropic faces and matched to them in x-height, cap
+   height and lowercase width, so switching between a face and its look-alike does
+   not rewrap text. The family names are the skin's own: a plugin asking for 'Inter'
+   or 'Noto Serif' still gets its own copy. */
 @font-face {
   font-family: 'Claude Style Inter';
   src: url('/dsh-claude-style/fonts/InterVariable.woff2') format('woff2');
@@ -89,32 +78,29 @@ body[data-dsh-claude-style] :is(h1, h2, h3, h4, [class*="headline"], [class*="ti
   line-height: 1.25;
 }
 
-/* display headings sit at 500; the new-conversation headline drops one step
-   further to 400, and both keep the tighter display tracking */
+/* Display headings sit at 500 with tighter tracking */
 body[data-dsh-claude-style] :is(h1, [class*="headline"]) {
   font-weight: 500;
   letter-spacing: -0.015em;
 }
 
 /* ---------- markdown document prose ---------- */
-/* Claude sets conversation prose — body and headings alike — in the serif
-   face and lets Chinese fall through to a sans CJK; the serif display rule
-   above stays for UI headlines. */
+/* Conversation prose — body and headings alike — takes the serif face and lets
+   Chinese fall through to a sans CJK; the display rule above stays for headlines. */
 body[data-dsh-claude-style] [class*="markdown"] {
   font-family: var(--dsh-claude-font-prose);
   line-height: calc(23px + var(--dsh-content-font-delta, 0px));
 }
 
-/* Claude keeps paragraph rhythm tight: 12px between blocks, not the host’s
-   16px. First/last-child zeroing stays with the host’s !important rules. */
+/* Claude keeps 12px between blocks, not the host's 16px; first/last-child zeroing
+   stays with the host's !important rules. */
 body[data-dsh-claude-style] [class*="markdown"] p {
   margin: 12px 0;
 }
 
-/* The host gives its markdown elements their own `font:` shorthand, so the
-   family has to be re-stated wherever those shorthands land. The heading
-   shorthand is re-asserted too, so the host's weight, size and line-height
-   survive the serif display rule above. */
+/* The host gives its markdown elements their own `font:` shorthand, so the family
+   has to be re-stated wherever those shorthands land; the heading shorthand is
+   re-asserted so the host's weight, size and line-height survive the display rule. */
 body[data-dsh-claude-style] [class*="markdown"] h1 { font: var(--dsw-font-markdown-h1); font-family: var(--dsh-claude-font-prose); }
 body[data-dsh-claude-style] [class*="markdown"] h2 { font: var(--dsw-font-markdown-h2); font-family: var(--dsh-claude-font-prose); }
 body[data-dsh-claude-style] [class*="markdown"] h3 { font: var(--dsw-font-markdown-h3); font-family: var(--dsh-claude-font-prose); }
@@ -122,8 +108,7 @@ body[data-dsh-claude-style] [class*="markdown"] h4 { font: var(--dsw-font-markdo
 
 body[data-dsh-claude-style] [class*="markdown"] :is(th, td) {
   font-family: var(--dsh-claude-font-prose);
-  /* One type step up from the host's secondary table size (13px → 14px),
-     not a literal +1px. */
+  /* One type step up from the host's 13px table size. */
   font-size: var(--dsh-content-font-size, 14px);
 }
 
@@ -137,16 +122,15 @@ body[data-dsh-claude-style][data-ds-dark-theme] [class*="tableScroll"] thead td 
   background: var(--dsh-claude-table-head) !important;
 }
 
-/* Table frame: same 0.5px line the host uses for row separators, rounded
-   like the code block. The scroll container already clips its content. */
+/* Table frame: the host's 0.5px row-separator line, rounded like the code block. */
 body[data-dsh-claude-style] [class*="tableScroll"] {
   border: 0.5px solid var(--dsw-alias-border-l2);
   border-radius: 12px;
   padding-left: 0 !important;
   padding-right: 0 !important;
   background-clip: padding-box;
-  /* Narrow tables stretch to the prose content block; wide tables keep
-     their natural max-content width and scroll inside this wrapper. */
+  /* Narrow tables stretch to the prose block; wide ones keep max-content and
+     scroll inside this wrapper. */
   width: 100% !important;
   max-width: var(--dsh-chat-content-width, 100%) !important;
   margin-left: auto !important;
@@ -165,7 +149,7 @@ body[data-dsh-claude-style] [class*="tableScroll"] table {
   max-width: max-content !important;
 }
 
-/* Every first/last cell, whatever element the renderer used (th or td). */
+/* Every first/last cell, whatever element the renderer used. */
 body[data-dsh-claude-style] [class*="tableScroll"] tr > :first-child {
   padding-left: 16px !important;
 }
@@ -174,11 +158,9 @@ body[data-dsh-claude-style] [class*="tableScroll"] tr > :last-child {
   padding-right: 16px !important;
 }
 
-/* Heading rhythm. The host gives every heading a 32px top margin, which stacks
-   on the previous heading's 16px bottom margin: two consecutive headings open
-   ~36px of air where Claude keeps ~12px, and in the sample document that alone
-   pushed the last list past the viewport. A heading that directly follows
-   another tightens further, so a run of headings reads as one block. */
+/* Heading rhythm: the host's 32px top margin stacks on the previous heading's
+   bottom margin, which opens ~36px where Claude keeps ~12px; a heading directly
+   after another tightens further so a run reads as one block. */
 body[data-dsh-claude-style] [class*="markdown"] :is(h1, h2, h3) {
   margin-top: 24px;
   margin-bottom: 12px;
@@ -204,10 +186,9 @@ body[data-dsh-claude-style] :is([class*="caption"], [class*="sectionLabel"]) {
 }
 
 /* ---------- editorial markdown ---------- */
-/* Claude's quote keeps the prose face but stands upright on a neutral bar and
-   wash; the warm accent stays reserved for controls. Links, inline-code chips
-   and file mentions keep their own material inside a quote — the quote is a
-   container, not a link, so it never borrows the link colour. */
+/* The quote keeps the prose face upright on a neutral bar and wash; links, chips
+   and file mentions keep their own material inside it — a quote is a container,
+   not a link, so it never borrows the link colour. */
 body[data-dsh-claude-style] blockquote {
   font-family: var(--dsh-claude-font-prose);
   font-style: normal;
@@ -218,18 +199,15 @@ body[data-dsh-claude-style] blockquote {
   padding: 0.6em 1em;
 }
 
-/* The fill rides the host's --dsw-alias-markdown-code-block token — the host
-   pins `pre.shiki` with !important, so a `background` here would never apply.
-   The frame lives on the wrapper so the language banner and the code share
-   one rounded outline, like Claude's code block. */
+/* The fill rides the host's --dsw-alias-markdown-code-block token, because the host
+   pins `pre.shiki` with !important and a `background` here would never apply. The
+   frame lives on the wrapper, so the banner and the code share one rounded outline. */
 body[data-dsh-claude-style] .md-code-block {
   border: 1px solid var(--dsw-alias-border-l1);
   border-radius: 12px;
 }
 
-/* Code blocks keep the same outer rhythm as body paragraphs: 12px between
-   blocks and the 23px + delta prose line box. The host ships 16px/19px,
-   so override both the wrapper margin and the pre line-height. */
+/* The same outer rhythm as body paragraphs, against the host's 16px/19px. */
 body[data-dsh-claude-style] .md-code-block {
   margin: 12px 0;
 }
@@ -240,8 +218,8 @@ body[data-dsh-claude-style] .md-code-block pre code {
   font-weight: 500 !important;
 }
 
-/* Code block type: one pixel below the surrounding body copy; the inner
-   <code> inherits from <pre> rather than compounding the calc(). */
+/* One pixel below the surrounding copy; the inner <code> inherits rather than
+   compounding the calc(). */
 body[data-dsh-claude-style] pre {
   font-size: calc(1em - 1px) !important;
   font-weight: 500 !important;
@@ -252,13 +230,9 @@ body[data-dsh-claude-style] pre code {
   font-weight: 500 !important;
 }
 
-/* Claude's inline-code chip: warm red on the same neutral gray the components
-   hover with — both resolve per theme from the palette blocks. The chip hugs
-   its glyphs: the host makes it an inline-flex box that inherits the prose line
-   box (23px for a 15px code size), which left ~5px of empty wash above and
-   below the text. line-height 1.2 collapses that box onto the glyphs (27px →
-   22px) and leaves the 1px padding as the visible inset; lower values start
-   clipping descenders. */
+/* The inline-code chip: the host makes it an inline-flex box inheriting the prose
+   line box, which left empty wash above and below the glyphs; line-height 1.2
+   collapses it onto them, and lower values start clipping descenders. */
 body[data-dsh-claude-style] code:not(pre code) {
   font-family: var(--dsh-claude-font-code);
   background: var(--dsh-claude-inline-code-bg);
@@ -270,25 +244,17 @@ body[data-dsh-claude-style] code:not(pre code) {
   line-height: 1.2;
 }
 
-/* Claude's links: blue, underlined at rest, and without the host's
-   link-category glyph. */
+/* Claude's links: blue, underlined at rest, without the host's link-category glyph. */
 body[data-dsh-claude-style] [class*="linkIcon"] {
   display: none;
 }
 
-/* Inline file mentions (and URL-promoted inline code) are links, not code: the
-   host resolves a file path inside an inline code span to a button and paints
-   it with its own link alias. This rule has to name them because the generic
-   inline-code chip above is more specific than the host's own class, so without
-   it a path like `CHANGELOG.md` kept the chip's warm red while real links were
-   blue. The class is hashed (`_fileMention_kcgor_304`), hence the longest
-   stable fragment. The chip itself is untouched — the same wash and hairline as
-   any other inline code — only the text takes the link colour and the link's
-   own underline: solid in the link tone at rest, solid and fully opaque on
-   hover, at the same thickness and offset, exactly how the skin treats an
-   anchor. The hover rule therefore touches the colour only: the
-   `text-decoration` shorthand would reset `text-decoration-thickness` to
-   `auto` and thin the underline mid-hover. */
+/* Inline file mentions are links, not code: the host resolves a path inside an
+   inline code span to a button, and the generic chip above is more specific than
+   the host's class, so the text would otherwise keep the chip's warm red while real
+   links are blue (the class is hashed, hence the longest stable fragment). The chip
+   keeps its own wash and hairline. The hover rule touches the colour only: the
+   `text-decoration` shorthand would reset the thickness to `auto` mid-hover. */
 body[data-dsh-claude-style] :is(code:not(pre code) > [class*="_fileMention"], code:not(pre code) > a) {
   color: var(--dsh-claude-link);
   font-weight: 500;

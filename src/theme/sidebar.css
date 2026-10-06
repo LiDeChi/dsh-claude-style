@@ -1,14 +1,9 @@
 /* ---------- Claude Code layout: sidebar brand ---------- */
-/* The shipped whale and wordmark give way to the selected brand. Each variant
-   is painted as an alpha mask over currentColor, so it follows the light/dark
-   label colour instead of carrying a baked-in one. The choice is switched by a
-   document attribute rather than by swapping the stylesheet, so the settings
-   page only has to flip one attribute and the whole UI follows.
-
-   Sizing: the mark is set to an 18px cap height to match the shipped brandName
-   box, and the wordmark takes its natural width from that height via the
-   artwork aspect ratio (Claude 4.214:1). The wordmark keeps a max-width so a
-   longer brand can never clip the row. */
+/* The shipped whale and wordmark give way to the selected brand, each painted as
+   an alpha mask over currentColor so it follows the label colour. The choice is a
+   document attribute, so the settings page flips one attribute and the UI follows.
+   Sizing: an 18px cap height to match the shipped brandName box, the wordmark's
+   width read from that height through the artwork's aspect ratio. */
 body[data-dsh-claude-style]%%BRAND_ACTIVE%% :is([class*="brandMark"], [class*="railMark"]) > * {
   display: none !important;
 }
@@ -53,27 +48,21 @@ body[data-dsh-claude-style][%%BRAND_ATTR%%="%%BRAND_CLAUDE%%"] [class*="brandIde
   mask: %%CLAUDE_WORD%% center / contain no-repeat;
 }
 
-/* DeepSeek: the host's own whale and wordmark, in DeepSeek's brand blue the
-   way its logo is drawn. The expanded brand is a button on most platforms
-   (theme/chrome.css inks that button too) and a plain row on macOS, and the
-   collapsed rail's whale sits in the sidebar toggle, so the art is inked where
-   it sits. */
+/* DeepSeek: the host's own whale and wordmark in DeepSeek's brand blue. The
+   expanded brand is a button on most platforms and a plain row on macOS, and the
+   collapsed rail's whale sits in the sidebar toggle, so the art is inked where it
+   sits. */
 body[data-dsh-claude-style][%%BRAND_ATTR%%="%%BRAND_DEEPSEEK%%"] :is([class*="brandIdentity"], [class*="railMark"]) {
   color: var(--dsh-claude-logo-ink) !important;
 }
 
 /* ---------- Claude Code layout: new session button ---------- */
-/* Narrow height matching conversation row, left-aligned plus icon. No plate at
-   rest — Claude's own sidebar keeps every row flat until the pointer is on it —
-   and the leading glyph is a 20px CHIP: a circular fill with the plus drawn
-   inside, which is how Claude marks its primary "New" row. The row treatment
-   holds while the column is expanded: collapsed, the host re-seats this button
-   as its own icon control (36px in the rail, 28px fixed in the Windows
-   titlebar), where a full-width row plate would span the titlebar. The app
-   frame carries the collapsed marker (ui-layout's AppFrame) and holds the
-   sidebar column as a direct child, so the expanded state is read going down
-   from the frame — `body:not(:has(collapsed))` made every DOM change re-match
-   the whole document. */
+/* A narrow, left-aligned row with a leading 20px chip, flat until the pointer is
+   on it. The row treatment holds while the column is expanded: collapsed, the host
+   re-seats this button as its own icon control, where a full-width plate would
+   span the titlebar. The expanded state is read down from the app frame, which
+   carries the collapsed marker and holds the sidebar column as a direct child —
+   `body:not(:has(collapsed))` made every DOM change re-match the document. */
 body[data-dsh-claude-style] [class*="_frame"]:not([data-sidebar-collapsed]) > [class*="_sidebarCol"] button[class*="newSession"] {
   display: flex !important;
   align-items: center !important;
@@ -108,25 +97,22 @@ body[data-dsh-claude-style][data-ds-dark-theme] [class*="_frame"]:not([data-side
 body[data-dsh-claude-style][data-ds-dark-theme] [class*="_frame"]:not([data-sidebar-collapsed]) > [class*="_sidebarCol"] button[class*="newSession"]:hover {
   background: rgba(255, 255, 255, 0.08) !important;
 }
-/* Collapsed rail and titlebar: no hover plate. The host draws one for its own
-   icon control, and the button floats in the window titlebar beside the app
-   menu, where a plate reads as a stray rectangle. */
+/* Collapsed rail and titlebar: the host draws its own plate for its icon control,
+   and in the titlebar one reads as a stray rectangle. */
 body[data-dsh-claude-style] [data-sidebar-collapsed] button[class*="newSession"]:hover {
   background: transparent !important;
 }
 body[data-dsh-claude-style] button[class*="newSession"] svg {
   display: none !important;
 }
-/* The expanded row centers its label inside a flex-1 mask and parks the
-   shortcut at the far right. Claude's row reads left to right from the chip,
-   so the mask's inner flex goes back to the start. */
+/* The expanded row centers its label inside a flex-1 mask and parks the shortcut
+   at the far right; Claude's row reads left to right from the chip. */
 body[data-dsh-claude-style] button[class*="newSession"] [class*="newSessionContent"] {
   justify-content: flex-start !important;
 }
-/* The chip: one 20px box that paints BOTH the circular fill and the plus. A mask
-   cannot do that — it clips the element to the glyph, taking the fill with it —
-   so the plus is a background image instead, which costs the currentColor
-   adaptivity and buys a theme pair below. */
+/* The chip paints BOTH the circular fill and the plus. A mask cannot: it clips the
+   element to the glyph and takes the fill with it, so the plus is a background
+   image, which costs the currentColor adaptivity and buys a theme pair below. */
 body[data-dsh-claude-style] button[class*="newSession"]::before {
   content: "";
   display: inline-block !important;
@@ -135,9 +121,9 @@ body[data-dsh-claude-style] button[class*="newSession"]::before {
   margin-right: 0 !important;
   flex: none !important;
   border-radius: 50% !important;
-  /* The page inherits `corner-shape: superellipse(1.5)` from <html>, which turns
-     a 50% radius into a pebble. True circles say so — exactly what the host's
-     own spinner/dot/toggle rules do. */
+  /* The page inherits `corner-shape: superellipse(1.5)` from <html>, which turns a
+     50% radius into a pebble; the host's own spinner/dot/toggle rules say round
+     for the same reason. */
   corner-shape: round !important;
   background-color: rgba(0, 0, 0, 0.10) !important;
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23141413' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><line x1='12' y1='6' x2='12' y2='18'></line><line x1='6' y1='12' x2='18' y2='12'></line></svg>") !important;
@@ -152,18 +138,11 @@ body[data-dsh-claude-style][data-ds-dark-theme] button[class*="newSession"]::bef
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23faf9f5' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><line x1='12' y1='6' x2='12' y2='18'></line><line x1='6' y1='12' x2='18' y2='12'></line></svg>") !important;
 }
 
-/* ---------- Claude Code layout: the sidebar's panel row (插件) ---------- */
-/* DSH 0.1.7 added a panel entry right under the new-session button, styled by
-   the host at 36px tall / 14px / 12px corners while the new-session row is
-   28px / 13px / 6px — two rows stacked on top of each other reading as two
-   different lists. One row, one look: the same metrics, the same flat rest and
-   hover plate as the new-session button, and the same 20px icon box so both
-   labels start at the same x. */
-/* ---------- Claude Code layout: the sidebar's panel rows (插件 + plugin entries) ---------- */
-/* The panel entries (插件, and anything a plugin registers beside it) live in a
-   `nav.panelList` whose own gap stacks on top of the row margin, so the
-   new-session → plugins pair sat 6px apart while plugins → the next entry sat
-   10px. One rhythm: the rows' own 6px margin is the only spacing. */
+/* ---------- the sidebar's panel rows (插件 + plugin entries) ---------- */
+/* The panel entries live in a `nav.panelList` whose own gap stacks on the row
+   margin, so the rows' 6px margin is the only spacing, and each row takes the
+   new-session metrics — including the 20px icon box, so both labels start at the
+   same x. */
 body[data-dsh-claude-style] nav[class*="panelList"] {
   gap: 0 !important;
 }
@@ -202,8 +181,7 @@ body[data-dsh-claude-style][data-ds-dark-theme] button[class*="panelRow"] {
 body[data-dsh-claude-style][data-ds-dark-theme] button[class*="panelRow"]:hover {
   background: rgba(255, 255, 255, 0.08) !important;
 }
-/* A 13px glyph in a 20px box: the same box the new-session chip occupies, so the
-   two labels line up. */
+/* A 13px glyph in a 20px box: the box the new-session chip occupies. */
 body[data-dsh-claude-style] button[class*="panelRow"] svg {
   width: 13px !important;
   height: 13px !important;
@@ -212,9 +190,8 @@ body[data-dsh-claude-style] button[class*="panelRow"] svg {
 }
 
 /* ---------- sidebar rows: the icon turns a quarter on hover ---------- */
-/* Both glyphs are four-fold symmetric, so the turn ends where it started and
-   reads as a spin rather than a change of state. The transition is what turns
-   the icon back when the pointer leaves. */
+/* Both glyphs are four-fold symmetric, so the turn ends where it started and the
+   transition turns it back when the pointer leaves. */
 body[data-dsh-claude-style] button[class*="newSession"]::before,
 body[data-dsh-claude-style] button[class*="panelRow"] svg {
   transition: transform 0.25s ease !important;
@@ -226,7 +203,7 @@ body[data-dsh-claude-style] button[class*="panelRow"]:hover svg {
 }
 
 /* ---------- Claude Code layout: workspace & session sidebar ---------- */
-/* 1. Typography: Anthropic Sans and compact font sizes */
+/* Typography: Anthropic Sans and compact sizes */
 body[data-dsh-claude-style] :is([data-pane="sidebar"], [class*="sidebarCol"], [class*="treeBody"], [role="tree"]) :is([class*="title"], [class*="projectText"], [class*="sectionLabel"], [class*="sessionRow"], [class*="projectRow"], [class*="_time"]) {
   font-family: var(--dsw-font-family) !important;
 }
@@ -260,7 +237,7 @@ body[data-dsh-claude-style] [class*="sectionLabel"] {
   line-height: 16px !important;
 }
 
-/* 2. Compact scale: shrunken heights, margins, and paddings */
+/* Compact scale: shrunken heights, margins and paddings */
 body[data-dsh-claude-style] [class*="projectRow"] {
   height: 28px !important;
   min-height: 28px !important;
@@ -293,10 +270,9 @@ body[data-dsh-claude-style] :is([class*="projectRow"], [class*="sessionRow"]) [c
   height: 16px !important;
 }
 
-/* 3. Hover & active background: session rows only. A folder row is a heading,
-   not a target, so it never takes a hover plate — its hover cue is the label
-   darkening (rule 4). This also cancels the shipped
-   .projectRow:hover{background:var(--dsw-alias-interactive-bg-hover)}. */
+/* Hover and active plates belong to session rows alone: a folder row is a heading,
+   so its cue is the label darkening below. This also cancels the shipped
+   .projectRow:hover background. */
 body[data-dsh-claude-style] [class*="sessionRow"]:hover,
 body[data-dsh-claude-style] [class*="sessionRow"][class*="_selected"],
 body[data-dsh-claude-style] [class*="sessionRow"][class*="menuOpen"] {
@@ -310,8 +286,7 @@ body[data-dsh-claude-style] [class*="projectRow"][class*="_selected"] {
   background: transparent !important;
 }
 
-/* 4. Folder header styling: grey font, remove folder icon, dropdown arrow */
-/* Folder text: muted grey */
+/* Folder header: muted label, no folder icon, dropdown arrow instead */
 body[data-dsh-claude-style] [class*="projectRow"] [class*="title"] {
   color: var(--dsw-alias-label-secondary, #787672) !important;
   font-weight: 500 !important;
@@ -322,11 +297,10 @@ body[data-dsh-claude-style] [class*="projectRow"]:hover [class*="title"] {
 body[data-dsh-claude-style] [class*="projectRow"] [class*="folderActive"] {
   color: inherit !important;
 }
-/* Cancel folder icon */
 body[data-dsh-claude-style] [class*="projectRow"] [class*="_folder"] {
   display: none !important;
 }
-/* Project row flex layout: Title on the left, dropdown arrow next to title */
+/* Title left, dropdown arrow beside it */
 body[data-dsh-claude-style] [class*="projectRow"] {
   display: flex !important;
   align-items: center !important;
@@ -336,12 +310,11 @@ body[data-dsh-claude-style] [class*="projectRow"] [class*="projectText"] {
   flex: 0 0 auto !important;
   margin-right: 2px !important;
 }
-/* The chevron is a reveal-on-hover affordance, never a resting one. The
-   shipped CSS gates it on .projectRow:hover alone, which drops it the moment
-   the pointer moves down into the folder's conversation list, so the trigger
-   is widened to the whole group section: the folder row and everything listed
-   under it. (Keyed on the section's own :hover rather than
-   `:has(row:hover)`, which made every DOM change re-match the document.) */
+/* The chevron is a reveal-on-hover affordance. The shipped CSS gates it on
+   .projectRow:hover alone, which drops it the moment the pointer moves down into
+   the folder's conversation list, so the trigger is the whole group section —
+   keyed on the section's own :hover rather than `:has(row:hover)`, which made
+   every DOM change re-match the document. */
 body[data-dsh-claude-style] [class*="projectRow"] [class*="_chevron"] {
   order: 2 !important;
   display: none !important;
@@ -358,7 +331,7 @@ body[data-dsh-claude-style] [class*="projectRow"] [class*="rowActions"] {
   order: 3 !important;
   margin-left: auto !important;
 }
-/* Cancel solid lower triangle, replace with dropdown menu arrow */
+/* The shipped solid triangle gives way to a chevron */
 body[data-dsh-claude-style] [class*="projectRow"] [class*="_chevron"] svg {
   display: none !important;
 }
@@ -375,12 +348,11 @@ body[data-dsh-claude-style] [class*="projectRow"] [class*="_chevron"]::after {
 body[data-dsh-claude-style] [class*="projectRow"][aria-expanded="false"] [class*="_chevron"]::after {
   transform: rotate(-90deg);
 }
-/* Session status circle indicator (matching Claude style). The host's newer
-   sidebar renders the leading seat through a slot outlet, whose anchor
-   (`div[data-slot]`, display:contents) is a child of the seat even when nothing
-   is registered — an idle row's seat is therefore no longer :empty, so the
-   circle hangs on the empty anchor as well. A seat carrying status dots or
-   another plugin's content keeps its own paint and gets no circle. */
+/* Session status circle. The host renders the leading seat through a slot outlet
+   whose anchor (`div[data-slot]`, display:contents) is a child of the seat even
+   when nothing is registered, so an idle row's seat is never :empty and the circle
+   hangs on the empty anchor as well; a seat carrying dots or another plugin's
+   content keeps its own paint. */
 body[data-dsh-claude-style] [class*="sessionRow"] [class*="_slot"] {
   width: 14px !important;
   height: 16px !important;
@@ -400,7 +372,7 @@ body[data-dsh-claude-style] [class*="sessionRow"] [class*="_slot"] > [data-slot]
   box-sizing: border-box;
 }
 
-/* Session status ongoing indicator: Windows 11 circular progress ring (replaces blue square matrix) */
+/* Session status ongoing indicator: a circular progress ring */
 body[data-dsh-claude-style] svg[data-state="ongoing"] {
   width: 10px !important;
   height: 10px !important;
@@ -428,14 +400,10 @@ body[data-dsh-claude-style] svg[data-state="ongoing"] * {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
-/* The ring spins in EVERY motion setting, deliberately. It used to stand down
-   under `prefers-reduced-motion: reduce`, which is what made it look broken:
-   with "show animations in Windows" off — a common default on Windows 11 — the
-   ring was drawn and then frozen, so it read as "sometimes it spins, sometimes
-   it does not". A 0.85s rotation is the whole signal that background work is
-   alive; standing it still removes the meaning rather than the motion. The
-   settings page's own animation choice (src/constants.js MOTION_MODES) does not
-   govern it either: this is the one animation that always runs. */
+/* The ring spins in EVERY motion setting, deliberately: a 0.85s rotation is the
+   whole signal that background work is alive, and a frozen ring reads as broken
+   rather than as calm. Neither the system setting (D26) nor the settings page's
+   own choice governs it. */
 @media (prefers-reduced-motion: reduce) {
   body[data-dsh-claude-style] svg[data-state="ongoing"] {
     animation: 0.85s linear infinite dsh-claude-win11-spin !important;
