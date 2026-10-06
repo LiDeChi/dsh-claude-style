@@ -2,6 +2,20 @@
 
 All notable changes to `dsh-claude-style` are documented here, newest first.
 
+## [Unreleased]
+
+[中文](#cn-unreleased) | [English](#en-unreleased)
+
+<h3 id="cn-unreleased">问题修复</h3>
+
+- **分支菜单保持在屏幕内**：首页下方的分支菜单现在优先向上展开，滚动或调整窗口后继续跟随按钮，菜单高度受屏幕边界限制。
+- **输入区底部适应侧栏压缩**：可用宽度不足时，权限与模型控件自动分行；模型名称缩略显示，并保留思考强度与上下文用量所需的空间，避免重叠和超出输入框。
+
+<h3 id="en-unreleased">Bug Fixes</h3>
+
+- **Branch picker stays inside the viewport**: the branch menu below the home composer opens upward when space permits, follows its trigger after scrolling or resizing, and limits its height to the viewport.
+- **Composer footer adapts to sidebar compression**: permission and model controls wrap when space is limited; model names truncate while preserving room for effort and context usage, preventing overlaps and overflow.
+
 ## [0.11.0] - 2026-10-06
 
 [中文](#cn-0.11.0) | [English](#en-0.11.0)
