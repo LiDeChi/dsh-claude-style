@@ -70,8 +70,20 @@
      * What is compared is the answer last announced, not a snapshot of the head:
      * the head changes for many reasons (a stylesheet of anybody's), and only
      * this plugin's own presence is news.
+     *
+     * The same child list carries the stylesheets that arrive with no owner: a
+     * sibling that mounts its sheet from `apply()` leaves it untagged, and the
+     * next package to materialize would take it into that package's bookkeeping
+     * and delete it at that package's next reload. This callback runs before
+     * such a materialization — a mutation callback is a microtask, a
+     * materialization is a later task — so the sheet is parked here (D33) while
+     * it is still nobody's. This is the only hook the skin has for a sheet that
+     * arrives after its own factory ran: `parkForeignSheets()` at module scope
+     * covers the sheets already in the document, and nothing of the skin runs
+     * between a sibling's append and that sibling's own materialization.
      */
     function checkPeerPresence() {
+      parkForeignSheets()
       const present = dshChatUxPresent()
       if (present === peerAnnounced) return
       peerAnnounced = present

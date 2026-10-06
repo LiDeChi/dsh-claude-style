@@ -14,6 +14,20 @@
      */
     const SETTINGS_ENTRY_FALLBACK = 'ui-skin-claude-style'
     const PACKAGE_NAME = 'dsh-claude-style'
+    /**
+     * The skin stylesheet's own key in the client module system's bookkeeping:
+     * the sheet is mounted tagged `data-plugin="<PACKAGE_NAME>"` and
+     * `data-plugin-css="<STYLE_PLUGIN_CSS>"`, which is what keeps the host's
+     * claim sweep and every sibling package's removal off it (D33).
+     */
+    const STYLE_PLUGIN_CSS = `${PACKAGE_NAME}/client.css`
+    /**
+     * The tag this package gives a sibling's untagged stylesheet so the host's
+     * claim sweep cannot attribute it to this package (D33). It carries a slash,
+     * so it can never equal a package name — the id every removal step matches
+     * on — and no package's reload takes the sheet away.
+     */
+    const FOREIGN_SHEET_TAG = `${PACKAGE_NAME}/foreign-sheet`
     const BUNDLE_CONFIG_SLOT = 'plugins.bundle.config'
     const SETTINGS_SECTION_SLOT = 'settings.section'
 
