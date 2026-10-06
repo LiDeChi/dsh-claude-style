@@ -8,6 +8,9 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 <h3 id="cn-unreleased">新增功能</h3>
 
+### 问题修复
+
+- **切换会话与新建会话不再卡住**：装着本插件时，点开另一条会话或新建会话，页面会僵住一到两秒，长对话里尤其明显。原因是选中文字的配色作用于整个页面，浏览器每一轮样式重算都要为页面上每个元素算一次选中样式；现在这套配色只作用于对话正文与输入框里承载文字的块级元素（段落、列表、标题、引用、代码）。实测单次切换的样式重算从 0.9–2.4 秒降到 0.11–0.51 秒（未装插件时约 0.05 秒）；侧栏、设置页与弹层里的选中配色回到宿主默认。
 - **对话导航**：对话区右侧的轮次短横线改由插件绘制，间距与展开后的列表行高一致。鼠标碰到它立刻展开成一张列表，每一轮一行，写着开启这一轮的那条消息，每一行正好落在它那条短横线原来的位置上，正在读的那一轮保持原位；滚轮上下翻，点一行跳到那一轮，还没加载的早期对话先加载再跳。Alt+↑ / Alt+↓ 跳到上一轮或下一轮，连按会接着走，输入框里有草稿时不接管；跳到的那一轮开头闪一条短横线。同时装着 dsh-plugin-msg-nav 时 Alt+↑ / Alt+↓ 留给它。设置页「对话」页新增「对话导航」开关，默认开启，关闭后恢复系统原来的轮次短横线与悬停预览。
 
 <h3 id="en-unreleased">New Features</h3>
@@ -21,6 +24,9 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 <h3 id="cn-0.10.6">新增功能</h3>
 
 - **聊天气泡动效**：提交消息的那一下，输入卡片原样浮起一份，一边飞一边把多余的收掉——工具栏左右两组贴着最近的角缩小、淡出，描边与阴影跟着形状收回，草稿里的字跟着变窄的形状一行一行重新排——落地时正好就是那条真实气泡；真实气泡在飞行期间藏着，落定后原位出现。设置页的「动画效果」选了「减弱」、两端不在同一屏、或起点读不到（快捷键与程序化提交）时都不飞；页面切到后台时另有定时器兜底，藏起来的消息一定会放出来。与对话区其他动画一起合并在设置页「对话」页的「聊天区动画效果」开关里，默认开启。
+### Bug Fixes
+
+- **Switching and starting sessions no longer stalls**: with the plugin installed, opening another conversation or starting a new one froze the page for a second or two, worst in long conversations. The selection colours applied to the whole document, so every style pass had the browser compute selection styling for every element on the page; they now apply to the blocks that carry text in the conversation and in the composer — paragraphs, lists, headings, quotes, code. Measured on one switch, style recalculation went from 0.9–2.4 s to 0.11–0.51 s (about 0.05 s with the plugin off); selection colours in the sidebar, settings and popovers go back to the host's own.
 - **文件变更行**：从 run_code 程序里派发出去的写入与编辑按直接调用的样子显示——行尾带 `+n -m`，展开是改动卡片，路径可点开文件；失败与中断的行保留裁决信息、不再给路径链接，状态另有给读屏的说明。改动内容无法从参数推出的调用保留系统的输入 / 输出卡片。与对话区其他动画一起合并在设置页「对话」页的「聊天区动画效果」开关里，默认开启。
 - **新到的文字先淡后实**：流式回答里新出现的字符从两成不透明度开始，约 0.12 秒内坐实到它自己的颜色，并按到达次序略作错开，读起来像文字正被写下。整段一次到达的内容（切会话、翻历史）、一次几千字的突发、以及刚被折叠重排过的文字都保持本色；主线程忙不过来时它自己让路，闲下来再继续。与对话区其他动画一起合并在设置页「对话」页的「聊天区动画效果」开关里，默认开启。
 - **折叠不再瞬间切换，展开体像卷帘门一样拉下来**：读者点开或收起一行（工具卡片、思考行、命令卡片）或一个过程组时，高度逐帧变化，下方内容被真的推开或收回。门只走读者看得见的那一段，两千像素的展开体和两万像素的展开体在眼前的速度一样；展开体里是多张卡片时（代码卡片加输出卡片）整扇门一起走，不会先挤没能缩的那一张。主线程卡住时门停一下再接着走，不会跳变；读者自己滚动离开底部之后，收尾不会把他拽回去。它与其他对话区动画一起挂在「聊天区动画效果」这个开关上（默认开启），关掉后读者点开收起恢复系统原来的瞬开瞬收。

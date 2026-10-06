@@ -180,48 +180,37 @@ body[data-dsh-claude-style] ::-webkit-scrollbar-thumb:hover {
   background: var(--dsh-claude-scrollbar-hover);
 }
 
-/* Text selection: two solid paints, identical on both canvases.
-   Focused is white on blue, unfocused is black on gray. It replaces the
-   translucent clay wash this skin used before, and it deliberately ignores the
-   theme: a selection is a transient user gesture, not a surface, so it does not
-   follow the ivory/warm-black palette. Every value is a solid colour and
-   !important, because it has to override the colors the host and this skin put
-   on the text underneath (markdown links, inline code, syntax tokens) — a
-   selection that kept the underlying colour would be illegible on blue.
-   The unfocused rule is declared after the focused one and shares its weight,
-   so the attribute decides; the focus state itself is mirrored onto the
-   document by src/features/selection/selection.js. */
-body[data-dsh-claude-style] ::selection {
+/* Text selection: white on blue, gray on black while the window is blurred.
+   !important and solid colours because the paint has to cover the ink the host
+   and this skin put under it (links, code, syntax tokens). The unfocused rule
+   comes after the focused one at the same weight, so the attribute decides.
+   Scope: text blocks in the conversation and the draft editor only (D35).
+   Selection styles inherit, so the blocks carry their inline descendants. */
+body[data-dsh-claude-style] :is([data-chat-flow], [data-lexical-editor]) :is(p, li, td, th, blockquote, pre, h1, h2, h3, h4, h5, h6)::selection {
   background-color: #3366d0 !important;
   color: #ffffff !important;
 }
 
-body[data-dsh-claude-style][data-dsh-window-blur] ::selection {
+body[data-dsh-claude-style][data-dsh-window-blur] :is([data-chat-flow], [data-lexical-editor]) :is(p, li, td, th, blockquote, pre, h1, h2, h3, h4, h5, h6)::selection {
   background-color: #c7c7c6 !important;
   color: #000000 !important;
 }
 
-/* Inline-code chips: Blink paints an inline box's own background ABOVE the
-   selection highlight, so the chip's 5% wash (theme/tokens.css
-   --dsh-claude-inline-code-bg) tints whatever the selection paints and a
-   selected chip reads as a separate, lighter block. These paints are the
-   channel-wise inverse of that overlay — dark composites 5% white over the
-   paint, light 5% black — so after the wash blends over them the result lands
-   back on the two selection colours above. The chip's 1px border is outside
-   ::selection's reach and keeps its own colour. */
-body[data-dsh-claude-style] code:not(pre code)::selection {
+/* Inline-code chips: the chip's own background paints above the selection
+   highlight, so these paints are the channel-wise inverse of that wash. */
+body[data-dsh-claude-style] [data-chat-flow] code:not(pre code)::selection {
   background-color: rgb(40, 94, 206) !important;
 }
 
-body[data-dsh-claude-style][data-dsh-window-blur] code:not(pre code)::selection {
+body[data-dsh-claude-style][data-dsh-window-blur] [data-chat-flow] code:not(pre code)::selection {
   background-color: rgb(196, 196, 195) !important;
 }
 
-body[data-dsh-claude-style]:not([data-ds-dark-theme]) code:not(pre code)::selection {
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) [data-chat-flow] code:not(pre code)::selection {
   background-color: rgb(54, 107, 219) !important;
 }
 
-body[data-dsh-claude-style]:not([data-ds-dark-theme])[data-dsh-window-blur] code:not(pre code)::selection {
+body[data-dsh-claude-style]:not([data-ds-dark-theme])[data-dsh-window-blur] [data-chat-flow] code:not(pre code)::selection {
   background-color: rgb(209, 209, 208) !important;
 }
 
