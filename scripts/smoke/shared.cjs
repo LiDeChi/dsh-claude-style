@@ -77,7 +77,7 @@ const FEATURE_CASES = {
     permissions: ['permissions', 'automode', 'automode-current', 'automode-hero', 'automode-roundtrip', 'no-auto-review', 'sync-fault', 'switches'],
     search: ['search', 'switches'],
     selection: [],
-    settings: ['settings', 'late-forms'],
+    settings: ['settings', 'late-forms', 'skin-center-handoff'],
     'theme-flip': [],
     'turn-nav': ['turn-nav'],
     'turn-status': ['turn-status', 'switches'],

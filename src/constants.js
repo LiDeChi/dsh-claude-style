@@ -526,6 +526,26 @@
      */
     const WINDOW_BLUR_ATTR = 'data-dsh-window-blur'
     /**
+     * The handoff marker: stamped on `body` while this build is live AND able
+     * to give the page back (D49). Its presence is a capability another
+     * package can read without running anything: a skin that lists this theme
+     * as one of its looks has to know the page can come back, and a build from
+     * before D49 does not stamp it.
+     */
+    const HANDOFF_ATTR = 'data-dsh-claude-style-handoff'
+    /**
+     * The document attribute the skin center stamps while a skin is painting
+     * (D49). It is read at boot and watched afterwards: the value is the skin
+     * id, and the presence means the page belongs to a skin.
+     */
+    const SKIN_STAMP_ATTR = 'data-dsh-skin'
+    /**
+     * The document attribute the delegated wallpaper plugin stamps while it
+     * renders (D49). Two plugins cannot own one shell, so a wallpaper outranks
+     * this theme exactly as a skin does.
+     */
+    const WALLPAPER_ACTIVE_ATTR = 'data-we-wallpaper'
+    /**
      * On the host's scroller around the settings page while the page is
      * mounted (src/features/settings/settings.js): the stylesheet keeps the
      * scrollbar's room there, so switching tabs never shifts the layout.
