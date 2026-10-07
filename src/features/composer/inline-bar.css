@@ -133,9 +133,10 @@ body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant
 body[data-dsh-claude-style] [data-slot="conversation.composer.dock"] > :not([data-composer-stats]) {
   min-width: 0 !important;
   max-width: 100% !important;
-  flex: 1 1 100% !important;
+  flex: 0 1 auto !important;
 }
 body[data-dsh-claude-style] [data-slot="conversation.composer.dock"] > .cm-root {
+  flex: 1 1 240px !important;
   white-space: normal !important;
   overflow-wrap: anywhere !important;
   overflow: visible !important;
