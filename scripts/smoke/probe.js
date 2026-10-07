@@ -365,6 +365,43 @@
     }
     r.seatIdle = seatState(seats[0])
     r.seatRunning = seatState(seats[1])
+    // The right column: the host's dockkit pane, its header strip, and the
+    // shapes each panel repeats. The hairline is read from the resolved token,
+    // so the checks hold under either palette (D52).
+    var rightPanel = document.querySelector('[data-rightbar-col] [data-dockkit-pane]')
+    function rightStyle(el) {
+      if (!el) return null
+      var s = getComputedStyle(el)
+      var b = el.getBoundingClientRect()
+      return {
+        height: Math.round(b.height),
+        radius: s.borderTopLeftRadius,
+        font: s.fontSize + '/' + s.lineHeight + ' ' + s.fontWeight,
+        borderLeft: s.borderLeftWidth + ' ' + s.borderLeftColor,
+        borderBottom: s.borderBottomWidth + ' ' + s.borderBottomColor,
+        borderTopColor: s.borderTopColor,
+        color: s.color,
+      }
+    }
+    var tokenProbe = document.createElement('span')
+    tokenProbe.style.color = 'var(--dsw-alias-border-l1)'
+    document.body.appendChild(tokenProbe)
+    var rightHairline = getComputedStyle(tokenProbe).color
+    tokenProbe.remove()
+    r.rightPanel = rightPanel === null ? null : {
+      hairline: rightHairline,
+      pane: rightStyle(rightPanel),
+      strip: rightStyle(document.querySelector('[data-rightbar-col] [data-dockkit-strip]')),
+      tab: rightStyle(document.querySelector('[data-rightbar-col] [data-dockkit-tab]')),
+      icon: rightStyle(document.querySelector('[data-rightbar-col] [class*="_iconButton"]')),
+      search: rightStyle(document.querySelector('[data-rightbar-col] [class*="_editorSearchInput"]')),
+      row: rightStyle(document.querySelector('[data-rightbar-col] [class*="_explorerRow"]')),
+      node: rightStyle(document.querySelector('[data-rightbar-col] [class*="_node"]')),
+      board: rightStyle(document.querySelector('[data-rightbar-col] [class*="_teamBoard"]')),
+      badge: rightStyle(document.querySelector('[data-rightbar-col] [class*="_kindBadge"]')),
+      header: rightStyle(document.querySelector('[data-rightbar-col] [class*="_subagentHeader"]')),
+      name: rightStyle(document.querySelector('[data-rightbar-col] [class*="_cardName"]')),
+    }
     await onlyFor(['brand'], async function () {
       // The Claude palette, light and dark: the ivory and warm-black canvases,
       // the clay accent, the raised card fill.

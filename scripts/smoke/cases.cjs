@@ -53,6 +53,36 @@ function commonChecks(r) {
   check('a seat carrying the running status dot draws no circle',
     r.seatRunning !== null && r.seatRunning.content === 'none' && r.seatRunning.svgs > 0,
     JSON.stringify(r.seatRunning))
+  const panel = r.rightPanel
+  check('the right panel takes the skin canvas and the warm hairline',
+    panel !== null && panel.pane !== null && panel.pane.borderLeft === `1px ${panel.hairline}`,
+    JSON.stringify(panel && panel.pane))
+  check('the right panel header takes the same hairline',
+    panel !== null && panel.strip !== null && panel.strip.borderBottom === `1px ${panel.hairline}`,
+    JSON.stringify(panel && panel.strip))
+  check('a right panel tab is a 28px label',
+    panel !== null && panel.tab !== null && panel.tab.height === 28 && panel.tab.radius === '6px' && panel.tab.font === '13px/18px 500',
+    JSON.stringify(panel && panel.tab))
+  check('a right panel icon button is a 28px square with 6px corners',
+    panel !== null && panel.icon !== null && panel.icon.height === 28 && panel.icon.radius === '6px',
+    JSON.stringify(panel && panel.icon))
+  check('the right panel search field is a 28px field with an 8px radius',
+    panel !== null && panel.search !== null && panel.search.height === 30 && panel.search.radius === '8px' && panel.search.font === '13px/18px 400',
+    JSON.stringify(panel && panel.search))
+  check('a right panel tree row is a 30px row',
+    panel !== null && panel.row !== null && panel.row.height === 30 && panel.row.radius === '6px' && panel.row.font === '13px/20px 400',
+    JSON.stringify(panel && panel.row))
+  check('a right panel node card and its board take the skin card radius',
+    panel !== null && panel.node !== null && panel.node.radius === '12px' &&
+      panel.board !== null && panel.board.radius === '12px' && panel.board.borderTopColor === panel.hairline,
+    JSON.stringify(panel && { node: panel.node, board: panel.board }))
+  check('a right panel chip is a 20px pill',
+    panel !== null && panel.badge !== null && panel.badge.height === 20 && panel.badge.radius === '999px',
+    JSON.stringify(panel && panel.badge))
+  check('a right panel section header takes a hairline over a 13px label',
+    panel !== null && panel.header !== null && panel.header.borderBottom === `1px ${panel.hairline}` &&
+      panel.name !== null && panel.name.font === '13px/18px 500',
+    JSON.stringify(panel && { header: panel.header, name: panel.name }))
   check('scheduler idle once settled (0 passes in 1 s)', r.idlePasses === 0, `${r.idlePasses} passes`, 'timing')
   check('a closed popover card claims no menu role for the host\'s keyboard arbitration',
     r.closedMenuCards === 0, `${r.closedMenuCards} closed cards carry role=menu`)

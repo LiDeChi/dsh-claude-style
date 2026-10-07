@@ -226,6 +226,31 @@ ${footer}
     <div class="_x_sessionRow_1" role="treeitem"><span class="_x_slot_1"><svg data-state="ongoing" viewBox="0 0 16 16" width="10" height="10"></svg></span><span class="_x_title_1">running session</span></div>
   </div>
 </div>
+<div data-rightbar-col>
+  <div data-slot="rightbar"><div data-sidebar-right-session>
+    <div data-sidebar-right-panel data-sidebar-right-open>
+      <section data-dockkit-pane data-dockkit-pane-active>
+        <div class="_x_tabHostHeader_1">
+          <div data-dockkit-strip role="tablist">
+            <div data-dockkit-strip-tabs><div class="_x_tab_1 _x_tabActive_1" data-dockkit-tab role="tab" aria-selected="true">Files</div></div>
+            <div data-dockkit-strip-chrome>
+              <button class="_x_iconButton_1" data-dockkit-split-button aria-label="Split"></button>
+              <button class="_x_iconButton_1" data-sidebar-right-mode aria-label="Fullscreen"></button>
+              <button class="_x_iconButton_1" data-sidebar-right-toggle aria-label="Collapse right sidebar"></button>
+            </div>
+          </div>
+        </div>
+        <div class="_x_tabHostBody_1">
+          <input class="_x_editorSearchInput_1" style="box-sizing:content-box" placeholder="Filter">
+          <button class="_x_iconButton_1" aria-label="Refresh"></button>
+          <div class="_x_explorerRow_1"><span class="_x_explorerName_1">row</span></div>
+          <section class="_x_teamBoard_1"><div class="_x_node_1"><span class="_x_cardName_1">name</span><span class="_x_kindBadge_1">Main agent</span></div></section>
+          <div class="_x_subagentHeader_1"><span class="_x_subagentHeading_1">session</span></div>
+        </div>
+      </section>
+    </div>
+  </div></div>
+</div>
 <div data-composer-card${name === 'automode-hero' ? ' data-phase="hero"' : ''}>
 ${heroRow}
   ${name === 'chat-send' ? '<div data-input-scroll style="overflow:auto;max-height:120px">' : ''}

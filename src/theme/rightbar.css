@@ -137,3 +137,63 @@ body[data-dsh-claude-style] [data-rightbar-col] :is([class*="_explorerRow"], [cl
 body[data-dsh-claude-style] [data-rightbar-col] :is([class*="_explorerName"], [class*="_explorerDirChanged"]) {
   font-size: 13px !important;
 }
+
+/* ---------- the cards and chips every panel builds from ---------- */
+/* The panels differ (the files panel draws rows, the agent-teams panel draws a
+   canvas of node cards) but they repeat two shapes: a rounded card with the
+   skin's hairline, and a small chip for a state. Both take the skin's card
+   recipe, so a panel reads as Claude's does without touching its layout. */
+body[data-dsh-claude-style] [data-rightbar-col] :is([class*="_node"], [class*="_teamBoard"], [class*="_cardBar"], [class*="_controls"]) {
+  border-radius: 12px !important;
+}
+
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%% [data-rightbar-col] :is([class*="_node"], [class*="_teamBoard"], [class*="_cardBar"], [class*="_controls"]) {
+  border-color: var(--dsw-alias-border-l1) !important;
+}
+
+body[data-dsh-claude-style] [data-rightbar-col] :is([class*="_teamBoard"], [class*="_cardBar"], [class*="_controls"]) {
+  border-width: 1px !important;
+  border-style: solid !important;
+}
+
+body[data-dsh-claude-style] [data-rightbar-col] :is([class*="_kindBadge"], [class*="_teamBoardCount"], [class*="_explorerRef"]) {
+  display: inline-flex !important;
+  align-items: center !important;
+  height: 20px !important;
+  padding: 0 8px !important;
+  border-radius: 999px !important;
+  font: 400 11px / 16px var(--dsw-font-family) !important;
+}
+
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%% [data-rightbar-col] :is([class*="_kindBadge"], [class*="_teamBoardCount"], [class*="_explorerRef"]) {
+  border-color: var(--dsw-alias-border-l1) !important;
+  color: var(--dsw-alias-label-tertiary) !important;
+}
+
+/* The agent-teams header names the session; the panel gives it a hairline and a
+   heading the way a Claude panel titles a section. */
+body[data-dsh-claude-style] [data-rightbar-col] [class*="_subagentHeader"] {
+  height: 36px !important;
+  border-bottom: 1px solid var(--dsw-alias-border-l1) !important;
+}
+
+body[data-dsh-claude-style] [data-rightbar-col] :is([class*="_subagentHeading"], [class*="_cardName"]) {
+  font: 500 13px / 18px var(--dsw-font-family) !important;
+}
+
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%% [data-rightbar-col] :is([class*="_subagentHeading"], [class*="_cardName"]) {
+  color: var(--dsw-alias-label-primary) !important;
+}
+
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%% [data-rightbar-col] :is([class*="_subagentSubject"], [class*="_teamEmpty"]) {
+  color: var(--dsw-alias-label-tertiary) !important;
+}
+
+body[data-dsh-claude-style] [data-rightbar-col] :is([class*="_teamBoardBar"], [class*="_outline_"]) {
+  border-radius: 6px !important;
+  font: 500 12px / 18px var(--dsw-font-family) !important;
+}
+
+body[data-dsh-claude-style] [data-rightbar-col] :is([class*="_teamBoardBar"], [class*="_outline_"]):hover {
+  background: var(--dsh-claude-hover-bg) !important;
+}
