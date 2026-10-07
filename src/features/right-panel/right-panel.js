@@ -103,6 +103,13 @@
         return `${(count / 1_000_000).toFixed(1)}M`
       }
 
+      /** The shown conversation's working folder, or '' when the host shows none. */
+      function folderName() {
+        const seat = document.querySelector('[data-phase="active"] [data-slot="conversation.hero.workspace"]')
+        if (seat === null) return ''
+        return (seat.textContent || '').trim().slice(0, 80)
+      }
+
       /** The cards this session's numbers make, in the order they appear. */
       function cards(chat) {
         const made = []
@@ -118,6 +125,11 @@
             const total = stats.turns > 0 ? Math.min(stats.turns, 6) : 0
             made.push({ title: chat('stats.dialog.title'), rows, trail: total > 0 ? { done: Math.max(0, total - 1), total } : null })
           }
+        }
+        // The reference's second card: the folder this session works in.
+        const folder = folderName()
+        if (folder !== '') {
+          made.push({ title: copyLabel('workingFolder', 'Working folder'), rows: [[copyLabel('workingFolderPath', 'Folder'), folder]], trail: null })
         }
         const usage = value('tokenUsage')
         if (usage !== undefined && usage !== null) {

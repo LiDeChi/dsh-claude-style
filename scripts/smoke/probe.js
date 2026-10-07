@@ -541,6 +541,12 @@
       statsPhase.appendChild(statsColumn)
       statsColumn.appendChild(statsCard)
       statsColumn.appendChild(statsDock)
+      // The host's workspace seat, as the hero row renders it: the landing
+      // cards read the folder's name off this contract slot.
+      var statsFolder = document.createElement('span')
+      statsFolder.setAttribute('data-slot', 'conversation.hero.workspace')
+      statsFolder.textContent = 'default-workspace'
+      statsPhase.appendChild(statsFolder)
       await sleep(300)
       var statsMeter = document.querySelector('[data-dsh-claude-context-meter]')
       if (statsMeter !== null) statsMeter.dispatchEvent(new MouseEvent('mouseenter'))

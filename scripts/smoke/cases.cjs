@@ -220,7 +220,7 @@ const CASES = {
     check('the host\'s panel takes the skin\'s own entrance, stamped by the feature',
       r.context.panelStamped === true, JSON.stringify(r.context.panelStamped))
     check("the guide carries the skin's landing cards, read from the session's own projections",
-      r.landing !== null && r.landing.cards === 2 && r.landing.rows === 6,
+      r.landing !== null && r.landing.cards === 3 && r.landing.rows === 7,
       JSON.stringify(r.landing && { cards: r.landing.cards, rows: r.landing.rows }))
     check('a landing card is a 12px card on the skin fill, with the warm hairline',
       r.landing !== null && r.landing.radius === '12px' && r.landing.fill === r.landing.cardToken &&
@@ -230,12 +230,15 @@ const CASES = {
       r.landing !== null && r.landing.title === '15px/22px 600' && r.landing.titleInk === r.landing.primary &&
         r.landing.row === '13px/20px 400',
       JSON.stringify(r.landing && { title: r.landing.title, ink: r.landing.titleInk, primary: r.landing.primary, row: r.landing.row }))
+    check("the folder card carries the workspace the host's own seat names",
+      r.landing !== null && r.landing.values.indexOf('default-workspace') !== -1,
+      JSON.stringify(r.landing && r.landing.values))
     check("a landing card trails one 22px circle per turn, the last one current",
       r.landing !== null && r.landing.trail !== null && r.landing.trail.dots === 2 &&
         r.landing.trail.done === 1 && r.landing.trail.current === 1 && r.landing.trail.size === 22,
       JSON.stringify(r.landing && r.landing.trail))
     check("the landing cards carry the host's own words for the session's numbers",
-      r.landing !== null && r.landing.labels.length === 6 && r.landing.values.length === 6 &&
+      r.landing !== null && r.landing.labels.length === 7 && r.landing.values.length === 7 &&
         r.landing.values.every((value) => value !== ''),
       JSON.stringify(r.landing && { labels: r.landing.labels, values: r.landing.values }))
     check('another plugin\'s popover is not taken for the host\'s panel, and the marks a previous generation left on it are cleared',
