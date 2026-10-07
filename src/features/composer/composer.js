@@ -535,7 +535,7 @@
       function focusEditorOnHover(event) {
         if (event.pointerType !== 'mouse' || event.buttons !== 0 || !document.hasFocus()) return
         const target = event.target
-        if (!(target instanceof Element) || getComputedStyle(target).cursor !== 'text') return
+        if (!(target instanceof Element) || !target.closest('[data-composer-card]')) return
         const selection = window.getSelection()
         if (selection && !selection.isCollapsed) return
         const focused = document.activeElement
@@ -577,6 +577,7 @@
       document.addEventListener('pointerdown', onDockPanDown, true)
       document.addEventListener('pointerover', onDockPanOver, true)
       document.addEventListener('pointerover', focusEditorOnHover, true)
+      document.addEventListener('pointermove', focusEditorOnHover, true)
       document.addEventListener('scroll', onDockPanScroll, true)
 
       return () => {
@@ -599,6 +600,7 @@
         document.removeEventListener('pointerdown', onDockPanDown, true)
         document.removeEventListener('pointerover', onDockPanOver, true)
         document.removeEventListener('pointerover', focusEditorOnHover, true)
+        document.removeEventListener('pointermove', focusEditorOnHover, true)
         document.removeEventListener('scroll', onDockPanScroll, true)
         endDockPan()
         if (panObserver !== null) panObserver.disconnect()
