@@ -10,11 +10,13 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 - **分支菜单保持在屏幕内**：首页下方的分支菜单现在优先向上展开，滚动或调整窗口后继续跟随按钮，菜单高度受屏幕边界限制。
 - **输入区底部适应侧栏压缩**：可用宽度不足时，权限与模型控件自动分行；模型名称缩略显示，并保留思考强度与上下文用量所需的空间，避免重叠和超出输入框。
+- **费用统计保留独立底栏**：同时启用 dsh-cost-meter 时，会话费用、缓存命中与 Token 统计显示在独立行，窄输入区允许文字换行，避免覆盖模型与思考强度控件。
 
 <h3 id="en-unreleased">Bug Fixes</h3>
 
 - **Branch picker stays inside the viewport**: the branch menu below the home composer opens upward when space permits, follows its trigger after scrolling or resizing, and limits its height to the viewport.
 - **Composer footer adapts to sidebar compression**: permission and model controls wrap when space is limited; model names truncate while preserving room for effort and context usage, preventing overlaps and overflow.
+- **Cost statistics keep a separate footer**: when dsh-cost-meter is enabled, session cost, cache hit rate and token statistics occupy a separate row and wrap in narrow composers without covering model or effort controls.
 
 ## [0.11.0] - 2026-10-06
 

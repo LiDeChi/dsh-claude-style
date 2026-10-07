@@ -87,6 +87,7 @@ body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant
   align-items: center !important;
   justify-content: center !important;
   gap: 12px !important;
+  flex-direction: row !important;
   pointer-events: none !important;
   z-index: 3 !important;
   max-width: var(--dsh-composer-card-max-width, 100%) !important;
@@ -102,13 +103,42 @@ body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant
    is position: fixed, and a transform here would anchor it to the meter. */
 body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] + [class*="_dock"] > [data-dsh-claude-context-meter] {
   position: absolute !important;
-  top: 0 !important;
-  bottom: 0 !important;
+  top: var(--dsh-claude-meter-top, 0) !important;
+  bottom: var(--dsh-claude-meter-bottom, 0) !important;
+  height: 28px !important;
   right: 4px !important;
   align-items: center !important;
 }
 body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] [class*="_row"] > [class*="_trailing"] {
   margin-right: var(--dsh-claude-meter-room, 0px) !important;
+}
+
+/* Extension content needs its own flow row; only the context meter overlays
+   the toolbar. Keep every extension in its native React slot. */
+body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] + [class*="_dock"]:has([data-slot="conversation.composer.dock"] > :not([data-composer-stats])) {
+  position: relative !important;
+  bottom: auto !important;
+  left: auto !important;
+  right: auto !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 28px !important;
+  padding: 4px !important;
+  gap: 4px 12px !important;
+  flex-wrap: wrap !important;
+  pointer-events: auto !important;
+  --dsh-claude-meter-top: auto;
+  --dsh-claude-meter-bottom: 100%;
+}
+body[data-dsh-claude-style] [data-slot="conversation.composer.dock"] > :not([data-composer-stats]) {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  flex: 1 1 100% !important;
+}
+body[data-dsh-claude-style] [data-slot="conversation.composer.dock"] > .cm-root {
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+  overflow: visible !important;
 }
 
 /* ---------- the host's stats row: hidden, its detail moved into the context popover ---------- */
