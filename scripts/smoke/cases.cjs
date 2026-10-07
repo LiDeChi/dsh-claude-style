@@ -230,6 +230,10 @@ const CASES = {
       r.landing !== null && r.landing.title === '15px/22px 600' && r.landing.titleInk === r.landing.primary &&
         r.landing.row === '13px/20px 400',
       JSON.stringify(r.landing && { title: r.landing.title, ink: r.landing.titleInk, primary: r.landing.primary, row: r.landing.row }))
+    check("a landing card trails one 22px circle per turn, the last one current",
+      r.landing !== null && r.landing.trail !== null && r.landing.trail.dots === 2 &&
+        r.landing.trail.done === 1 && r.landing.trail.current === 1 && r.landing.trail.size === 22,
+      JSON.stringify(r.landing && r.landing.trail))
     check("the landing cards carry the host's own words for the session's numbers",
       r.landing !== null && r.landing.labels.length === 6 && r.landing.values.length === 6 &&
         r.landing.values.every((value) => value !== ''),

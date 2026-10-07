@@ -588,6 +588,17 @@
           title: landingTitle === null ? null : getComputedStyle(landingTitle).fontSize + '/' + getComputedStyle(landingTitle).lineHeight + ' ' + getComputedStyle(landingTitle).fontWeight,
           titleInk: landingTitle === null ? null : getComputedStyle(landingTitle).color,
           row: landingRow === null ? null : getComputedStyle(landingRow).fontSize + '/' + getComputedStyle(landingRow).lineHeight + ' ' + getComputedStyle(landingRow).fontWeight,
+          trail: (function () {
+            var trail = landingStack.querySelector('[data-dsh-claude-panel-trail]')
+            if (trail === null) return null
+            var dot = trail.querySelector('[data-dsh-claude-panel-dot]')
+            return {
+              dots: trail.querySelectorAll('[data-dsh-claude-panel-dot]').length,
+              done: trail.querySelectorAll('[data-dsh-claude-panel-dot="done"]').length,
+              current: trail.querySelectorAll('[data-dsh-claude-panel-dot="current"]').length,
+              size: dot === null ? null : Math.round(dot.getBoundingClientRect().width),
+            }
+          })(),
           labels: Array.prototype.map.call(landingStack.querySelectorAll('.dsh-claude-panel-card-label'), function (l) { return (l.textContent || '').trim() }),
           values: Array.prototype.map.call(landingStack.querySelectorAll('.dsh-claude-panel-card-value'), function (v) { return (v.textContent || '').trim() }),
         }

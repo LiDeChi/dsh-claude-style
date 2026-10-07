@@ -14,6 +14,8 @@
       const CARDS_ATTR = 'data-dsh-claude-panel-cards'
       /** One card: `data-dsh-claude-panel-card="<title key>"`. */
       const CARD_ATTR = 'data-dsh-claude-panel-card'
+      /** The trail a card may carry: one circle per turn. */
+      const TRAIL_ATTR = 'data-dsh-claude-panel-trail'
       /** One row inside a card: `data-dsh-claude-panel-row="<label key>"`. */
       const ROW_ATTR = 'data-dsh-claude-panel-row'
       /** The projections the cards read, in the order their cards appear. */
@@ -111,7 +113,11 @@
           if (totalMs > 0) rows.push([copyLabel('contextTotalTime', 'Total time'), duration(totalMs)])
           if (stats.llmMs > 0) rows.push([chat('stats.dialog.llmTime'), duration(stats.llmMs)])
           if (stats.toolMs > 0) rows.push([chat('stats.dialog.toolTime'), duration(stats.toolMs)])
-          if (rows.length > 0) made.push({ title: chat('stats.dialog.title'), rows })
+          if (rows.length > 0) {
+            // The reference card trails one circle per turn, the last one current.
+            const total = stats.turns > 0 ? Math.min(stats.turns, 6) : 0
+            made.push({ title: chat('stats.dialog.title'), rows, trail: total > 0 ? { done: Math.max(0, total - 1), total } : null })
+          }
         }
         const usage = value('tokenUsage')
         if (usage !== undefined && usage !== null) {
@@ -148,6 +154,24 @@
         chevron.setAttribute('aria-hidden', 'true')
         head.appendChild(chevron)
         section.appendChild(head)
+        if (card.trail !== null && card.trail !== undefined) {
+          const trail = document.createElement('div')
+          trail.className = 'dsh-claude-panel-card-trail'
+          trail.setAttribute(TRAIL_ATTR, '')
+          for (let i = 0; i < card.trail.total; i++) {
+            if (i > 0) {
+              const link = document.createElement('span')
+              link.className = 'dsh-claude-panel-card-link'
+              trail.appendChild(link)
+            }
+            const dot = document.createElement('span')
+            const state = i < card.trail.done ? 'done' : i === card.trail.done ? 'current' : 'pending'
+            dot.className = 'dsh-claude-panel-card-dot'
+            dot.setAttribute('data-dsh-claude-panel-dot', state)
+            trail.appendChild(dot)
+          }
+          section.appendChild(trail)
+        }
         for (let i = 0; i < card.rows.length; i++) {
           const row = document.createElement('div')
           row.className = 'dsh-claude-panel-card-row'
