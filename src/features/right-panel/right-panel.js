@@ -180,10 +180,17 @@
 
       /** One pass: follow the session, then draw what its numbers make. */
       function sync() {
+        // Without the right column's guide there is nothing to draw and nothing
+        // to follow: the pass leaves the projections alone.
+        const host = document.querySelector(GUIDE_SELECTOR)
+        if (host === null) {
+          releaseWatch()
+          unmount()
+          return
+        }
         syncWatch()
         const chat = chatText()
-        const host = document.querySelector(GUIDE_SELECTOR)
-        if (host === null || chat === null) {
+        if (chat === null) {
           unmount()
           return
         }
