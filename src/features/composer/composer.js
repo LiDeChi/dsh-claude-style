@@ -336,6 +336,75 @@
       }
 
       /**
+       * The stretch of the toolbar's own line the extension content shares, and
+       * the room below which it takes its own row again.
+       */
+      const DOCK_BAND_ATTR = 'data-dsh-claude-dock-band'
+      const DOCK_BAND_MIN = 220
+      let bandNode = null
+      let bandCard = null
+      let bandBox = ''
+
+      /** The dock's box can move with no DOM change: its own observer stamps again. */
+      const bandObserver = typeof ResizeObserver === 'function' ? new ResizeObserver(() => { if (bandCard !== null) stampDockBand(bandCard) }) : null
+
+      /**
+       * Put the dock's extension content on the toolbar's own line while the row
+       * leaves it a gap, and on its own row when the row is too narrow for one.
+       *
+       * The gap is measured from the row's own clusters — the leading controls
+       * and the trailing cluster that already keeps the meter's room — so the
+       * content sits between them by construction: it can neither cover them nor
+       * be covered, and the line inside it pans instead of pushing anything. The
+       * row's line gives the dock its height and its bottom, so a stack that
+       * places its dock elsewhere still lands on its controls' line.
+       */
+      function stampDockBand(card) {
+        const dock = card === undefined ? null : composerDock(card)
+        if (dock !== bandNode) {
+          if (bandNode !== null) bandNode.removeAttribute(DOCK_BAND_ATTR)
+          bandNode = dock
+          bandBox = ''
+          if (bandObserver !== null) {
+            bandObserver.disconnect()
+            if (dock !== null) bandObserver.observe(dock)
+          }
+        }
+        bandCard = card === undefined ? null : card
+        if (dock === null || !active) return
+        const row = card.querySelector('[class*="_row"]')
+        const tools = row === null ? null : row.querySelector('[class*="_tools"]')
+        const trailing = row === null ? null : row.querySelector('[class*="_trailing"]')
+        const box = dock.getBoundingClientRect()
+        const line = trailing === null ? null : trailing.getBoundingClientRect()
+        const stack = dock.parentElement
+        if (line === null || box.width === 0 || stack === null) {
+          bandBox = 'off'
+          dock.removeAttribute(DOCK_BAND_ATTR)
+          return
+        }
+        const lead = tools === null ? box.left : tools.getBoundingClientRect().right
+        const left = Math.round(lead - box.left) + 12
+        const right = Math.round(box.right - line.left) + 12
+        const room = Math.round(box.width) - left - right
+        const height = Math.round(line.height)
+        const bottom = Math.round(stack.getBoundingClientRect().bottom - line.bottom)
+        const on = room >= DOCK_BAND_MIN && height >= 24
+        const next = on ? `${left}:${right}:${bottom}:${height}` : 'off'
+        if (next === bandBox) return
+        bandBox = next
+        if (!on) {
+          dock.removeAttribute(DOCK_BAND_ATTR)
+          return
+        }
+        dock.style.setProperty('--dsh-claude-band-left', `${left}px`)
+        dock.style.setProperty('--dsh-claude-band-right', `${right}px`)
+        dock.style.setProperty('--dsh-claude-band-bottom', `${bottom}px`)
+        dock.style.setProperty('--dsh-claude-band-height', `${height}px`)
+        dock.setAttribute(DOCK_BAND_ATTR, 'on')
+      }
+
+      /**
        * A scroll of the line — the drag, a trackpad sweep — moves which end is
        * hidden. Scroll events do not bubble, so this is heard on the document in
        * the capture phase; the tooltip is not rewritten here (it does not change
@@ -437,6 +506,7 @@
         syncControls(cards)
         stampContextMeter(cards[0])
         stampDockPan(cards[0])
+        stampDockBand(cards[0])
         syncChatTabComposer()
       }
 
@@ -495,7 +565,7 @@
         heroCard = null
         document.body.removeAttribute(COMPOSER_ATTR)
         document.body.removeAttribute(COMPOSER_HIDDEN_ATTR)
-        const marks = ['data-composer-variant', 'data-has-attachments', ATTACHMENT_TILE_ATTR, DRAFT_EMPTY_ATTR, CONTROL_ATTR, 'data-dsh-claude-context-meter', DOCK_PAN_ATTR, DOCK_PAN_DRAG_ATTR]
+        const marks = ['data-composer-variant', 'data-has-attachments', ATTACHMENT_TILE_ATTR, DRAFT_EMPTY_ATTR, CONTROL_ATTR, 'data-dsh-claude-context-meter', DOCK_PAN_ATTR, DOCK_PAN_DRAG_ATTR, DOCK_BAND_ATTR]
         for (const mark of marks) {
           for (const marked of document.querySelectorAll(`[${mark}]`)) marked.removeAttribute(mark)
         }
@@ -515,5 +585,14 @@
         panLine = null
         panText = ''
         panOwnTitle = ''
+        if (bandNode !== null) {
+          for (const name of ['--dsh-claude-band-left', '--dsh-claude-band-right', '--dsh-claude-band-bottom', '--dsh-claude-band-height']) {
+            bandNode.style.removeProperty(name)
+          }
+        }
+        if (bandObserver !== null) bandObserver.disconnect()
+        bandNode = null
+        bandCard = null
+        bandBox = ''
       }
     }

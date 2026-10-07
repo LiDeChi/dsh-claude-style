@@ -113,11 +113,46 @@ body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant
   margin-right: var(--dsh-claude-meter-room, 0px) !important;
 }
 
+/* While the toolbar row leaves a gap between its leading controls and its
+   trailing cluster, the extension content shares that row: the dock keeps the
+   host's placement over the line and insets its content to the measured gap, so
+   the cost line reads on the controls' own line with its visible area bounded by
+   them — never over them — and pans inside that box. A row without the room
+   falls back to the dock's own row below the card (the rule under this one). */
+body[data-dsh-claude-style] [data-composer-card] + [class*="_dock"][data-dsh-claude-dock-band="on"]:has([data-slot="conversation.composer.dock"] > :not([data-composer-stats])) {
+  position: absolute !important;
+  bottom: var(--dsh-claude-band-bottom, 4px) !important;
+  left: var(--dsh-composer-side-clearance, 0px) !important;
+  right: var(--dsh-composer-side-clearance, 0px) !important;
+  width: auto !important;
+  max-width: var(--dsh-composer-card-max-width, 100%) !important;
+  height: var(--dsh-claude-band-height, 28px) !important;
+  min-height: 0 !important;
+  margin: 0 auto !important;
+  padding: 0 var(--dsh-claude-band-right, 0px) 0 var(--dsh-claude-band-left, 0px) !important;
+  gap: 8px !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+  pointer-events: auto !important;
+  z-index: 3 !important;
+  --dsh-claude-meter-top: 0;
+  --dsh-claude-meter-bottom: 0;
+}
+/* The fee-details entry keeps its content width inside the band: the line takes
+   the rest and pans, so a narrow band never squeezes the entry away. */
+body[data-dsh-claude-style] [data-composer-card] + [class*="_dock"][data-dsh-claude-dock-band="on"] [data-slot="conversation.composer.dock"] > .cm-btn {
+  flex: 0 0 auto !important;
+}
+
 /* Extension content needs its own flow row; only the context meter overlays
    the toolbar. Keep every extension in its native React slot. The composer stack
    is not named here: the dock's own line is what keeps a cost line off the model
    row, in the welcome stack and a chat panel as much as in a session. */
-body[data-dsh-claude-style] [data-composer-card] + [class*="_dock"]:has([data-slot="conversation.composer.dock"] > :not([data-composer-stats])) {
+body[data-dsh-claude-style] [data-composer-card] + [class*="_dock"]:not([data-dsh-claude-dock-band="on"]):has([data-slot="conversation.composer.dock"] > :not([data-composer-stats])) {
   position: relative !important;
   bottom: auto !important;
   left: auto !important;

@@ -12,9 +12,9 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - **输入区底部适应侧栏压缩**：可用宽度不足时，权限与模型控件自动分行；模型名称缩略显示，并保留思考强度与上下文用量所需的空间，避免重叠和超出输入框。
 - **思考强度紧贴模型控件**：侧栏展开或收缩期间，思考强度按钮与模型控件保持固定间距，不再出现短暂重叠。
 - **费用明细入口按内容宽度显示**：统计行里的费用明细入口与统计文字并排，不再独占一行。
-- **费用统计保留独立底栏**：同时启用 dsh-cost-meter 时，会话费用、缓存命中与 Token 统计显示在独立行，不覆盖模型、思考强度与上下文用量控件。
+- **费用统计与权限、模型控件同排**：同时启用 dsh-cost-meter 时，费用统计读在权限控件与模型控件之间的空档里，由两侧控件夹住可见区域，不再压住任何一侧；控件行排满、没有空档时，才回落到卡片下方的独立一行。
 - **费用统计单行内横向拖动**：统计文字不再折成两行，超出可见宽度时在底栏内横向滚动；按住即可左右拖动，把想看的数字拉进可见区，鼠标悬停显示完整统计（dsh-cost-meter 自己的逐模型费用提示接在后面），两端渐隐表示还有内容未显示。
-- **统计行在每种输入区里都独占一行**：给底栏单独成行的规则此前只认会话输入区，首页与面板里的输入区仍用浮在卡片上的底栏，那里的费用统计会压在模型与思考强度那一行上；现在只要底栏里挂着扩展内容，任何输入区都把它排到卡片下方单独一行。
+- **统计行在每种输入区都遵守同一套规则**：同排或回落不再只认会话输入区，首页与面板里的输入区也一样；底栏是否与控件同排，由控件行当下的空档宽度决定。
 
 <h3 id="en-unreleased">Bug Fixes</h3>
 
@@ -22,9 +22,9 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - **Composer footer adapts to sidebar compression**: permission and model controls wrap when space is limited; model names truncate while preserving room for effort and context usage, preventing overlaps and overflow.
 - **Effort trigger tracks the model control**: while a sidebar expands or collapses, the effort trigger keeps a fixed gap beside the model control and no longer overlaps it.
 - **Cost details entry keeps its content width**: the cost details entry sits beside the statistics text in the statistics row instead of filling a row of its own.
-- **Cost statistics keep a separate footer**: when dsh-cost-meter is enabled, session cost, cache hit rate and token statistics occupy a separate row and no longer cover the model, effort or context usage controls.
-- **Cost statistics pan on one line**: the statistics no longer wrap onto two lines; when they are wider than the footer they scroll sideways in place — drag to pull the numbers you want into view, hover to read the whole line (dsh-cost-meter's own per-model tooltip follows it), with a faded end showing which side still hides content.
-- **Statistics keep their own row in every composer**: the rule that gives the footer its own row only matched a session composer, so the home and panel composers kept the footer floating over the card, where a cost statistics line sat on the model and effort row; a footer carrying extension content now takes its own row below the card in every composer.
+- **Cost statistics share the controls' row**: with dsh-cost-meter enabled, the statistics read in the gap between the permission controls and the model cluster, bounded on both sides instead of covering either; when the row is full and leaves no gap, they fall back to a row of their own below the card.
+- **Cost statistics pan on one line**: the statistics no longer wrap onto two lines; when they are wider than the visible area they scroll sideways in place — drag to pull the numbers you want into view, hover to read the whole line (dsh-cost-meter's own per-model tooltip follows it), with a faded end showing which side still hides content.
+- **Statistics follow the same rule in every composer**: sharing the controls' row, or falling back, no longer only applies to a session composer — the home and panel composers behave alike, and the choice follows the row's current gap.
 
 ## [0.11.0] - 2026-10-06
 
