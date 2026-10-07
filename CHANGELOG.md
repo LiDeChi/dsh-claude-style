@@ -12,7 +12,8 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - **输入区底部适应侧栏压缩**：可用宽度不足时，权限与模型控件自动分行；模型名称缩略显示，并保留思考强度与上下文用量所需的空间，避免重叠和超出输入框。
 - **思考强度紧贴模型控件**：侧栏展开或收缩期间，思考强度按钮与模型控件保持固定间距，不再出现短暂重叠。
 - **费用明细入口按内容宽度显示**：统计行里的费用明细入口与统计文字并排，不再独占一行。
-- **费用统计保留独立底栏**：同时启用 dsh-cost-meter 时，会话费用、缓存命中与 Token 统计显示在独立行，窄输入区允许文字换行，避免覆盖模型与思考强度控件。
+- **费用统计保留独立底栏**：同时启用 dsh-cost-meter 时，会话费用、缓存命中与 Token 统计显示在独立行，不覆盖模型、思考强度与上下文用量控件。
+- **费用统计单行内横向拖动**：统计文字不再折成两行，超出可见宽度时在底栏内横向滚动；按住即可左右拖动，把想看的数字拉进可见区，鼠标悬停显示完整统计（dsh-cost-meter 自己的逐模型费用提示接在后面），两端渐隐表示还有内容未显示。
 
 <h3 id="en-unreleased">Bug Fixes</h3>
 
@@ -20,7 +21,8 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - **Composer footer adapts to sidebar compression**: permission and model controls wrap when space is limited; model names truncate while preserving room for effort and context usage, preventing overlaps and overflow.
 - **Effort trigger tracks the model control**: while a sidebar expands or collapses, the effort trigger keeps a fixed gap beside the model control and no longer overlaps it.
 - **Cost details entry keeps its content width**: the cost details entry sits beside the statistics text in the statistics row instead of filling a row of its own.
-- **Cost statistics keep a separate footer**: when dsh-cost-meter is enabled, session cost, cache hit rate and token statistics occupy a separate row and wrap in narrow composers without covering model or effort controls.
+- **Cost statistics keep a separate footer**: when dsh-cost-meter is enabled, session cost, cache hit rate and token statistics occupy a separate row and no longer cover the model, effort or context usage controls.
+- **Cost statistics pan on one line**: the statistics no longer wrap onto two lines; when they are wider than the footer they scroll sideways in place — drag to pull the numbers you want into view, hover to read the whole line (dsh-cost-meter's own per-model tooltip follows it), with a faded end showing which side still hides content.
 
 ## [0.11.0] - 2026-10-06
 

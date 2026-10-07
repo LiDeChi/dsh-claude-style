@@ -135,11 +135,37 @@ body[data-dsh-claude-style] [data-slot="conversation.composer.dock"] > :not([dat
   max-width: 100% !important;
   flex: 0 1 auto !important;
 }
+/* The cost line is as wide as the session's numbers; the dock is as wide as the
+   card. It keeps one line and pans inside that box instead of wrapping onto a
+   second one: hovering names the whole line (the pass composes the tooltip), a
+   drag pulls the wanted numbers into view, and the faded end says which side is
+   still hiding something (data-dsh-claude-dock-pan, written by the composer
+   pass from the line's own scroll). */
 body[data-dsh-claude-style] [data-slot="conversation.composer.dock"] > .cm-root {
-  flex: 1 1 240px !important;
-  white-space: normal !important;
-  overflow-wrap: anywhere !important;
-  overflow: visible !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  white-space: nowrap !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none !important;
+  cursor: grab !important;
+}
+body[data-dsh-claude-style] [data-slot="conversation.composer.dock"] > .cm-root::-webkit-scrollbar {
+  display: none !important;
+}
+body[data-dsh-claude-style] [data-slot="conversation.composer.dock"] > .cm-root[data-dsh-claude-dock-dragging] {
+  cursor: grabbing !important;
+  user-select: none !important;
+}
+body[data-dsh-claude-style] [data-slot="conversation.composer.dock"] > .cm-root[data-dsh-claude-dock-pan="start"] {
+  mask-image: linear-gradient(to right, #000 calc(100% - 20px), transparent 100%);
+}
+body[data-dsh-claude-style] [data-slot="conversation.composer.dock"] > .cm-root[data-dsh-claude-dock-pan="middle"] {
+  mask-image: linear-gradient(to right, transparent 0, #000 16px, #000 calc(100% - 20px), transparent 100%);
+}
+body[data-dsh-claude-style] [data-slot="conversation.composer.dock"] > .cm-root[data-dsh-claude-dock-pan="end"] {
+  mask-image: linear-gradient(to right, transparent 0, #000 16px);
 }
 
 /* ---------- the host's stats row: hidden, its detail moved into the context popover ---------- */
