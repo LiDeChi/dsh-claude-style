@@ -289,26 +289,50 @@
        */
       const panObserver = typeof ResizeObserver === 'function' ? new ResizeObserver(() => measureDockPan()) : null
 
+      /** Point the pan at `line`, or null: the line left behind loses its marks. */
+      function adoptDockPanLine(line) {
+        if (line === panLine) return
+        if (panLine !== null) {
+          panLine.removeAttribute(DOCK_PAN_ATTR)
+          panLine.removeAttribute(DOCK_PAN_DRAG_ATTR)
+          if (panObserver !== null) panObserver.unobserve(panLine)
+        }
+        panLine = line
+        panText = ''
+        panOwnTitle = ''
+        panDrag = null
+        if (line !== null && panObserver !== null) panObserver.observe(line)
+      }
+
+      /**
+       * The cost line `target` sits in, when that line is in the composer's own
+       * dock. The plugin mounts the line when usage arrives, which is not a pass:
+       * a press or a hover reads it here instead of waiting for the next pass.
+       */
+      function dockPanLineFrom(target) {
+        if (!(target instanceof Element)) return null
+        const line = target.closest('.cm-root')
+        if (line === null) return null
+        return line.closest('[data-slot="conversation.composer.dock"]') === null ? null : line
+      }
+
       /** Point the pan at the dock's cost line, as this pass has the dock. */
       function stampDockPan(card) {
         const dock = card === undefined ? null : composerDock(card)
         const slot = dock === null ? null : dock.querySelector('[data-slot="conversation.composer.dock"]')
         const line = slot === null ? null : slot.querySelector('.cm-root')
-        if (line !== panLine) {
-          if (panLine !== null) {
-            panLine.removeAttribute(DOCK_PAN_ATTR)
-            panLine.removeAttribute(DOCK_PAN_DRAG_ATTR)
-            if (panObserver !== null) panObserver.unobserve(panLine)
-          }
-          panLine = line
-          panText = ''
-          panOwnTitle = ''
-          panDrag = null
-          if (line !== null && panObserver !== null) panObserver.observe(line)
-        }
+        adoptDockPanLine(line)
         // A moved reading re-measures; a moved box is the observer's business, so
         // nothing here reads the line's layout unless its text changed.
         if (line !== null && (line.textContent || '').trim() !== panText) measureDockPan()
+      }
+
+      /** Mark the pan on a line the pass has not adopted, measuring it once. */
+      function adoptReachedDockPanLine(line) {
+        if (line === null || line === panLine) return line
+        adoptDockPanLine(line)
+        measureDockPan()
+        return line
       }
 
       /**
@@ -318,10 +342,19 @@
        * with the scroll) so a scroll reads no more layout than it must.
        */
       function onDockPanScroll(event) {
-        const line = event.target
-        if (!(line instanceof Element) || line !== panLine) return
+        const line = adoptReachedDockPanLine(dockPanLineFrom(event.target))
+        if (line === null) return
         const hint = dockPanHint(line)
         if (line.getAttribute(DOCK_PAN_ATTR) !== hint) line.setAttribute(DOCK_PAN_ATTR, hint)
+      }
+
+      /**
+       * The reader's pointer arrives at the line: what the pass would have marked,
+       * marked now, so the faded end and the whole-line tooltip are right at the
+       * moment they are read. Only a line the pan is not on reaches a measurement.
+       */
+      function onDockPanOver(event) {
+        adoptReachedDockPanLine(dockPanLineFrom(event.target))
       }
 
       /**
@@ -330,9 +363,9 @@
        * press selects the numbers, as it would anywhere else.
        */
       function onDockPanDown(event) {
-        if (event.button !== 0 || panLine === null || panDrag !== null) return
-        const line = event.target instanceof Element ? event.target.closest(`[${DOCK_PAN_ATTR}]`) : null
-        if (line === null || line !== panLine) return
+        if (event.button !== 0 || panDrag !== null) return
+        const line = adoptReachedDockPanLine(dockPanLineFrom(event.target))
+        if (line === null) return
         if (line.scrollWidth - line.clientWidth <= 1) return
         event.preventDefault()
         line.toggleAttribute(DOCK_PAN_DRAG_ATTR, true)
@@ -454,6 +487,7 @@
       }
       readState()
       document.addEventListener('pointerdown', onDockPanDown, true)
+      document.addEventListener('pointerover', onDockPanOver, true)
       document.addEventListener('scroll', onDockPanScroll, true)
 
       return () => {
@@ -474,6 +508,7 @@
         meterMeasuredActive = false
         meterWidth = 0
         document.removeEventListener('pointerdown', onDockPanDown, true)
+        document.removeEventListener('pointerover', onDockPanOver, true)
         document.removeEventListener('scroll', onDockPanScroll, true)
         endDockPan()
         if (panObserver !== null) panObserver.disconnect()
