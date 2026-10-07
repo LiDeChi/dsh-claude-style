@@ -33,3 +33,32 @@ body[data-dsh-claude-style] .agy-tv-pre {
   overflow-x: auto;
 }
 
+/* ---------- Third-party repair: dsh-market settings page ---------- */
+/* The market page stacks more into its two header rows than the settings
+   dialog's 564px options column holds: the title row (page title + version
+   chip + update button + restart reminder) and the tab strip (six tabs + the
+   install queue's entry, whose label grows to "Installing N/M" while an
+   install runs). The host panel clips at its own edge (`overflow: hidden`), so
+   once the queue entry grew it — and the Tasks card anchored to it — was cut
+   off at the dialog's right edge. Both rows keep every item instead: they wrap
+   in the column's own width, the title back onto one line. Scoped by the
+   market's own `data-dsh-market-root`; `_titleRow`/`_tabs` hit other surfaces
+   (ST7X_W_titleRow, nArs4W_tabBar) without it. */
+body[data-dsh-claude-style] [data-dsh-market-root] [class*="_titleRow"] {
+  flex-wrap: wrap;
+  row-gap: 6px;
+}
+
+body[data-dsh-claude-style] [data-dsh-market-root] [class*="_tabs"] {
+  flex-wrap: wrap;
+  row-gap: 2px;
+}
+
+/* That title row is a container of controls, not a heading: the display rule
+   (`[class*="title"]`, src/theme/typography.css) would otherwise hand the
+   version chip, the update button and the restart reminder the editorial
+   serif. Only the page title, which the same rule matches on its own class,
+   keeps it. */
+body[data-dsh-claude-style] [data-dsh-market-root] [class*="_titleRow"] {
+  font-family: var(--dsw-font-family);
+}
