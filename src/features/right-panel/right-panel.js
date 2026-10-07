@@ -108,7 +108,7 @@
         if (stats !== undefined && stats !== null) {
           const totalMs = (stats.llmMs > 0 ? stats.llmMs : 0) + (stats.toolMs > 0 ? stats.toolMs : 0)
           const rows = []
-          if (totalMs > 0) rows.push([chat('contextTotalTime'), duration(totalMs)])
+          if (totalMs > 0) rows.push([copyLabel('contextTotalTime', 'Total time'), duration(totalMs)])
           if (stats.llmMs > 0) rows.push([chat('stats.dialog.llmTime'), duration(stats.llmMs)])
           if (stats.toolMs > 0) rows.push([chat('stats.dialog.toolTime'), duration(stats.toolMs)])
           if (rows.length > 0) made.push({ title: chat('stats.dialog.title'), rows })

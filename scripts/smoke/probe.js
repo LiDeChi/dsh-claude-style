@@ -560,6 +560,38 @@
       window.__pushStats('sessionStats', { turns: 2, steps: 3, llmMs: 1200, toolMs: 400, ttftMs: 800, ttftSteps: 1, decodeMs: 2000, decodeTokens: 210 })
       window.__pushStats('tokenUsage', { uncachedInputTokens: 1000, outputTokens: 105, cacheReadTokens: 9000, cacheWriteTokens: 0 })
       await sleep(200)
+      // The right column's landing cards are skin-owned: with the projections
+      // served, the guide's stack reads them (D52).
+      r.landing = (function () {
+        var landingStack = document.querySelector('[data-dsh-claude-panel-cards]')
+        if (landingStack === null) return null
+        function token(name) {
+          var probe = document.createElement('span')
+          probe.style.color = 'var(' + name + ')'
+          document.body.appendChild(probe)
+          var reading = getComputedStyle(probe).color
+          probe.remove()
+          return reading
+        }
+        var stackStyle = getComputedStyle(landingStack)
+        var landingTitle = landingStack.querySelector('.dsh-claude-panel-card-title')
+        var landingRow = landingStack.querySelector('[data-dsh-claude-panel-row]')
+        return {
+          cards: landingStack.querySelectorAll('[data-dsh-claude-panel-card]').length,
+          rows: landingStack.querySelectorAll('[data-dsh-claude-panel-row]').length,
+          radius: stackStyle.borderTopLeftRadius,
+          fill: stackStyle.backgroundColor,
+          cardToken: token('--dsh-claude-card'),
+          border: stackStyle.borderTopWidth + ' ' + stackStyle.borderTopColor,
+          hairline: token('--dsw-alias-border-l1'),
+          primary: token('--dsw-alias-label-primary'),
+          title: landingTitle === null ? null : getComputedStyle(landingTitle).fontSize + '/' + getComputedStyle(landingTitle).lineHeight + ' ' + getComputedStyle(landingTitle).fontWeight,
+          titleInk: landingTitle === null ? null : getComputedStyle(landingTitle).color,
+          row: landingRow === null ? null : getComputedStyle(landingRow).fontSize + '/' + getComputedStyle(landingRow).lineHeight + ' ' + getComputedStyle(landingRow).fontWeight,
+          labels: Array.prototype.map.call(landingStack.querySelectorAll('.dsh-claude-panel-card-label'), function (l) { return (l.textContent || '').trim() }),
+          values: Array.prototype.map.call(landingStack.querySelectorAll('.dsh-claude-panel-card-value'), function (v) { return (v.textContent || '').trim() }),
+        }
+      })()
       var statsBlock = document.querySelector('.dsh-claude-context-stats')
       var statsPanel = statsBlock === null ? null : statsBlock.closest('[role="dialog"]')
       r.context.opened = statsPanel !== null

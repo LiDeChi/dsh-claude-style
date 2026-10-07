@@ -392,6 +392,14 @@ card's 12px corners and the skin's ink hierarchy. Only `[data-rightbar-col]` is
 reached: the bottom panel and the floating panes share the dockkit markers and
 keep the host's own chrome (D52).
 
+**Landing cards.** The guide an empty column opens on carries the skin's own
+card stack (features/right-panel): one 380px card on the raised fill with 12px
+corners and the warm hairline, a 15px / 22px at 600 title with a chevron in the
+tertiary ink, and 13px / 20px label-value rows. Every number is read from the
+host's `sessionStats` / `tokenUsage` projections and worded with the host's own
+`chat` strings, so a card whose input is absent is left out rather than shown
+with a zero.
+
 **Palette.** A modal card set 8vh from the top, 760px wide at most, 16px radius,
 on the same ivory fill (dark `#1E1E1D`) under the host's mask. From the top: a
 17px borderless input with a 28px close button; the category chips (32px tall,

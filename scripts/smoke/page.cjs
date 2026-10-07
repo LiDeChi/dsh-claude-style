@@ -241,6 +241,7 @@ ${footer}
           </div>
         </div>
         <div class="_x_tabHostBody_1">
+          <div data-slot="sidebar.right.tab.guide"></div>
           <input class="_x_editorSearchInput_1" style="box-sizing:content-box" placeholder="Filter">
           <button class="_x_iconButton_1" aria-label="Refresh"></button>
           <div class="_x_explorerRow_1"><span class="_x_explorerName_1">row</span></div>

@@ -83,6 +83,8 @@ The settings page appears both in the settings dialog (the "Claude Style" tab) a
 
 **Right panel**: the panel surface, its header and the guide cards take the same warm hairline as the sidebar in place of the host's cold white line. Tabs read as titles with the current one in the primary ink, and the split, fullscreen and collapse buttons are 28px squares.
 
+An empty panel's guide also carries the session's own time and token cards, read from the host's statistics projections.
+
 **Composer lists**: type `- `, `* `, `+ `, `• `, `1. ` or `1) ` to start a list. Enter or Shift+Enter continues it and increments numbers; Enter on an empty item exits the list. Ctrl/Cmd+Shift+7 toggles a numbered list and Ctrl/Cmd+Shift+8 toggles a bullet list. Ctrl/Cmd+Enter still submits. Lists are saved as Markdown text, support undo and follow the composer restyle scope.
 
 Every feature that takes over part of the host's interface has its own switch; turning it off brings the host's original back at once, without a reload. The conversation area's animations — the follow, the automatic folding with its rolling door, the text fade, the file change rows and the send flight — share one Chat-area animations switch; the caret keeps its own three-way choice.
