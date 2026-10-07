@@ -114,8 +114,10 @@ body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant
 }
 
 /* Extension content needs its own flow row; only the context meter overlays
-   the toolbar. Keep every extension in its native React slot. */
-body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] + [class*="_dock"]:has([data-slot="conversation.composer.dock"] > :not([data-composer-stats])) {
+   the toolbar. Keep every extension in its native React slot. The composer stack
+   is not named here: the dock's own line is what keeps a cost line off the model
+   row, in the welcome stack and a chat panel as much as in a session. */
+body[data-dsh-claude-style] [data-composer-card] + [class*="_dock"]:has([data-slot="conversation.composer.dock"] > :not([data-composer-stats])) {
   position: relative !important;
   bottom: auto !important;
   left: auto !important;
