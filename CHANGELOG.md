@@ -15,6 +15,8 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - **费用统计与权限、模型控件同排**：同时启用 dsh-cost-meter 时，费用统计读在权限控件与模型控件之间的空档里，由两侧控件夹住可见区域，不再压住任何一侧；控件行排满、没有空档时，才回落到卡片下方的独立一行。
 - **费用统计单行内横向拖动**：统计文字不再折成两行，超出可见宽度时在底栏内横向滚动；按住即可左右拖动，把想看的数字拉进可见区，鼠标悬停显示完整统计（dsh-cost-meter 自己的逐模型费用提示接在后面），两端渐隐表示还有内容未显示。
 - **统计行在每种输入区都遵守同一套规则**：同排或回落不再只认会话输入区，首页与面板里的输入区也一样；底栏是否与控件同排，由控件行当下的空档宽度决定。
+- **同排的底栏不再挡住控件**：与权限、模型控件同排时，底栏这一层不再接收点击，只有统计文字与费用明细入口可点，模型按钮、思考强度与权限菜单照常可用。
+- **统计行从开头读起**：统计文字不再被居中或被省略号截断；被拖到中段、窗口变宽或文案更新后，自动回到文案开头，右端不再留出一片空白。
 
 <h3 id="en-unreleased">Bug Fixes</h3>
 
@@ -25,6 +27,8 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - **Cost statistics share the controls' row**: with dsh-cost-meter enabled, the statistics read in the gap between the permission controls and the model cluster, bounded on both sides instead of covering either; when the row is full and leaves no gap, they fall back to a row of their own below the card.
 - **Cost statistics pan on one line**: the statistics no longer wrap onto two lines; when they are wider than the visible area they scroll sideways in place — drag to pull the numbers you want into view, hover to read the whole line (dsh-cost-meter's own per-model tooltip follows it), with a faded end showing which side still hides content.
 - **Statistics follow the same rule in every composer**: sharing the controls' row, or falling back, no longer only applies to a session composer — the home and panel composers behave alike, and the choice follows the row's current gap.
+- **The shared row no longer blocks the controls**: while the statistics share the row, the dock layer takes no clicks of its own — only the statistics text and the cost-details entry do — so the model button, the effort control and the permission menu keep working.
+- **The statistics line reads from its start**: the text is no longer centred or cut with an ellipsis, and a line left scrolled (or one whose window grew, or whose text was redrawn) returns to the start instead of leaving the right side empty.
 
 ## [0.11.0] - 2026-10-06
 

@@ -271,9 +271,15 @@
       function measureDockPan() {
         const line = panLine
         if (line === null) return
+        const text = (line.textContent || '').trim()
+        /* The box reads from its start unless it hides something: a stale
+         * scrollLeft — a narrower window, a drag past a line that has since grown,
+         * a redrawn reading — would otherwise keep the front of the sentence out of
+         * view for good, so it is dropped whenever nothing is hidden or the text
+         * itself moved. */
+        if (line.scrollLeft !== 0 && ((panText !== '' && text !== panText) || line.scrollWidth <= line.clientWidth + 1)) line.scrollLeft = 0
         const hint = dockPanHint(line)
         if (line.getAttribute(DOCK_PAN_ATTR) !== hint) line.setAttribute(DOCK_PAN_ATTR, hint)
-        const text = (line.textContent || '').trim()
         const own = line.getAttribute('title') || ''
         if (text !== '' && own !== '' && !own.includes(text)) panOwnTitle = own
         const whole = hint === 'none' ? panOwnTitle : panOwnTitle === '' ? text : `${text} — ${panOwnTitle}`

@@ -137,10 +137,18 @@ body[data-dsh-claude-style] [data-composer-card] + [class*="_dock"][data-dsh-cla
   justify-content: flex-start !important;
   overflow: hidden !important;
   box-sizing: border-box !important;
-  pointer-events: auto !important;
+  pointer-events: none !important;
   z-index: 3 !important;
   --dsh-claude-meter-top: 0;
   --dsh-claude-meter-bottom: 0;
+}
+/* The band's own padding reaches across the toolbar's controls, so the dock box
+   stays click-through and only its content takes the pointer: a press on the
+   model, the effort control or the permission menu must reach the control, never
+   this layer. */
+body[data-dsh-claude-style] [data-composer-card] + [class*="_dock"][data-dsh-claude-dock-band="on"] > [data-slot="conversation.composer.dock"],
+body[data-dsh-claude-style] [data-composer-card] + [class*="_dock"][data-dsh-claude-dock-band="on"] > * {
+  pointer-events: auto !important;
 }
 /* The fee-details entry keeps its content width inside the band: the line takes
    the rest and pans, so a narrow band never squeezes the entry away. */
@@ -187,6 +195,11 @@ body[data-dsh-claude-style] [data-slot="conversation.composer.dock"] > .cm-root 
   overscroll-behavior-x: contain;
   scrollbar-width: none !important;
   cursor: grab !important;
+  /* The cost plugin's own rule centres this line and cuts it with an ellipsis;
+     both hide the front of the sentence and leave the tail of the box empty. The
+     line reads from its start and pans, so neither applies here. */
+  text-align: left !important;
+  text-overflow: clip !important;
 }
 body[data-dsh-claude-style] [data-slot="conversation.composer.dock"] > .cm-root::-webkit-scrollbar {
   display: none !important;
