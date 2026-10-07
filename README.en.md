@@ -85,7 +85,9 @@ The settings page appears both in the settings dialog (the "Claude Style" tab) a
 
 An empty panel's guide also carries the session's own time and token cards, read from the host's statistics projections.
 
-**Composer lists**: type `- `, `* `, `+ `, `• `, `1. ` or `1) ` to start a list. Enter or Shift+Enter continues it and increments numbers; Enter on an empty item exits the list. Ctrl/Cmd+Shift+7 toggles a numbered list and Ctrl/Cmd+Shift+8 toggles a bullet list. Ctrl/Cmd+Enter still submits. Lists are saved as Markdown text, support undo and follow the composer restyle scope.
+**Composer focus**: moving the mouse into the text-cursor area focuses the editor while preserving its draft and insertion point. Clicking blank space in the composer card also focuses it.
+
+**Composer lists**: type `- `, `* `, `+ `, `• `, `1. ` or `1) ` to start a list. Shift+Enter on an empty list item removes its marker in place and exits the list; elsewhere it inserts a plain newline. Enter submits normally. Ctrl/Cmd+Shift+7 toggles a numbered list and Ctrl/Cmd+Shift+8 toggles a bullet list. Ctrl/Cmd+Enter still submits. List text has an 8px inset. Deleting a selected whole item updates consecutive numbers below it; the selection may include or omit the trailing newline. Backspace at the start of the item's text removes the number, delimiter and following spaces together. Lists are saved as Markdown text, restore the whole edit with one undo and follow the composer restyle scope.
 
 Every feature that takes over part of the host's interface has its own switch; turning it off brings the host's original back at once, without a reload. The conversation area's animations — the follow, the automatic folding with its rolling door, the text fade, the file change rows and the send flight — share one Chat-area animations switch; the caret keeps its own three-way choice.
 

@@ -522,13 +522,25 @@
        * not one of its controls means the field.
        */
       function focusEditorOnPress(target) {
-        const card = closestComposerCard(target, 'inline')
+        if (!active || !(target instanceof Element)) return
+        const card = target.closest('[data-composer-card]')
         if (!card) return
-        if (target.closest('button, [role="button"], [role="menu"], [role="radiogroup"], input, select')) return
-        const input = card.querySelector('[data-composer-input]')
+        if (target.closest('button, a, [role="button"], [role="menu"], [role="radiogroup"], input, select, textarea')) return
+        const input = card.querySelector('[data-composer-input][contenteditable="true"]')
         if (input && document.activeElement !== input) {
-          input.focus()
+          input.focus({ preventScroll: true })
         }
+      }
+
+      function focusEditorOnHover(event) {
+        if (event.pointerType !== 'mouse' || event.buttons !== 0 || !document.hasFocus()) return
+        const target = event.target
+        if (!(target instanceof Element) || getComputedStyle(target).cursor !== 'text') return
+        const selection = window.getSelection()
+        if (selection && !selection.isCollapsed) return
+        const focused = document.activeElement
+        if (focused instanceof Element && focused.matches('input, textarea, [contenteditable="true"]') && !focused.hasAttribute('data-composer-input')) return
+        focusEditorOnPress(target)
       }
 
       /**
@@ -564,6 +576,7 @@
       readState()
       document.addEventListener('pointerdown', onDockPanDown, true)
       document.addEventListener('pointerover', onDockPanOver, true)
+      document.addEventListener('pointerover', focusEditorOnHover, true)
       document.addEventListener('scroll', onDockPanScroll, true)
 
       return () => {
@@ -585,6 +598,7 @@
         meterWidth = 0
         document.removeEventListener('pointerdown', onDockPanDown, true)
         document.removeEventListener('pointerover', onDockPanOver, true)
+        document.removeEventListener('pointerover', focusEditorOnHover, true)
         document.removeEventListener('scroll', onDockPanScroll, true)
         endDockPan()
         if (panObserver !== null) panObserver.disconnect()

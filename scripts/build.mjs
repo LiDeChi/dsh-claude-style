@@ -188,6 +188,7 @@ const STYLE_FILES = [
   { file: 'features/composer/card.css', gate: true },
   { file: 'features/composer/inline.css', gate: true },
   { file: 'features/composer/inline-bar.css', gate: true },
+  { file: 'features/composer-lists/composer-lists.css', gate: true },
   { file: 'theme/sidebar.css' },
   { file: 'theme/rightbar.css' },
   { file: 'features/right-panel/right-panel.css' },

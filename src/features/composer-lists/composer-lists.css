@@ -1,0 +1,5 @@
+/* @composer-gate */
+/* Keep Markdown text and the editor's offsets intact; inset the host's text block. */
+body[data-dsh-claude-style] [data-composer-input] > [data-dsh-composer-list] {
+  padding-inline-start: 8px;
+}

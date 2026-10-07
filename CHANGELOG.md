@@ -8,16 +8,18 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 <h3 id="cn-unreleased">新增功能</h3>
 
-- **输入框列表编辑**：项目符号和编号列表可以回车续写，编号自动递增；空项目回车退出列表，支持切换列表的快捷键与撤销，并按 Markdown 文本保存。
+- **输入框列表编辑**：空列表项 Shift+Enter 原地删除标记并退出列表；其他位置 Shift+Enter 普通换行，Enter 正常发送，支持切换列表的快捷键与撤销，并按 Markdown 文本保存。
 
 ### 体验优化
 
+- **输入框自动获得焦点**：鼠标进入显示文字光标的输入区域即可输入；点击首页或对话输入卡片的空白处也可获得焦点，保留草稿与插入位置。
 - **Claude Desktop 侧栏布局**：搜索图标常驻顶部，进行中 / 已归档切换移至导航上方；会话文字更清楚，行距加宽，空闲状态使用空心圆，灰色选中背景与悬停背景分别显示。
 - **右侧面板卡片**：空面板的引导页新增会话自己的数字卡片（总用时、模型用时、工具用时、输入与输出 token、缓存命中率），标题与行距沿用面板的卡片配方，数据缺席时不显示卡片；工作目录显示当前会话所在的文件夹。
 - **右侧面板**：面板表面与页眉改用皮肤的暖色发丝线，替换宿主自带的冷白边界；页签按标题显示，当前页签用主文字色；拆分、全屏与折叠按钮统一为 28px 方形，空面板的引导卡片与图标取皮肤的文字色阶。
 
 ### 问题修复
 
+- **输入框列表编号与标记删除**：选中整项删除后编号自动补齐，选取范围可以包含或省略行尾换行。首项正文完整选取删除时也补齐后续编号。正文开头按退格一次删除完整标记及后面的空格，支持中英文逗号与顿号。段落末尾使用列表快捷键插入新列表；列表文字增加 8 像素缩进，编号调整支持一次撤销。
 - **分支菜单保持在屏幕内**：首页下方的分支菜单现在优先向上展开，滚动或调整窗口后继续跟随按钮，菜单高度受屏幕边界限制。
 - **输入区底部适应侧栏压缩**：可用宽度不足时，权限与模型控件自动分行；模型名称缩略显示，并保留思考强度与上下文用量所需的空间，避免重叠和超出输入框。
 - **思考强度紧贴模型控件**：侧栏展开或收缩期间，思考强度按钮与模型控件保持固定间距，不再出现短暂重叠。
@@ -28,16 +30,18 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 
 <h3 id="en-unreleased">New Features</h3>
 
-- **Composer list editing**: Enter continues bullet and numbered lists, incrementing numbers; Enter on an empty item exits. List shortcuts and undo are supported, and drafts are saved as Markdown text.
+- **Composer list editing**: Shift+Enter on an empty list item removes its marker in place and exits the list; elsewhere it inserts a plain newline. Enter submits normally. List shortcuts and undo are supported, and drafts are saved as Markdown text.
 
 ### Improvements
 
+- **Composer hover focus**: moving the mouse into the text-cursor area focuses the editor. Blank space in both home and conversation composer cards also focuses it on click, preserving the draft and insertion point.
 - **Claude Desktop sidebar layout**: search stays visible in the top toolbar and the Active / Archived switch sits above navigation. Conversation text is brighter, rows have more space, idle status uses hollow dots, and grey selection has its own surface apart from hover.
 - **Right panel cards**: an empty panel's guide now carries the session's own numbers as cards (total, model and tool time, input and output tokens, cache hit rate) on the panel's card recipe; a card whose data is absent is left out, and the folder the current session works in is named too.
 - **Right panel**: the panel surface and its header take the skin's warm hairline in place of the host's cold white line; tabs read as titles with the current one in the primary ink, the split, fullscreen and collapse buttons become 28px squares, and an empty panel's guide cards and icon take the skin's ink hierarchy.
 
 ### Bug Fixes
 
+- **Composer list numbering and marker removal**: deleting a whole item closes the numbering gap, whether the selection includes its trailing newline or not. Deleting the first item's complete body also closes the numbering gap. Backspace at the start of the item's text removes the full marker and following spaces, including comma and ideographic-comma markers. List shortcuts at a paragraph's end insert a new list below it. List text has an 8px inset, and numbering edits support one-step undo.
 - **Branch picker stays inside the viewport**: the branch menu below the home composer opens upward when space permits, follows its trigger after scrolling or resizing, and limits its height to the viewport.
 - **Composer footer adapts to sidebar compression**: permission and model controls wrap when space is limited; model names truncate while preserving room for effort and context usage, preventing overlaps and overflow.
 - **Effort trigger tracks the model control**: while a sidebar expands or collapses, the effort trigger keeps a fixed gap beside the model control and no longer overlaps it.
