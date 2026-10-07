@@ -69,6 +69,7 @@ const FEATURE_CASES = {
     composer: ['composer', 'sync-fault'],
     // List editing also needs real-host verification of draft insertion and undo.
     'composer-lists': ['composer', 'switches'],
+    'right-panel': ['brand', 'markup'],
     'context-stats': ['context-stats', 'stats-compact'],
     copy: ['hero', 'late-forms'],
     effort: [],
