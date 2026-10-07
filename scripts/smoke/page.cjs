@@ -221,8 +221,10 @@ ${skinOwner}
 ${motionStub}
 ${footer}
 <div class="_x_treeBody_1" role="tree">
-  <div class="_x_sessionRow_1" role="treeitem"><span class="_x_slot_1"><div data-slot="sidebar.session.row.leading" style="display:contents"></div></span><span class="_x_title_1">idle session</span></div>
-  <div class="_x_sessionRow_1" role="treeitem"><span class="_x_slot_1"><svg data-state="ongoing" viewBox="0 0 16 16" width="10" height="10"></svg></span><span class="_x_title_1">running session</span></div>
+  <div data-slot="sidebar.workspaces">
+    <div class="_x_sessionRow_1" role="treeitem"><span class="_x_slot_1"><div data-slot="sidebar.session.row.leading" style="display:contents"></div></span><span class="_x_title_1">idle session</span></div>
+    <div class="_x_sessionRow_1" role="treeitem"><span class="_x_slot_1"><svg data-state="ongoing" viewBox="0 0 16 16" width="10" height="10"></svg></span><span class="_x_title_1">running session</span></div>
+  </div>
 </div>
 <div data-composer-card${name === 'automode-hero' ? ' data-phase="hero"' : ''}>
 ${heroRow}

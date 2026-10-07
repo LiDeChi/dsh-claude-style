@@ -103,6 +103,7 @@ const FRAGMENTS = [
   'shared/visual-owner.js',
   'features/selection/selection.js',
   'features/composer/composer.js',
+  'features/composer-lists/composer-lists.js',
   'features/copy/copy.js',
   'features/permissions/permissions.js',
   'features/context-stats/session-stats.js',
@@ -719,6 +720,7 @@ function checkListed() {
 const FEATURE_MAINS = {
   selection: 'features/selection/selection.js',
   composer: 'features/composer/composer.js',
+  composerLists: 'features/composer-lists/composer-lists.js',
   homeLayout: 'features/home/home-layout.js',
   mascot: 'features/mascot/mascot.js',
   copy: 'features/copy/copy.js',

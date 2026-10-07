@@ -2,6 +2,26 @@
 
 All notable changes to `dsh-claude-style` are documented here, newest first.
 
+## [Unreleased]
+
+[中文](#cn-unreleased) | [English](#en-unreleased)
+
+<h3 id="cn-unreleased">新增功能</h3>
+
+- **输入框列表编辑**：项目符号和编号列表可以回车续写，编号自动递增；空项目回车退出列表，支持切换列表的快捷键与撤销，并按 Markdown 文本保存。
+
+### 体验优化
+
+- **Claude Desktop 侧栏布局**：搜索图标常驻顶部，进行中 / 已归档切换移至导航上方；会话文字更清楚，行距加宽，空闲状态使用空心圆，灰色选中背景与悬停背景分别显示。
+
+<h3 id="en-unreleased">New Features</h3>
+
+- **Composer list editing**: Enter continues bullet and numbered lists, incrementing numbers; Enter on an empty item exits. List shortcuts and undo are supported, and drafts are saved as Markdown text.
+
+### Improvements
+
+- **Claude Desktop sidebar layout**: search stays visible in the top toolbar and the Active / Archived switch sits above navigation. Conversation text is brighter, rows have more space, idle status uses hollow dots, and grey selection has its own surface apart from hover.
+
 ## [0.11.1] - 2026-10-06
 
 [中文](#cn-0.11.1) | [English](#en-0.11.1)

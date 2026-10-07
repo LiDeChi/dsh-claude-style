@@ -466,9 +466,8 @@
       r.controls.back = controlOf('send')
     })
     await onlyFor(['search'], async function () {
-      // The sidebar's brand row (ui-sidebar SidebarRoot): the search box goes in
-      // beside the wide brand, and pressing it renders the host's Modal through
-      // a root of the skin's own.
+      // SidebarRoot places collapse and persistent search in the toolbar.
+      // Pressing search renders the host's Modal through the skin's own root.
       var sidebarSlot = document.createElement('div')
       sidebarSlot.setAttribute('data-slot', 'sidebar')
       sidebarSlot.innerHTML = '<div class="_n_root_1"><div class="_n_logoRow_1" data-window-drag="true">' +
@@ -483,7 +482,8 @@
       await sleep(60)
       searchRoot = window.__roots[rootsBefore]
       r.search = {
-        placed: !!searchTrigger && searchTrigger.previousElementSibling === logoRow.firstElementChild,
+        placed: !!searchTrigger && searchTrigger === logoRow.lastElementChild &&
+          searchTrigger.previousElementSibling.matches('[class*="_toggle"]'),
         rowMarked: logoRow.hasAttribute('data-dsh-claude-search-row'),
         resting: searchTrigger ? getComputedStyle(searchTrigger).visibility : null,
         modalRendered: !!searchRoot && searchRoot.renders > 0,
@@ -978,11 +978,11 @@
       switchSidebar.innerHTML = '<div class="_n_root_1"><div class="_n_logoRow_1" data-window-drag="true">' +
         '<button type="button" class="_n_brand_1 _n_wide_1" aria-label="New session">brand</button>' +
         '<button type="button" class="_n_iconButton_1 _n_toggle_1" aria-label="Collapse sidebar">toggle</button></div>' +
-        // One hash prefix for the section, its header, its label and its list
-        // area, the way the host's CSS modules name them (the skin finds the
-        // workspace section by that shared prefix, never by the label text).
-        '<div class="_w1_root"><div class="_w1_sectionHeader"><span class="_w1_sectionLabel _w1_wide">Workspaces</span></div>' +
-        '<div role="tree" class="_w1_listArea"><div data-row-key="w1" class="_w1_projectRow">project</div></div></div></div>'
+        // SidebarRoot owns New Session before the workspace outlet; the view
+        // switch is inserted immediately above that host action.
+        '<button type="button" class="_n_newSession_1">New session</button>' +
+        '<div data-slot="sidebar.workspaces"><div class="_w1_root"><div class="_w1_sectionHeader"><span class="_w1_sectionLabel _w1_wide">Workspaces</span></div>' +
+        '<div role="tree" class="_w1_listArea"><div data-row-key="w1" class="_w1_projectRow">project</div></div></div></div></div>'
       document.body.appendChild(switchSidebar)
       var switchHeader = document.createElement('div')
       switchHeader.className = '_c_header_1'

@@ -363,19 +363,18 @@ pass that stamps it) which `features/hero-menu/hero-menu.css` reads with
 
 ## Search · 搜索
 
-**Sidebar box.** The box takes the brand's place in the logo row while the
-pointer is over the sidebar: 32px tall, 8px radius, a 1px `#E8E6DC` hairline on
-the ivory canvas fill (dark: `#2E2C29` on `#1E1E1D`), a 16px search glyph in the
-secondary label, the "Search" label in the tertiary label at 14px, and the
-host's search shortcut as 20px keycaps at the right end. It is a button like
-the New session and Plugins rows below it: the pointer cursor, and on hover the
-same plate those rows take (`--dsh-claude-hover-bg`, dark `rgba(255, 255, 255,
-0.08)`) laid over its opaque fill. Box and brand share one grid cell and
-cross-fade over 0.16s, the timing the workspace heading and its segmented
-control trade places with; the box is excluded from the window drag region. In
-the desktop titlebar mode the brand row rises 10px, since the sidebar column
-starts under the 40px titlebar — as far as it goes with the box still wholly
-below that edge, which clips the column.
+**Toolbar icon.** A persistent 28px search button with an 18px glyph sits
+beside the host's collapse control. Its fill is transparent at rest and uses
+`--dsh-claude-hover-bg` on hover. The accessible label and title name search;
+the window drag region excludes this button. macOS uses the native top strip,
+while browsers use the logo row.
+
+**Sidebar layout.** The toolbar precedes a 34px full-width Active / Archived
+switch, then 32px navigation rows and workspace groups separated by 16px.
+Conversation rows are 32px tall with 14px text, 6px hollow idle dots and 6px
+corners. Claude dark mode uses `#111110` for the sidebar, `#C2C0B8` for normal
+conversation text and `#343433` for selection; hover has its own lighter wash.
+The account footer has a full-width divider. Host colours remain token-based.
 
 **Palette.** A modal card set 8vh from the top, 760px wide at most, 16px radius,
 on the same ivory fill (dark `#1E1E1D`) under the host's mask. From the top: a

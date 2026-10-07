@@ -63,6 +63,8 @@
 | [D32](D32-chat-interactions.md) | 搬来的聊天区交互：自己的前缀、自己的偏好、对上游让位 | 已实施 |
 | [D34](D34-turn-navigator.md) | 对话导航：皮肤画导航条，跳转按宿主自己的刻度 | 已实施 |
 | [D49](D49-visual-yield.md) | 让路：宿主另有属主时收掉整套视觉，留下设置页 | 已实施 |
+| [D50](D50-sidebar-reference.md) | Claude Desktop 侧栏布局 | 已实施 |
+| [D51](D51-composer-lists.md) | 输入框 Markdown 列表编辑 | 已实施 |
 
 ## 分发与流程
 

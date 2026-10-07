@@ -48,7 +48,7 @@ function commonChecks(r) {
       contrast(r.topUpInk, r.topUpFill) >= 3,
     JSON.stringify({ ink: r.topUpInk, fill: r.topUpFill }))
   check('the idle session seat draws the status circle through the slot outlet',
-    r.seatIdle !== null && r.seatIdle.content !== 'none' && r.seatIdle.width === '5px',
+    r.seatIdle !== null && r.seatIdle.content !== 'none' && r.seatIdle.width === '6px',
     JSON.stringify(r.seatIdle))
   check('a seat carrying the running status dot draws no circle',
     r.seatRunning !== null && r.seatRunning.content === 'none' && r.seatRunning.svgs > 0,
@@ -137,13 +137,12 @@ const CASES = {
     check('Enter on an open composer menu reaches the host', same(r.keys, ['host picked the menu item']), JSON.stringify(r.keys))
     commonChecks(r)
   },
-  // The sidebar's search box: placed in the brand row, resting hidden, opening
-  // the host's modal through a root of the skin's own.
+  // The sidebar's toolbar search opens the host modal through the skin's own root.
   search(r) {
     basicChecks(r)
     const search = r.search || {}
-    check('the search box goes in the brand row beside the brand, and rests hidden until the sidebar is hovered',
-      search.placed === true && search.rowMarked === true && search.resting === 'hidden', JSON.stringify(search))
+    check('the search icon stays visible in the sidebar toolbar',
+      search.placed === true && search.rowMarked === true && search.resting === 'visible', JSON.stringify(search))
     check('pressing the search box renders the host modal through a root of the skin\'s own', search.modalRendered === true, JSON.stringify(search))
     check('teardown takes the search box, its row mark and its root away',
       search.left === 0 && search.rootUnmounted === true, JSON.stringify(search))
