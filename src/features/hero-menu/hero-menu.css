@@ -1,4 +1,16 @@
 /* @composer-gate */
+/* Git-graph nests its picker under the chip. Fixed positioning keeps it inside
+   the viewport after the skin moves that row below the composer. */
+body[data-dsh-claude-style] [data-dsh-claude-branch-positioned] {
+  position: fixed !important;
+  left: var(--dsh-claude-branch-x, 8px) !important;
+  top: var(--dsh-claude-branch-y, 8px) !important;
+  bottom: auto !important;
+  width: min(280px, calc(100vw - 16px)) !important;
+  max-height: min(360px, calc(100vh - 16px)) !important;
+  box-sizing: border-box !important;
+  z-index: 99999 !important;
+}
 /* ---------- Host menu primitive: the hero row's pickers ---------- */
 /* The workspace (directory) chip and the agent-preset seat open the host's
    shared Menu primitive, which portals its card to <body>. The card carries no

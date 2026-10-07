@@ -16,6 +16,16 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - **右侧面板卡片**：空面板的引导页新增会话自己的数字卡片（总用时、模型用时、工具用时、输入与输出 token、缓存命中率），标题与行距沿用面板的卡片配方，数据缺席时不显示卡片。
 - **右侧面板**：面板表面与页眉改用皮肤的暖色发丝线，替换宿主自带的冷白边界；页签按标题显示，当前页签用主文字色；拆分、全屏与折叠按钮统一为 28px 方形，空面板的引导卡片与图标取皮肤的文字色阶。
 
+### 问题修复
+
+- **分支菜单保持在屏幕内**：首页下方的分支菜单现在优先向上展开，滚动或调整窗口后继续跟随按钮，菜单高度受屏幕边界限制。
+- **输入区底部适应侧栏压缩**：可用宽度不足时，权限与模型控件自动分行；模型名称缩略显示，并保留思考强度与上下文用量所需的空间，避免重叠和超出输入框。
+- **思考强度紧贴模型控件**：侧栏展开或收缩期间，思考强度按钮与模型控件保持固定间距，不再出现短暂重叠。
+- **费用明细入口按内容宽度显示**：统计行里的费用明细入口与统计文字并排，不再独占一行。
+- **费用统计保留独立底栏**：同时启用 dsh-cost-meter 时，会话费用、缓存命中与 Token 统计显示在独立行，不覆盖模型、思考强度与上下文用量控件。
+- **费用统计单行内横向拖动**：统计文字不再折成两行，超出可见宽度时在底栏内横向滚动；按住即可左右拖动，把想看的数字拉进可见区，鼠标悬停显示完整统计（dsh-cost-meter 自己的逐模型费用提示接在后面），两端渐隐表示还有内容未显示。
+- **插件市场页的设置弹窗不再被裁切**：市场页的标题行与标签行改为在弹窗宽度内换行，安装进行中的「Installing N/M」队列入口不再被切在弹窗右缘；标题行里的版本号、更新按钮与重启提醒也交回界面字体，不再被展示衬线规则带走。
+
 <h3 id="en-unreleased">New Features</h3>
 
 - **Composer list editing**: Enter continues bullet and numbered lists, incrementing numbers; Enter on an empty item exits. List shortcuts and undo are supported, and drafts are saved as Markdown text.
@@ -25,6 +35,16 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - **Claude Desktop sidebar layout**: search stays visible in the top toolbar and the Active / Archived switch sits above navigation. Conversation text is brighter, rows have more space, idle status uses hollow dots, and grey selection has its own surface apart from hover.
 - **Right panel cards**: an empty panel's guide now carries the session's own numbers as cards (total, model and tool time, input and output tokens, cache hit rate) on the panel's card recipe; a card whose data is absent is left out.
 - **Right panel**: the panel surface and its header take the skin's warm hairline in place of the host's cold white line; tabs read as titles with the current one in the primary ink, the split, fullscreen and collapse buttons become 28px squares, and an empty panel's guide cards and icon take the skin's ink hierarchy.
+
+### Bug Fixes
+
+- **Branch picker stays inside the viewport**: the branch menu below the home composer opens upward when space permits, follows its trigger after scrolling or resizing, and limits its height to the viewport.
+- **Composer footer adapts to sidebar compression**: permission and model controls wrap when space is limited; model names truncate while preserving room for effort and context usage, preventing overlaps and overflow.
+- **Effort trigger tracks the model control**: while a sidebar expands or collapses, the effort trigger keeps a fixed gap beside the model control and no longer overlaps it.
+- **Cost details entry keeps its content width**: the cost details entry sits beside the statistics text in the statistics row instead of filling a row of its own.
+- **Cost statistics keep a separate footer**: when dsh-cost-meter is enabled, session cost, cache hit rate and token statistics occupy a separate row and no longer cover the model, effort or context usage controls.
+- **Cost statistics pan on one line**: the statistics no longer wrap onto two lines; when they are wider than the footer they scroll sideways in place — drag to pull the numbers you want into view, hover to read the whole line (dsh-cost-meter's own per-model tooltip follows it), with a faded end showing which side still hides content.
+- **The Plugin Market settings page is no longer clipped**: the market page's title and tab rows now wrap inside the dialog, so the "Installing N/M" queue entry is no longer cut at the dialog's edge; the version chip, update button and restart reminder in the title row take the interface face back instead of the display serif.
 
 ## [0.11.1] - 2026-10-06
 
@@ -39,6 +59,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 - **Skin center handoff**: the DSH Skin Center offers this theme as a selectable skin. Selecting it hands the whole page to this plugin; selecting another skin, the official default, or a running wallpaper takes the page back without a reload. The verdict reads the `html[data-dsh-skin]` attribute the Skin Center injects into the served document and the wallpaper plugin's `body[data-we-wallpaper]`; either one means yielding, and while yielded the theme mounts no stylesheet, installs no feature and claims no document attribute, keeping only its settings page and preferences. A build stamps `data-dsh-claude-style-handoff` on `body` to say it can do this.
 
 **Full Changelog**: [v0.11.0...v0.11.1](https://github.com/Nwflower/dsh-claude-style/compare/v0.11.0...v0.11.1)
+
 
 ## [0.11.0] - 2026-10-06
 

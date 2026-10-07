@@ -228,6 +228,184 @@
       }
 
       /**
+       * The cost line the cost-meter plugin contributes to the dock, next to the
+       * host's own (hidden) stats row. It is the only thing down there that can
+       * be wider than the card, so it is the line that pans: the stylesheet keeps
+       * it on one line with `overflow-x: auto`, this pass says where its scroll
+       * sits and what its ends hide, and a drag on it pulls the wanted numbers
+       * into view.
+       *
+       * The line is the plugin's own element (`.cm-root`) and stays where React
+       * put it — the skin marks it, never moves it.
+       */
+      const DOCK_PAN_ATTR = 'data-dsh-claude-dock-pan'
+      const DOCK_PAN_DRAG_ATTR = 'data-dsh-claude-dock-dragging'
+      /** The line the pan is set up on, and the reading it was last measured at. */
+      let panLine = null
+      let panText = ''
+      /** The line's own tooltip, kept while the skin's (the whole line) is the one written. */
+      let panOwnTitle = ''
+      /** The live drag on that line — `{id, x, left, moved}` — or null. */
+      let panDrag = null
+
+      /** Which end of the line is out of sight, for the faded ends the CSS draws. */
+      function dockPanHint(line) {
+        const hidden = line.scrollWidth - line.clientWidth
+        if (hidden <= 1) return 'none'
+        if (line.scrollLeft <= 1) return 'start'
+        if (line.scrollLeft >= hidden - 1) return 'end'
+        return 'middle'
+      }
+
+      /**
+       * Mark the line with the end it hides, and with a tooltip that carries the
+       * whole line once the line is clipped: the plugin's own tooltip (the
+       * per-model split) follows it, and comes back on its own when the line fits
+       * again. A tooltip the plugin replaces while the line is clipped is picked
+       * up on the next measure, since ours never reads as its own.
+       *
+       * Only a new line, a moved reading or a resized box reaches this: the
+       * scroll width read here forces a layout, and a pass that read it would
+       * force one on every DOM change, mid-stream included.
+       */
+      function measureDockPan() {
+        const line = panLine
+        if (line === null) return
+        const hint = dockPanHint(line)
+        if (line.getAttribute(DOCK_PAN_ATTR) !== hint) line.setAttribute(DOCK_PAN_ATTR, hint)
+        const text = (line.textContent || '').trim()
+        const own = line.getAttribute('title') || ''
+        if (text !== '' && own !== '' && !own.includes(text)) panOwnTitle = own
+        const whole = hint === 'none' ? panOwnTitle : panOwnTitle === '' ? text : `${text} — ${panOwnTitle}`
+        if (whole === '') {
+          if (own !== '') line.removeAttribute('title')
+        } else if (own !== whole) line.setAttribute('title', whole)
+        panText = text
+      }
+
+      /**
+       * The line's box moved (the sidebar opened, the window resized) without any
+       * DOM change the pass would see, so its own observer measures again.
+       */
+      const panObserver = typeof ResizeObserver === 'function' ? new ResizeObserver(() => measureDockPan()) : null
+
+      /** Point the pan at `line`, or null: the line left behind loses its marks. */
+      function adoptDockPanLine(line) {
+        if (line === panLine) return
+        if (panLine !== null) {
+          panLine.removeAttribute(DOCK_PAN_ATTR)
+          panLine.removeAttribute(DOCK_PAN_DRAG_ATTR)
+          if (panObserver !== null) panObserver.unobserve(panLine)
+        }
+        panLine = line
+        panText = ''
+        panOwnTitle = ''
+        panDrag = null
+        if (line !== null && panObserver !== null) panObserver.observe(line)
+      }
+
+      /**
+       * The cost line `target` sits in, when that line is in the composer's own
+       * dock. The plugin mounts the line when usage arrives, which is not a pass:
+       * a press or a hover reads it here instead of waiting for the next pass.
+       */
+      function dockPanLineFrom(target) {
+        if (!(target instanceof Element)) return null
+        const line = target.closest('.cm-root')
+        if (line === null) return null
+        return line.closest('[data-slot="conversation.composer.dock"]') === null ? null : line
+      }
+
+      /** Point the pan at the dock's cost line, as this pass has the dock. */
+      function stampDockPan(card) {
+        const dock = card === undefined ? null : composerDock(card)
+        const slot = dock === null ? null : dock.querySelector('[data-slot="conversation.composer.dock"]')
+        const line = slot === null ? null : slot.querySelector('.cm-root')
+        adoptDockPanLine(line)
+        // A moved reading re-measures; a moved box is the observer's business, so
+        // nothing here reads the line's layout unless its text changed.
+        if (line !== null && (line.textContent || '').trim() !== panText) measureDockPan()
+      }
+
+      /** Mark the pan on a line the pass has not adopted, measuring it once. */
+      function adoptReachedDockPanLine(line) {
+        if (line === null || line === panLine) return line
+        adoptDockPanLine(line)
+        measureDockPan()
+        return line
+      }
+
+      /**
+       * A scroll of the line — the drag, a trackpad sweep — moves which end is
+       * hidden. Scroll events do not bubble, so this is heard on the document in
+       * the capture phase; the tooltip is not rewritten here (it does not change
+       * with the scroll) so a scroll reads no more layout than it must.
+       */
+      function onDockPanScroll(event) {
+        const line = adoptReachedDockPanLine(dockPanLineFrom(event.target))
+        if (line === null) return
+        const hint = dockPanHint(line)
+        if (line.getAttribute(DOCK_PAN_ATTR) !== hint) line.setAttribute(DOCK_PAN_ATTR, hint)
+      }
+
+      /**
+       * The reader's pointer arrives at the line: what the pass would have marked,
+       * marked now, so the faded end and the whole-line tooltip are right at the
+       * moment they are read. Only a line the pan is not on reaches a measurement.
+       */
+      function onDockPanOver(event) {
+        adoptReachedDockPanLine(dockPanLineFrom(event.target))
+      }
+
+      /**
+       * A press on the clipped cost line pans it by the drag's travel. The press
+       * is only claimed while the line hides something: otherwise the very same
+       * press selects the numbers, as it would anywhere else.
+       */
+      function onDockPanDown(event) {
+        if (event.button !== 0 || panDrag !== null) return
+        const line = adoptReachedDockPanLine(dockPanLineFrom(event.target))
+        if (line === null) return
+        if (line.scrollWidth - line.clientWidth <= 1) return
+        event.preventDefault()
+        line.toggleAttribute(DOCK_PAN_DRAG_ATTR, true)
+        line.setPointerCapture(event.pointerId)
+        panDrag = {id: event.pointerId, x: event.clientX, left: line.scrollLeft, moved: false}
+        document.addEventListener('pointermove', onDockPanMove, true)
+        document.addEventListener('pointerup', onDockPanUp, true)
+        document.addEventListener('pointercancel', onDockPanUp, true)
+      }
+
+      function onDockPanMove(event) {
+        const drag = panDrag
+        if (drag === null || event.pointerId !== drag.id || panLine === null) return
+        const travel = event.clientX - drag.x
+        // A press that never travels stays a press: panning from the first pixel
+        // would make a plain click jump the line.
+        if (!drag.moved && Math.abs(travel) < 4) return
+        drag.moved = true
+        panLine.scrollLeft = drag.left - travel
+      }
+
+      function onDockPanUp(event) {
+        const drag = panDrag
+        if (drag === null || event.pointerId !== drag.id) return
+        endDockPan()
+      }
+
+      function endDockPan() {
+        const drag = panDrag
+        if (drag === null) return
+        panDrag = null
+        document.removeEventListener('pointermove', onDockPanMove, true)
+        document.removeEventListener('pointerup', onDockPanUp, true)
+        document.removeEventListener('pointercancel', onDockPanUp, true)
+        if (panLine === null) return
+        panLine.removeAttribute(DOCK_PAN_DRAG_ATTR)
+        if (panLine.hasPointerCapture(drag.id)) panLine.releasePointerCapture(drag.id)
+      }
+
+      /**
        * The composer is chat-view-only. The host mounts the seat inside the
        * conversation root on every tab (轨迹 / 上下文 even reserve room for
        * it), so the skin reflects the active view on <body> and CSS drops the
@@ -258,6 +436,7 @@
         syncDraftState(cards)
         syncControls(cards)
         stampContextMeter(cards[0])
+        stampDockPan(cards[0])
         syncChatTabComposer()
       }
 
@@ -307,13 +486,16 @@
         }
       }
       readState()
+      document.addEventListener('pointerdown', onDockPanDown, true)
+      document.addEventListener('pointerover', onDockPanOver, true)
+      document.addEventListener('scroll', onDockPanScroll, true)
 
       return () => {
         active = false
         heroCard = null
         document.body.removeAttribute(COMPOSER_ATTR)
         document.body.removeAttribute(COMPOSER_HIDDEN_ATTR)
-        const marks = ['data-composer-variant', 'data-has-attachments', ATTACHMENT_TILE_ATTR, DRAFT_EMPTY_ATTR, CONTROL_ATTR, 'data-dsh-claude-context-meter']
+        const marks = ['data-composer-variant', 'data-has-attachments', ATTACHMENT_TILE_ATTR, DRAFT_EMPTY_ATTR, CONTROL_ATTR, 'data-dsh-claude-context-meter', DOCK_PAN_ATTR, DOCK_PAN_DRAG_ATTR]
         for (const mark of marks) {
           for (const marked of document.querySelectorAll(`[${mark}]`)) marked.removeAttribute(mark)
         }
@@ -325,5 +507,13 @@
         meterReading = ''
         meterMeasuredActive = false
         meterWidth = 0
+        document.removeEventListener('pointerdown', onDockPanDown, true)
+        document.removeEventListener('pointerover', onDockPanOver, true)
+        document.removeEventListener('scroll', onDockPanScroll, true)
+        endDockPan()
+        if (panObserver !== null) panObserver.disconnect()
+        panLine = null
+        panText = ''
+        panOwnTitle = ''
       }
     }

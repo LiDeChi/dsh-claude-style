@@ -432,7 +432,8 @@ body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [class*="_row"],
 body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant="hero"]) [data-composer-card] [class*="_row"] {
   display: flex !important;
-  flex-wrap: nowrap !important;
+  flex-wrap: wrap !important;
+  gap: 6px 12px !important;
   justify-content: space-between !important;
   align-items: center !important;
   padding: 0 4px !important;
@@ -441,7 +442,7 @@ body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant
   border: none !important;
   box-shadow: none !important;
   min-height: 28px !important;
-  height: 28px !important;
+  height: auto !important;
   width: 100% !important;
   max-width: 100% !important;
   box-sizing: border-box !important;
@@ -479,7 +480,10 @@ body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant
   display: flex !important;
   align-items: center !important;
   gap: 8px !important;
-  flex: 0 0 auto !important;
+  flex: 0 1 auto !important;
+  flex-wrap: wrap !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
   overflow: visible !important;
 }
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [class*="_modes"],
@@ -487,6 +491,9 @@ body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant
   order: 1 !important;
   display: inline-flex !important;
   align-items: center !important;
+  flex-wrap: wrap !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
   overflow: visible !important;
 }
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] button[data-dsh-claude-control="commands"],
@@ -512,5 +519,15 @@ body[data-dsh-claude-style] [class*="_composerStack"]:not([data-composer-variant
   align-items: center !important;
   gap: 8px !important;
   margin-left: auto !important;
-  flex: 0 0 auto !important;
+  flex: 0 1 auto !important;
+  min-width: 0 !important;
+  max-width: calc(100% - var(--dsh-claude-meter-room, 0px)) !important;
+}
+/* The slot must shrink with the trailing group before its label can ellipsize.
+   Effort reserves its measured margin on the model button inside this slot. */
+body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [data-slot="conversation.input.model"] {
+  display: flex !important;
+  flex: 0 1 auto !important;
+  min-width: 0 !important;
+  overflow: visible !important;
 }

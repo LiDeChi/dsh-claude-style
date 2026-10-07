@@ -48,6 +48,32 @@
       /** The open card, marked with the picker it belongs to, and the trigger it was stamped for. */
       const cardStamp = createStamp(HERO_MENU_ATTR)
       let stampedTrigger = null
+      let branchCard = null
+
+      function clearBranchCard() {
+        if (branchCard === null) return
+        branchCard.removeAttribute('data-dsh-claude-branch-positioned')
+        branchCard.style.removeProperty('--dsh-claude-branch-x')
+        branchCard.style.removeProperty('--dsh-claude-branch-y')
+        branchCard = null
+      }
+
+      /** The git-graph picker stays in its React parent but uses viewport coordinates. */
+      function positionBranchCard() {
+        const card = document.querySelector('[data-gitgraph-chip-anchor] [data-gitgraph-popover][role="listbox"]')
+        if (card !== branchCard) {
+          clearBranchCard()
+          branchCard = card
+        }
+        if (card === null) return
+        const trigger = card.parentElement.querySelector('[data-gitgraph-chip]')
+        if (trigger === null) return
+        card.setAttribute('data-dsh-claude-branch-positioned', '')
+        const { x, y } = resolveAnchoredPosition(trigger.getBoundingClientRect(), card.offsetWidth, card.offsetHeight, { side: 'above-left', gap: GAP })
+        card.style.setProperty('--dsh-claude-branch-x', `${Math.round(x)}px`)
+        card.style.setProperty('--dsh-claude-branch-y', `${Math.round(y)}px`)
+      }
+
       let openedByHover = false
       /** The trigger the hover opened. The row has TWO of them (workspace, preset). */
       let hoverTrigger = null
@@ -235,12 +261,14 @@
 
       /** Re-place an open card after a scroll or a resize moved its anchor. */
       function repositionHeroMenu() {
+        positionBranchCard()
         const card = cardStamp.current()
         if (card === null || stampedTrigger === null) return
         placeCard(stampedTrigger, card)
       }
 
       function syncHeroMenu() {
+        positionBranchCard()
         const trigger = openTrigger()
         if (trigger === null) {
           // The menu is shut — by a click, by Escape or by an outside press — so
@@ -286,6 +314,7 @@
         openedByHover = false
         hoverTrigger = null
         pointerTrigger = null
+        clearBranchCard()
         clearStamp()
         unregisterPopover('hero')
         document.removeEventListener('mouseover', onHeroPointerOver, true)

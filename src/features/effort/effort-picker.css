@@ -362,6 +362,20 @@ body[data-dsh-claude-style] .dsh-claude-effort-btn {
   z-index: 10 !important;
   transition: background-color 0.12s ease, color 0.12s ease !important;
 }
+/* Native anchors follow sidebar transitions and late font/layout changes before
+   paint. Keep the body-mounted trigger outside the host's React-owned slot;
+   the JS coordinates remain the fallback on browsers without anchor support. */
+@supports (left: anchor(right)) and (top: anchor(center)) {
+  body[data-dsh-claude-style] .dsh-claude-model-btn {
+    anchor-name: --dsh-claude-model-trigger;
+  }
+  body[data-dsh-claude-style] .dsh-claude-effort-btn {
+    position-anchor: --dsh-claude-model-trigger;
+    left: calc(anchor(right) + 2px) !important;
+    top: anchor(center) !important;
+    transform: translateY(-50%) !important;
+  }
+}
 body[data-dsh-claude-style] .dsh-claude-effort-btn:hover {
   background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08)) !important;
   color: var(--dsw-alias-label-primary, #141413) !important;
