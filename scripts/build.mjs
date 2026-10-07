@@ -188,6 +188,7 @@ const STYLE_FILES = [
   { file: 'features/composer/inline.css', gate: true },
   { file: 'features/composer/inline-bar.css', gate: true },
   { file: 'theme/sidebar.css' },
+  { file: 'theme/rightbar.css' },
   { file: 'features/workspace/workspace.css' },
   { file: 'features/search/search.css' },
   { file: 'features/turn-status/turn-status.css' },

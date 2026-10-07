@@ -376,6 +376,22 @@ corners. Claude dark mode uses `#111110` for the sidebar, `#C2C0B8` for normal
 conversation text and `#343433` for selection; hover has its own lighter wash.
 The account footer has a full-width divider. Host colours remain token-based.
 
+## Right panel · 右侧面板
+
+The host's right column is a dockkit pane: a header strip carrying the tab set
+and the pane's icon buttons, then the pane body. The pane takes the skin's
+canvas with a 1px warm hairline on its left edge (the shipped line is a cold
+white one), and the header takes the same hairline underneath, so the title line
+and the content read as two layers. A tab is a label rather than a segment: 28px
+tall with 6px corners, 13px at weight 500, the current tab in the primary ink
+and the others in the tertiary, washing with `--dsh-claude-hover-bg` under the
+pointer. The pane's icon buttons (split, fullscreen, collapse) are 28px squares
+with 6px corners in the secondary ink, turning primary over that same wash. The
+guide an empty panel opens on takes the raised card, the warm hairline, the
+card's 12px corners and the skin's ink hierarchy. Only `[data-rightbar-col]` is
+reached: the bottom panel and the floating panes share the dockkit markers and
+keep the host's own chrome (D52).
+
 **Palette.** A modal card set 8vh from the top, 760px wide at most, 16px radius,
 on the same ivory fill (dark `#1E1E1D`) under the host's mask. From the top: a
 17px borderless input with a 28px close button; the category chips (32px tall,

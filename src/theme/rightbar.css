@@ -1,0 +1,86 @@
+/* --- 2.4 Right panel: the host's dockkit pane on the skin's warm surface --- */
+/* The right column is the host's own right sidebar: one dockkit pane per column
+   ([data-dockkit-pane]) carrying a header strip ([data-dockkit-strip]) with the
+   tab set and the pane's icon buttons, then the pane body. The shipped pane
+   hairlines with a cold white line and its strip has no divider, so the panel
+   stands beside the warm sidebar as a surface of its own. Every rule is scoped
+   to [data-rightbar-col]: the same dockkit markers also drive the bottom panel
+   and the floating panes, which this decision does not reach (D52). */
+
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%% [data-rightbar-col] [data-dockkit-pane] {
+  background: var(--dsh-claude-canvas) !important;
+  border-left: 1px solid var(--dsw-alias-border-l1) !important;
+}
+
+/* The header takes the same 1px hairline the sidebar uses, so the tab strip and
+   the body read as two layers of one panel. */
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%% [data-rightbar-col] [data-dockkit-strip] {
+  border-bottom: 1px solid var(--dsw-alias-border-l1) !important;
+}
+
+/* ---------- the tab set: the panel's title line ---------- */
+/* A tab is a label, not a segment: the current one takes the primary ink, the
+   others the tertiary, and a clickable label washes under the pointer. */
+body[data-dsh-claude-style] [data-rightbar-col] [data-dockkit-tab] {
+  height: 28px !important;
+  padding: 0 8px !important;
+  border-radius: 6px !important;
+  font: 500 13px / 18px var(--dsw-font-family) !important;
+  transition: background-color 0.12s ease, color 0.12s ease !important;
+}
+
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%% [data-rightbar-col] [data-dockkit-tab] {
+  background: transparent !important;
+  color: var(--dsw-alias-label-tertiary) !important;
+}
+
+body[data-dsh-claude-style] [data-rightbar-col] [data-dockkit-tab]:hover {
+  background: var(--dsh-claude-hover-bg) !important;
+}
+
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%% [data-rightbar-col] [data-dockkit-tab]:is([aria-selected="true"], [class*="_tabActive"]) {
+  color: var(--dsw-alias-label-primary) !important;
+}
+
+/* ---------- the pane's own icon buttons ---------- */
+body[data-dsh-claude-style] [data-rightbar-col] :is([data-dockkit-split-button], [data-sidebar-right-mode], [data-sidebar-right-toggle]) {
+  width: 28px !important;
+  height: 28px !important;
+  padding: 6px !important;
+  border-radius: 6px !important;
+}
+
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%% [data-rightbar-col] :is([data-dockkit-split-button], [data-sidebar-right-mode], [data-sidebar-right-toggle]) {
+  color: var(--dsw-alias-label-secondary) !important;
+}
+
+body[data-dsh-claude-style] [data-rightbar-col] :is([data-dockkit-split-button], [data-sidebar-right-mode], [data-sidebar-right-toggle]):hover {
+  background: var(--dsh-claude-hover-bg) !important;
+}
+
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%% [data-rightbar-col] :is([data-dockkit-split-button], [data-sidebar-right-mode], [data-sidebar-right-toggle]):hover {
+  color: var(--dsw-alias-label-primary) !important;
+}
+
+/* ---------- the guide an empty panel opens on ---------- */
+/* The shipped guide paints a cool compass over layer-1 capsules; the compass
+   takes a skin ink and the capsules the rows' hairline. The raised fill is added
+   under the dark palettes only: --dsh-claude-raised has no light value, and the
+   light capsule already sits on the host's own layer-1 fill. */
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%% [data-rightbar-col] [data-slot="sidebar.right.tab.guide"] [class*="_hero"] {
+  color: var(--dsw-alias-label-caption) !important;
+}
+
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%% [data-rightbar-col] [data-slot="sidebar.right.tab.guide"] button[class*="_entry"] {
+  /* The shipped capsule rounds to 20px; the skin's card radius is 12px. */
+  border: 1px solid var(--dsw-alias-border-l1) !important;
+  border-radius: 12px !important;
+}
+
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%%[data-ds-dark-theme] [data-rightbar-col] [data-slot="sidebar.right.tab.guide"] button[class*="_entry"] {
+  background: var(--dsh-claude-raised) !important;
+}
+
+body[data-dsh-claude-style]%%PALETTE_CLAUDE%% [data-rightbar-col] [data-slot="sidebar.right.tab.guide"] button[class*="_entry"] [class*="_entryDescription"] {
+  color: var(--dsw-alias-label-tertiary) !important;
+}

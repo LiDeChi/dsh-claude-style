@@ -65,6 +65,7 @@
 | [D49](D49-visual-yield.md) | 让路：宿主另有属主时收掉整套视觉，留下设置页 | 已实施 |
 | [D50](D50-sidebar-reference.md) | Claude Desktop 侧栏布局 | 已实施 |
 | [D51](D51-composer-lists.md) | 输入框 Markdown 列表编辑 | 已实施 |
+| [D52](D52-right-panel.md) | 右侧面板：宿主的 dockkit 结构，皮肤的暖色表面 | 已实施 |
 
 ## 分发与流程
 
