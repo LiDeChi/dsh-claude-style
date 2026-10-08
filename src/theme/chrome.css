@@ -216,6 +216,13 @@ body[data-dsh-claude-style] [data-slot="conversation.session.header.actions"] > 
   z-index: 9 !important;
 }
 
+/* The open-target split lives in the desktop header's drag region. Exclude
+   its own boxes, including image and SVG hit targets, from native dragging. */
+body[data-dsh-claude-style] [data-open-target],
+body[data-dsh-claude-style] [data-open-target] * {
+  -webkit-app-region: no-drag !important;
+}
+
 /* The queue dock's spacing is the host's to own: its own rule cancels the stack
    gap and tucks 3px under the input card. No rule here on purpose — re-add one
    only if the host changes its geometry. */
